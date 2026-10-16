@@ -2,6 +2,15 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>https://www.hanlior.top/2026/10/16/mac-hexo-next-custom-domain-blog/</loc>
+    
+    <lastmod>2026-10-16</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
     <loc>https://www.hanlior.top/index.html</loc>
     
     <lastmod>2026-10-16</lastmod>
@@ -20,7 +29,7 @@
   </url>
   
   <url>
-    <loc>https://www.hanlior.top/categories/index.html</loc>
+    <loc>https://www.hanlior.top/tags/index.html</loc>
     
     <lastmod>2026-10-16</lastmod>
     
@@ -29,7 +38,7 @@
   </url>
   
   <url>
-    <loc>https://www.hanlior.top/tags/index.html</loc>
+    <loc>https://www.hanlior.top/categories/index.html</loc>
     
     <lastmod>2026-10-16</lastmod>
     
@@ -46,6 +55,41 @@
   </url>
 
   
+  <url>
+    <loc>https://www.hanlior.top/tags/Mac/</loc>
+    <lastmod>2026-10-16</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://www.hanlior.top/tags/Hexo/</loc>
+    <lastmod>2026-10-16</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://www.hanlior.top/tags/NexT/</loc>
+    <lastmod>2026-10-16</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://www.hanlior.top/tags/GitHub-Pages/</loc>
+    <lastmod>2026-10-16</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
 
+  
+  <url>
+    <loc>https://www.hanlior.top/categories/%E5%8D%9A%E5%AE%A2%E6%90%AD%E5%BB%BA/</loc>
+    <lastmod>2026-10-16</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
   
 </urlset>

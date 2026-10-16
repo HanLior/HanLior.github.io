@@ -1,3 +1,170 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
+  <entry>
+    <title>在Mac上搭建个人博客：Hexo + NexT + 自定义域名搭建永久有效的个人博客网站</title>
+    <url>/2026/10/16/mac-hexo-next-custom-domain-blog/</url>
+    <content><![CDATA[在 Mac 上搭建个人博客配置Github项目在Github右上角点击Repository
+然后去New一个
+
+按照下面的输入配置，名字输入自己想要起的名字就可以
+
+生成密钥ssh-keygen -t rsa -b 4096然后一路回车，可以看到生成到了/Users/cr1sp/.ssh/id_rsa  这里Cr1sp是我电脑的用户名用编辑器打开，去复制id_rsa.pub到github：https://github.com/settings/ssh改变密钥认证方式：ssh-keyscan -t ed25519 github.com &gt;&gt; ~/.ssh/known_hosts测试是否成功：ssh -T git@github.com
+
+如果出现这样的字就是代表可以链接成功
+
+设置账号信息：
+git config --global user.name &quot;HanLior&quot;
+
+设置github邮箱：
+git config --global user.email &quot;你的 GitHub 邮箱&quot;
+
+下载Git这里我用的homebrew下载的git
+1.先安装homebrew/bin/bash -c &quot;$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)&quot;
+
+2.通过Homebrew安装Gitbrew install git
+
+3.验证是否安装成功
+出现这样的就是安装成功
+安装node.js1.下载node.jsbrew install node
+
+2.验证是否下载成功node --version
+
+
+搭建Hexo1.切换阿里云镜像源npm config set registry https://registry.npmmirror.com
+
+2.安装cnpmnpm install -g cnpm --registry=https://registry.npmmirror.com
+
+3.用 cnpm 安装 hexocnpm install -g hexo-cli
+
+4.验证是否安装成功
+本地创建Hexo博客文件先在本地目录里面创建一个文件夹
+mkdir blogcd bloghexo init
+
+然后看到blog目录文件里面有这些东西就可以
+
+node_modules: 依赖包public：存放生成的页面scaffolds：生成文章的一些模板source：用来存放你的文章themes：放下下载的主题_config.yml: 博客的核心配置文件（设置主体、标题等属性）
+
+启动cnpm install
+
+启动hexo hexo s -g
+
+访问127.0.0.1:4000
+
+配置域名解析，可以参考这篇文章
+https://www.duheweb.com/post/20210417143744.html
+然后去github配置一下域名，启用https
+
+本站实际配置记录以下配置对应本博客当前使用的 GitHub 仓库和域名：
+
+GitHub 用户：HanLior
+Pages 仓库：HanLior/HanLior.github.io
+域名：www.hanlior.top
+Hexo 项目目录：/Users/cr1sp/blog
+Hexo：8.1.2；NexT：8.21.1，Pisces 风格
+
+配置 DNS在域名服务商的 DNS 解析页面添加以下记录。根域名用 4 条 A 记录，www 用 CNAME；CNAME 的记录值不要带 https:// 或末尾路径。
+
+
+
+主机记录
+类型
+记录值
+
+
+
+@
+A
+185.199.108.153
+
+
+@
+A
+185.199.109.153
+
+
+@
+A
+185.199.110.153
+
+
+@
+A
+185.199.111.153
+
+
+www
+CNAME
+HanLior.github.io
+
+
+在 GitHub 仓库 HanLior/HanLior.github.io 的 Settings → Pages 中，发布来源选择 Deploy from a branch，分支选择 main、目录选择 /(root)。Custom domain 填 www.hanlior.top。等 DNS 检查和 TLS 证书签发完成后，再启用 Enforce HTTPS。
+在 Hexo 的 source/CNAME 文件中只写自定义域名：
+www.hanlior.top
+
+不要把 CNAME 文件放在 source/_posts 里，也不要把它命名为 CNAME.txt。
+配置 Hexo 部署到 GitHub Pages在博客根目录 /Users/cr1sp/blog 安装部署插件：
+npm install hexo-deployer-git --save
+
+在根目录的 _config.yml 配置仓库和分支：
+deploy:  type: git  repo: git@github.com:HanLior/HanLior.github.io.git  branch: main
+
+每次发布前先清理并重新生成，再部署：
+npx hexo cleannpx hexo generatenpx hexo deploy
+
+也可以依次使用 hexo clean、hexo generate、hexo deploy。第一次在本机部署时需要已经配置 GitHub SSH Key，并确认 ssh -T git@github.com 可以连接。
+安装并启用 NexT 主题本站使用 NexT 8.21.1，主题通过 npm 安装并由 package.json 管理：
+npm install hexo-theme-next@8.21.1 --save
+
+Hexo 根目录 _config.yml 中设置：
+theme: next
+
+主题设置写在博客根目录的 _config.next.yml，不是 themes/next/_config.yml。本站使用 Pisces、深色模式、左侧文章侧栏、中文导航和 GitHub 个人链接：
+scheme: Piscesdarkmode: truesidebar:  position: left  display: postmenu:  home: / || home  categories: /categories/ || th  tags: /tags/ || tags  about: /about/ || usersocial:  GitHub: https://github.com/HanLior || fab fa-github
+
+menu 中的页面需在 source 目录下创建对应页面。本站有分类、标签和关于页面；目前没有文章，所以暂时不显示归档入口。以后发布文章后，可以在主题配置里加上：
+archives: /archives/ || archive
+
+创建分类、标签和关于页面可用 Hexo 命令生成页面：
+npx hexo new page categoriesnpx hexo new page tagsnpx hexo new page about
+
+命令会创建 source/&lt;页面名&gt;/index.md。分类页和标签页的 front matter 分别设置 type: categories、type: tags；这些页面以及关于页均可设置 comments: false。例如：
+---title: 分类type: categoriescomments: false---
+
+本站开启的搜索和 SEO 基础功能安装搜索索引、Atom 订阅和站点地图插件：
+npm install hexo-generator-searchdb hexo-generator-feed hexo-generator-sitemap --save
+
+Hexo 根目录 _config.yml 中配置搜索索引、订阅和站点地图：
+search:  path: search.xml  field: post  content: true  format: striptagsfeed:  type: atom  path: atom.xml  limit: 20sitemap:  path: sitemap.xml  tags: true  categories: true
+
+NexT 的 _config.next.yml 开启本地搜索：
+local_search:  enable: true  top_n_per_article: 1  unescape: false  preload: false
+
+本站还在 _config.next.yml 中启用了代码块复制和 Busuanzi 访问统计：
+codeblock:  copy_button:    enable: true    style: macbusuanzi_count:  enable: true  total_visitors: true  total_visitors_icon: fa fa-user  total_views: true  total_views_icon: fa fa-eye  post_views: true  post_views_icon: far fa-eye
+
+根目录配置还要填写站点标题、作者、语言、时区和正式网址。本站当前值如下：
+title: HanLiorsubtitle: 技术学习与实践description: HanLior 的个人博客，记录技术学习、项目实践与思考。keywords: Hexo, NexT, HanLiorauthor: HanLiorlanguage: zh-CNtimezone: Asia/Shanghaiurl: https://www.hanlior.top
+
+搜索引擎抓取规则放在 source/robots.txt：
+User-agent: *Allow: /Sitemap: https://www.hanlior.top/sitemap.xml
+
+本站还开启了 NexT 深色模式。访问统计需要访客打开网页后才会逐步积累数据。
+删除默认示例文章Hexo 初始化时会生成 source/_posts/hello-world.md。删除该文件并重新部署后，文章和归档列表里就不会再显示 Hello World。删除博客最后一篇文章时，Hexo 可能不再生成首页，所以本站创建了 source/index.md 作为首页提示：
+---title: 首页layout: pagecomments: false---文章正在整理中，欢迎稍后再来。
+
+之后写新文章可运行：
+npx hexo new post &quot;文章标题&quot;
+
+完成编辑后再运行清理、生成和部署命令。
+]]></content>
+      <categories>
+        <category>博客搭建</category>
+      </categories>
+      <tags>
+        <tag>Mac</tag>
+        <tag>Hexo</tag>
+        <tag>NexT</tag>
+        <tag>GitHub Pages</tag>
+      </tags>
+  </entry>
 </search>
