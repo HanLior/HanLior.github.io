@@ -10,7 +10,27 @@
   <rights>All rights reserved 2026, HanLior</rights>
   <subtitle>技术学习与实践</subtitle>
   <title>HanLior</title>
-  <updated>2026-10-16T12:47:57.430Z</updated>
+  <updated>2026-10-28T07:42:58.096Z</updated>
+  <entry>
+    <author>
+      <name>HanLior</name>
+    </author>
+    <category term="web安全学习" scheme="https://www.hanlior.top/categories/web%E5%AE%89%E5%85%A8%E5%AD%A6%E4%B9%A0/"/>
+    <category term="HTTP" scheme="https://www.hanlior.top/tags/HTTP/"/>
+    <category term="Web安全" scheme="https://www.hanlior.top/tags/Web%E5%AE%89%E5%85%A8/"/>
+    <category term="CTF" scheme="https://www.hanlior.top/tags/CTF/"/>
+    <content>
+      <![CDATA[<p>本文结合 moectf 2024 的 <a href="https://ctf.xidian.edu.cn/training/10?challenge=15">ezhttp 题目</a>，整理 HTTP 请求行、常见请求头、请求体，以及响应状态码和响应头。</p><span id="more"></span><h2 id="HTTP-请求"><a href="#HTTP-请求" class="headerlink" title="HTTP 请求"></a>HTTP 请求</h2><p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261028151016424.png" alt="HTTP 请求示例"></p><p>HTTP 请求的第一行叫<strong>请求行</strong>，包含请求方法、请求目标和 HTTP 版本。常见方法有：</p><ul><li><strong>GET</strong>：获取指定资源。</li><li><strong>POST</strong>：向服务器提交数据，常用于创建或处理资源。</li><li><strong>HEAD</strong>：请求与 GET 类似，但只返回响应头，不返回响应体。</li></ul><p>请求行下面是请求头，常见字段包括：</p><ul><li><strong>Host</strong>：请求访问的主机名。</li><li><strong>X-Forwarded-For</strong>：代理服务器常用来传递客户端 IP。只有来自可信代理的值才应作为真实来源，因为客户端可能自行伪造它。</li><li><strong>Referer</strong>：表示请求从哪个页面发起。</li><li><strong>User-Agent</strong>：描述客户端使用的设备、操作系统和浏览器等信息。</li><li><strong>Content-Type</strong>：描述请求体的数据格式，例如表单或 JSON。</li></ul><p>请求头之后是请求体。题目中的请求体示例为 <code>imoau=sb</code>。如果提交 JSON，请求头中的 <code>Content-Type</code> 通常应设为 <code>application/json</code>；表单数据则使用对应的表单媒体类型。</p><h2 id="HTTP-响应"><a href="#HTTP-响应" class="headerlink" title="HTTP 响应"></a>HTTP 响应</h2><p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261028153101154.png" alt="HTTP 响应示例"></p><p>服务器响应的第一行包含 HTTP 版本、状态码和状态描述。状态码按范围表示处理结果：</p><ul><li><strong>1xx</strong>：信息响应，请求仍在处理中。</li><li><strong>2xx</strong>：请求已成功处理。</li><li><strong>3xx</strong>：需要重定向或进一步操作。</li><li><strong>4xx</strong>：请求存在问题，或服务器无法按请求提供资源。</li><li><strong>5xx</strong>：服务器处理请求时发生错误。</li></ul><p>常见状态码：</p><ul><li><strong>200 OK</strong>：请求成功。</li><li><strong>301 Moved Permanently</strong>：资源已永久迁移，响应会提供新的地址。</li><li><strong>404 Not Found</strong>：服务器找不到请求的资源。</li><li><strong>418 I’m a teapot</strong>：一个真实定义过的状态码，源自愚人节 RFC，常作为趣味状态码出现。</li><li><strong>500 Internal Server Error</strong>：服务器遇到未预期的错误。</li></ul><p>响应状态行下面是响应头，常见字段包括：</p><ul><li><strong>Server</strong>：服务器软件信息；出于安全考虑，服务器可能会隐藏或简化此字段。</li><li><strong>Content-Type</strong>：响应体的媒体类型，例如 <code>text/html</code> 或 <code>application/json</code>。</li><li><strong>Set-Cookie</strong>：让浏览器保存或更新 Cookie。</li><li><strong>Content-Length</strong>：响应体的长度（以字节计，具体行为也受传输方式影响）。</li></ul><p>响应头之后是<strong>响应体</strong>，通常包含浏览器最终显示的页面内容或接口返回的数据。</p>]]>
+    </content>
+    <id>https://www.hanlior.top/2026/10/28/http-protocol-learning/</id>
+    <link href="https://www.hanlior.top/2026/10/28/http-protocol-learning/"/>
+    <published>2026-10-28T07:41:00.000Z</published>
+    <summary>
+      <![CDATA[<p>本文结合 moectf 2024 的 <a href="https://ctf.xidian.edu.cn/training/10?challenge=15">ezhttp 题目</a>，整理 HTTP 请求行、常见请求头、请求体，以及响应状态码和响应头。</p>]]>
+    </summary>
+    <title>HTTP协议学习：从请求头到响应头</title>
+    <updated>2026-10-28T07:42:58.096Z</updated>
+  </entry>
   <entry>
     <author>
       <name>HanLior</name>
