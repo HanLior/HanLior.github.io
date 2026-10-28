@@ -1,6 +1,63 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>HTTP协议学习：从请求头到响应头</title>
+    <url>/2026/10/28/http-protocol-learning/</url>
+    <content><![CDATA[本文结合 moectf 2024 的 ezhttp 题目，整理 HTTP 请求行、常见请求头、请求体，以及响应状态码和响应头。
+
+
+HTTP 请求
+HTTP 请求的第一行叫请求行，包含请求方法、请求目标和 HTTP 版本。常见方法有：
+
+GET：获取指定资源。
+POST：向服务器提交数据，常用于创建或处理资源。
+HEAD：请求与 GET 类似，但只返回响应头，不返回响应体。
+
+请求行下面是请求头，常见字段包括：
+
+Host：请求访问的主机名。
+X-Forwarded-For：代理服务器常用来传递客户端 IP。只有来自可信代理的值才应作为真实来源，因为客户端可能自行伪造它。
+Referer：表示请求从哪个页面发起。
+User-Agent：描述客户端使用的设备、操作系统和浏览器等信息。
+Content-Type：描述请求体的数据格式，例如表单或 JSON。
+
+请求头之后是请求体。题目中的请求体示例为 imoau=sb。如果提交 JSON，请求头中的 Content-Type 通常应设为 application/json；表单数据则使用对应的表单媒体类型。
+HTTP 响应
+服务器响应的第一行包含 HTTP 版本、状态码和状态描述。状态码按范围表示处理结果：
+
+1xx：信息响应，请求仍在处理中。
+2xx：请求已成功处理。
+3xx：需要重定向或进一步操作。
+4xx：请求存在问题，或服务器无法按请求提供资源。
+5xx：服务器处理请求时发生错误。
+
+常见状态码：
+
+200 OK：请求成功。
+301 Moved Permanently：资源已永久迁移，响应会提供新的地址。
+404 Not Found：服务器找不到请求的资源。
+418 I’m a teapot：一个真实定义过的状态码，源自愚人节 RFC，常作为趣味状态码出现。
+500 Internal Server Error：服务器遇到未预期的错误。
+
+响应状态行下面是响应头，常见字段包括：
+
+Server：服务器软件信息；出于安全考虑，服务器可能会隐藏或简化此字段。
+Content-Type：响应体的媒体类型，例如 text/html 或 application/json。
+Set-Cookie：让浏览器保存或更新 Cookie。
+Content-Length：响应体的长度（以字节计，具体行为也受传输方式影响）。
+
+响应头之后是响应体，通常包含浏览器最终显示的页面内容或接口返回的数据。
+]]></content>
+      <categories>
+        <category>web安全学习</category>
+      </categories>
+      <tags>
+        <tag>HTTP</tag>
+        <tag>Web安全</tag>
+        <tag>CTF</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>基础逆向分析学习</title>
     <url>/2026/10/16/reverse-engineering-basics/</url>
     <content><![CDATA[本文整理 Android 注册逻辑、Java 解密、ELF 与 Windows 程序等基础逆向分析题目的思路和脚本。
@@ -265,63 +322,6 @@ npx hexo new post &quot;文章标题&quot;
         <tag>Hexo</tag>
         <tag>NexT</tag>
         <tag>GitHub Pages</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>HTTP协议学习：从请求头到响应头</title>
-    <url>/2026/10/28/http-protocol-learning/</url>
-    <content><![CDATA[本文结合 moectf 2024 的 ezhttp 题目，整理 HTTP 请求行、常见请求头、请求体，以及响应状态码和响应头。
-
-
-HTTP 请求
-HTTP 请求的第一行叫请求行，包含请求方法、请求目标和 HTTP 版本。常见方法有：
-
-GET：获取指定资源。
-POST：向服务器提交数据，常用于创建或处理资源。
-HEAD：请求与 GET 类似，但只返回响应头，不返回响应体。
-
-请求行下面是请求头，常见字段包括：
-
-Host：请求访问的主机名。
-X-Forwarded-For：代理服务器常用来传递客户端 IP。只有来自可信代理的值才应作为真实来源，因为客户端可能自行伪造它。
-Referer：表示请求从哪个页面发起。
-User-Agent：描述客户端使用的设备、操作系统和浏览器等信息。
-Content-Type：描述请求体的数据格式，例如表单或 JSON。
-
-请求头之后是请求体。题目中的请求体示例为 imoau=sb。如果提交 JSON，请求头中的 Content-Type 通常应设为 application/json；表单数据则使用对应的表单媒体类型。
-HTTP 响应
-服务器响应的第一行包含 HTTP 版本、状态码和状态描述。状态码按范围表示处理结果：
-
-1xx：信息响应，请求仍在处理中。
-2xx：请求已成功处理。
-3xx：需要重定向或进一步操作。
-4xx：请求存在问题，或服务器无法按请求提供资源。
-5xx：服务器处理请求时发生错误。
-
-常见状态码：
-
-200 OK：请求成功。
-301 Moved Permanently：资源已永久迁移，响应会提供新的地址。
-404 Not Found：服务器找不到请求的资源。
-418 I’m a teapot：一个真实定义过的状态码，源自愚人节 RFC，常作为趣味状态码出现。
-500 Internal Server Error：服务器遇到未预期的错误。
-
-响应状态行下面是响应头，常见字段包括：
-
-Server：服务器软件信息；出于安全考虑，服务器可能会隐藏或简化此字段。
-Content-Type：响应体的媒体类型，例如 text/html 或 application/json。
-Set-Cookie：让浏览器保存或更新 Cookie。
-Content-Length：响应体的长度（以字节计，具体行为也受传输方式影响）。
-
-响应头之后是响应体，通常包含浏览器最终显示的页面内容或接口返回的数据。
-]]></content>
-      <categories>
-        <category>web安全学习</category>
-      </categories>
-      <tags>
-        <tag>HTTP</tag>
-        <tag>Web安全</tag>
-        <tag>CTF</tag>
       </tags>
   </entry>
 </search>
