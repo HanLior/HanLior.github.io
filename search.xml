@@ -324,4 +324,216 @@ npx hexo new post &quot;文章标题&quot;
         <tag>GitHub Pages</tag>
       </tags>
   </entry>
+  <entry>
+    <title>PHP学习笔记：类型比较、超全局变量与面向对象</title>
+    <url>/2026/10/28/php-learning/</url>
+    <content><![CDATA[本文记录 PHP 基础语法、弱类型比较、超全局变量与常见函数，并通过类、对象、构造方法和继承入门面向对象。
+
+
+学习地址
+基础语法PHP 脚本在服务器上执行，然后将纯 HTML 结果发送回浏览器
+PHP代码的基本格式
+&lt;?php//PHP代码?&gt;
+
+PHP变量
+变量以 $ 符号开始，后面跟着变量的名称
+
+变量名必须以字母或者下划线字符开始
+
+变量名只能包含字母、数字以及下划线（A-z、0-9 和 _ ）
+
+变量名不能包含空格
+
+变量名是区分大小写的（$y 和 $Y 是两个不同的变量）
+这些和其他语言的差别不大
+
+
+&lt;?php$x=5;  //给x赋值$y=6;  // $给变量赋值 $z=$x+$y;echo $z;?&gt;
+
+PHP 是一门弱类型语言
+这是什么意思那，就是不必向 PHP 声明该变量的数据类型，和C语言对比，比如c语言定义一个整型变量需要int a; 但是在PHP中就不需要，PHP 会根据变量的值，自动把变量转换为正确的数据类型。
+PHP数据类型和比较
+String（字符串）
+
+Integer（整型）
+
+Float（浮点型）
+
+Boolean（布尔型）
+
+Array（数组）
+
+Object（对象）
+
+NULL（空值）
+
+Resource（资源类型）
+数组这里array() 和其他语言不太一样，重点学习一下
+
+
+&lt;?php $cars=array(&quot;Volvo&quot;,&quot;BMW&quot;,&quot;Toyota&quot;);var_dump($cars);?&gt;
+
+
+面向对象的部分放在后面写
+类型比较
+注意事项说在前面
+这里我踩了一些坑，刚一开始我用的系统安装的php来跑，发现怎么都得不到想要的flag，后来查询资料得到了原来是因为我安装的php8，版本比较高了，这些都不存在了
+这段代码的关键区别在 $num == 1：PHP 7 会把 &quot;1abc&quot; 转成数字 1；PHP 8 不再这样处理，所以同样的输入在 PHP 7 能得到 flag，在 PHP 8 不能
+所以环境一定要选择对，可以用phpstudy的环境来跑
+
+松散比较：使用两个等号 &#x3D;&#x3D; 比较，只比较值，不比较类型
+
+严格比较：用三个等号 &#x3D;&#x3D;&#x3D; 比较，除了比较值，也比较类型
+&lt;?phpif(42 == &quot;42&quot;) &#123;    echo &#x27;1、值相等&#x27;;&#125; echo PHP_EOL; // 换行符 if(42 === &quot;42&quot;) &#123;    echo &#x27;2、类型相等&#x27;;&#125; else &#123;    echo &#x27;3、类型不相等&#x27;;&#125;?&gt;
+
+
+这里让gpt写了一段php代码来学习一下弱类型比较
+&lt;!DOCTYPE html&gt;&lt;html lang=&quot;zh-CN&quot;&gt;&lt;head&gt;    &lt;meta charset=&quot;UTF-8&quot;&gt;    &lt;title&gt;PHP 条件判断练习&lt;/title&gt;&lt;/head&gt;&lt;body&gt;    &lt;form method=&quot;get&quot;&gt;        &lt;label&gt;            输入 num：            &lt;input type=&quot;text&quot; name=&quot;num&quot;&gt;        &lt;/label&gt;        &lt;button type=&quot;submit&quot;&gt;提交&lt;/button&gt;    &lt;/form&gt;    &lt;pre&gt;&lt;?php    if (isset($_GET[&#x27;num&#x27;]) &amp;&amp; is_string($_GET[&#x27;num&#x27;])) &#123;        $num = $_GET[&#x27;num&#x27;];        if (!is_numeric($num)) &#123;            // 将输入作为普通文字显示            echo htmlspecialchars($num, ENT_QUOTES, &#x27;UTF-8&#x27;);            if ($num == 1) &#123;                echo &quot;\nflag&#123;**********&#125;&quot;;            &#125;        &#125;    &#125;    ?&gt;&lt;/pre&gt;&lt;/body&gt;&lt;/html&gt;
+
+如果输入的是单纯一个数字，什么都不会显示
+
+但是如果输入1abc的话，就会直接出flag
+
+这里的原理就是源代码中
+if ($num == 1) &#123;               echo &quot;\nflag&#123;**********&#125;&quot;;           &#125;
+
+判断一下输入的数字是否和1相等，如果我理解没错的话，要比较的1是一位数组，然后我们输入的是1abc 自动的也就是和第一位的1比较了，然后因为弱类型比较，得到的是true，所以就输出了flag
+超级全局变量PHP中预定义了几个超级全局变量（superglobals） ，这意味着它们在一个脚本的全部作用域中都可用。 你不需要特别说明，就可以在函数及类中使用。
+PHP 超级全局变量列表:
+
+$GLOBALS
+
+$_SERVER
+
+$_REQUEST
+
+$_POST
+
+$_GET
+
+$_FILES
+
+$_ENV
+
+$_COOKIE
+
+$_SESSION
+也就是在这些输入点，可能会导致很多的漏洞点，这里借用一下学长总结的表格
+
+
+
+变量
+用途
+渗透关注点
+
+
+
+$_GET
+URL 参数
+最常见注入入口
+
+
+$_POST
+POST Body
+表单注入入口
+
+
+$_REQUEST
+GET+POST+Cookie
+参数来源混乱，易绕过
+
+
+$_COOKIE
+Cookie
+认证伪造、反序列化
+
+
+$_SESSION
+会话
+会话固定、会话劫持
+
+
+$_SERVER
+服务器信息
+信息泄露、HTTP_* 头伪造
+
+
+$_FILES
+上传文件
+文件上传漏洞
+
+
+$GLOBALS
+全局变量
+变量覆盖
+
+
+
+
+函数PHP中的一些危险函数
+上文中是一些在CTF中出现的一些可能会导致漏洞危险函数
+这里便不再赘述了，因为只学原理不实践的话也没什么意义，所以我选择边实践边学习，遇到了再学
+这里先把extract()学习一下
+extract($_GET)作用是 将GET请求的参数直接解析为变量并覆盖原有变量；
+&lt;?php$flag = &quot;xxxxxxxxxxxx&quot;;extract($_GET);if($secret == &quot;admin&quot;)&#123;echo $flag;&#125;else&#123;echo &quot;Access Denied&quot;;&#125;?&gt;
+
+正常代码无法直接控制 $secret，但是 extract() 会自动创建&#x2F;覆盖任意变量。也就是说：我们在URL传什么参数，服务器就会生成什么变量。
+这里extract接收GET的参数，由于这个函数可以直接覆盖GET到的参数，所以就直接可以在url中加上?secret=admin可以直接覆盖掉原本的参数，直接就可以输出flag
+面向对象可以把它们串成一条线来理解：类定义对象有哪些数据和行为；序列化保存对象的数据；反序列化恢复对象。如果恢复的数据由外部控制，而对象又会自动执行某些操作，就可能产生漏洞。
+这里来学习面向对象,用一下菜鸟教程中的一个汽车的例子
+&lt;?phpclass Car &#123;    public $color;    public function __construct($color = &quot;green&quot;)    &#123;        $this-&gt;color = $color;    &#125;    public function describe()    &#123;        return &quot;汽车的颜色是：&quot; . $this-&gt;color;    &#125;&#125;$car = new Car(&quot;white&quot;);echo $car-&gt;describe();?&gt;
+
+这是程序执行之后的结果
+
+这里开始一段一段的分析代码
+class car  定义一个类car，也就相当于car的设计图
+public $color 在类中声明一个名为 color 的公开属性，用于保存每个对象的颜色,也就相当于规定了在Car中都需要有color（颜色）这个属性，意思就是汽车的设计图中得设计一下颜色
+function describe() 在类中定义的一个方法，这个方法的作用就是描述一下这个车的颜色是什么
+$this 表示目前操作的对象，可能也能想象成英语中的代词哈哈
+$car = new Car(&quot;white&quot;)这个代码很关键，这里原本的含义是new一个新对象,用通俗的话来讲就是让工厂按照 Car 这份设计图，生产一辆新车，并在生产时指定颜色为白色，再用 $car 指代这辆车。
+学习反序列化之前，先学习一下__construct()
+__construct() 魔术方法-构造方法 使用 new 创建对象时，PHP 会自动调用它，用来设置对象的初始状态
+这个可以这样理解
+new Car(&quot;white&quot;)       ↓创建一个 Car 对象       ↓自动调用 __construct(&quot;white&quot;)       ↓参数 $color 得到 &quot;white&quot;       ↓$this-&gt;color = $color       ↓新对象的颜色被设置为 &quot;white&quot;
+
+当然，在类和对象中，这个方法也不是必须有的，下面再看一个例子
+class Car&#123;    public $color;&#125;// 没有构造方法，照样可以创建对象$car = new Car();// 创建后，再设置颜色$car-&gt;color = &quot;white&quot;;echo $car-&gt;color; // 输出 white
+
+如果没有构造方法，只能先创建对象，然后给对象设置颜色，当然这里肯定就不能像有构造方法时候直接在new对象时候传递参数，也就是不能这样$car = new Car(&quot;white&quot;);
+当然，有了构造方法，也可以写多个参数，在这里多设置一个价格，也是可以的
+class Car&#123;    public $color;    public $price;    public function __construct($color,$price)    &#123;        $this-&gt;color = $color;        $this-&gt;price = $price;    &#125;  public function describe()    &#123;        return &quot;汽车的颜色是：&quot; . $this-&gt;color;    &#125;&#125;$car = new Car(&quot;white&quot;,1000);echo $car-&gt;color; // whiteecho $car-&gt;price; // 1000
+
+在这里简单的学完构造方法之后，还有一个自定义的方法function describe()&#96;
+在类和对象中，也可以自定义方法，在这个例子中，describe()就是我们自定义的方法，-&gt; 不仅可以用来引用类中的属性，也可以用来引用方法
+我们自定义的这个方法的含义，在这个car的例子来讲的话，可以通俗的理解为用来描述这个车的颜色
+至此为止，我们用通俗易懂的例子学习了面向对象中的类、对象、属性、方法
+再学一个新概念，继承
+例如，“电动车”也是一种“车”，可以继承 Car
+我们已经有一份汽车设计图 Car，现在想设计电动车，可以在汽车设计图的基础上增加电池等功能，不必从头设计。 这就是继承。
+class ElectricCar extends Car&#123;    public $battery;    public function __construct($color, $price, $battery)    &#123;        parent::__construct($color, $price);        $this-&gt;battery = $battery;    &#125;&#125;
+
+这里：
+
+Car 是父类。
+
+ElectricCar 是子类。
+
+extends 表示继承。
+parent::__construct($color, $price);表示：调用父类的构造方法，让它负责设置颜色和价格。
+
+
+现在电动车不仅有自己的 $battery，还可以使用继承来的公开属性和方法
+$car = new ElectricCar(&quot;white&quot;, 1000, 80);
+
+总结目前php的学习就先到这里，在函数的那个部分，等到在ctf的过程中遇到什么就学什么，然后再来补充
+]]></content>
+      <categories>
+        <category>web安全学习</category>
+      </categories>
+      <tags>
+        <tag>Web安全</tag>
+        <tag>CTF</tag>
+        <tag>PHP</tag>
+      </tags>
+  </entry>
 </search>
