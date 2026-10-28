@@ -404,6 +404,28 @@
   <span>本站访客：<span id="busuanzi_site_uv">加载中…</span> 人</span>
   <span>总浏览量：<span id="busuanzi_site_pv">加载中…</span> 次</span>
 </div>
+<div style="text-align: center; margin-top: 0.4em;">
+  博客运行时间：<span id="blog-runtime">计算中…</span>
+</div>
+<script>
+  (function () {
+    var startTime = Date.UTC(2026, 9, 16, 10, 48, 16); // 2026-10-16 18:48:16 Asia/Shanghai
+    var runtime = document.getElementById('blog-runtime');
+
+    function updateRuntime() {
+      var elapsed = Math.max(0, Date.now() - startTime);
+      var seconds = Math.floor(elapsed / 1000);
+      var days = Math.floor(seconds / 86400);
+      var hours = Math.floor((seconds % 86400) / 3600);
+      var minutes = Math.floor((seconds % 3600) / 60);
+      var remainingSeconds = seconds % 60;
+      runtime.textContent = days + ' 天 ' + hours + ' 小时 ' + minutes + ' 分钟 ' + remainingSeconds + ' 秒';
+    }
+
+    updateRuntime();
+    window.setInterval(updateRuntime, 1000);
+  })();
+</script>
 <script defer src="https://busuanzi.meuicat.com/js"></script>
 <script>
   window.setTimeout(function () {
