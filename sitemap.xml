@@ -2,7 +2,7 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
-    <loc>https://www.hanlior.top/2026/10/16/mac-hexo-next-custom-domain-blog/</loc>
+    <loc>https://www.hanlior.top/2026/11/02/file-upload-security/</loc>
     
     <lastmod>2026-11-02</lastmod>
     
@@ -12,6 +12,15 @@
   
   <url>
     <loc>https://www.hanlior.top/2026/11/02/sql-injection-learning/</loc>
+    
+    <lastmod>2026-11-02</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://www.hanlior.top/2026/10/16/mac-hexo-next-custom-domain-blog/</loc>
     
     <lastmod>2026-11-02</lastmod>
     
@@ -120,14 +129,14 @@
   </url>
   
   <url>
-    <loc>https://www.hanlior.top/tags/SQL%E6%B3%A8%E5%85%A5/</loc>
+    <loc>https://www.hanlior.top/tags/%E6%96%87%E4%BB%B6%E4%B8%8A%E4%BC%A0/</loc>
     <lastmod>2026-11-02</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
-    <loc>https://www.hanlior.top/tags/MySQL/</loc>
+    <loc>https://www.hanlior.top/tags/Upload-Labs/</loc>
     <lastmod>2026-11-02</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -156,6 +165,20 @@
   
   <url>
     <loc>https://www.hanlior.top/tags/GitHub-Pages/</loc>
+    <lastmod>2026-11-02</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://www.hanlior.top/tags/SQL%E6%B3%A8%E5%85%A5/</loc>
+    <lastmod>2026-11-02</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://www.hanlior.top/tags/MySQL/</loc>
     <lastmod>2026-11-02</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
