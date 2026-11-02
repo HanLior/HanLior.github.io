@@ -1,6 +1,63 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>HTTP协议学习：从请求头到响应头</title>
+    <url>/2026/10/28/http-protocol-learning/</url>
+    <content><![CDATA[本文结合 moectf 2024 的 ezhttp 题目，整理 HTTP 请求行、常见请求头、请求体，以及响应状态码和响应头。
+
+
+HTTP 请求
+HTTP 请求的第一行叫请求行，包含请求方法、请求目标和 HTTP 版本。常见方法有：
+
+GET：获取指定资源。
+POST：向服务器提交数据，常用于创建或处理资源。
+HEAD：请求与 GET 类似，但只返回响应头，不返回响应体。
+
+请求行下面是请求头，常见字段包括：
+
+Host：请求访问的主机名。
+X-Forwarded-For：代理服务器常用来传递客户端 IP。只有来自可信代理的值才应作为真实来源，因为客户端可能自行伪造它。
+Referer：表示请求从哪个页面发起。
+User-Agent：描述客户端使用的设备、操作系统和浏览器等信息。
+Content-Type：描述请求体的数据格式，例如表单或 JSON。
+
+请求头之后是请求体。题目中的请求体示例为 imoau=sb。如果提交 JSON，请求头中的 Content-Type 通常应设为 application/json；表单数据则使用对应的表单媒体类型。
+HTTP 响应
+服务器响应的第一行包含 HTTP 版本、状态码和状态描述。状态码按范围表示处理结果：
+
+1xx：信息响应，请求仍在处理中。
+2xx：请求已成功处理。
+3xx：需要重定向或进一步操作。
+4xx：请求存在问题，或服务器无法按请求提供资源。
+5xx：服务器处理请求时发生错误。
+
+常见状态码：
+
+200 OK：请求成功。
+301 Moved Permanently：资源已永久迁移，响应会提供新的地址。
+404 Not Found：服务器找不到请求的资源。
+418 I’m a teapot：一个真实定义过的状态码，源自愚人节 RFC，常作为趣味状态码出现。
+500 Internal Server Error：服务器遇到未预期的错误。
+
+响应状态行下面是响应头，常见字段包括：
+
+Server：服务器软件信息；出于安全考虑，服务器可能会隐藏或简化此字段。
+Content-Type：响应体的媒体类型，例如 text/html 或 application/json。
+Set-Cookie：让浏览器保存或更新 Cookie。
+Content-Length：响应体的长度（以字节计，具体行为也受传输方式影响）。
+
+响应头之后是响应体，通常包含浏览器最终显示的页面内容或接口返回的数据。
+]]></content>
+      <categories>
+        <category>web安全学习</category>
+      </categories>
+      <tags>
+        <tag>HTTP</tag>
+        <tag>Web安全</tag>
+        <tag>CTF</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>PHP学习笔记：类型比较、超全局变量与面向对象</title>
     <url>/2026/10/28/php-learning/</url>
     <content><![CDATA[本文记录 PHP 基础语法、弱类型比较、超全局变量与常见函数，并通过类、对象、构造方法和继承入门面向对象。
@@ -207,66 +264,9 @@ $car = new ElectricCar(&quot;white&quot;, 1000, 80);
         <category>web安全学习</category>
       </categories>
       <tags>
+        <tag>Web安全</tag>
+        <tag>CTF</tag>
         <tag>PHP</tag>
-        <tag>Web安全</tag>
-        <tag>CTF</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>HTTP协议学习：从请求头到响应头</title>
-    <url>/2026/10/28/http-protocol-learning/</url>
-    <content><![CDATA[本文结合 moectf 2024 的 ezhttp 题目，整理 HTTP 请求行、常见请求头、请求体，以及响应状态码和响应头。
-
-
-HTTP 请求
-HTTP 请求的第一行叫请求行，包含请求方法、请求目标和 HTTP 版本。常见方法有：
-
-GET：获取指定资源。
-POST：向服务器提交数据，常用于创建或处理资源。
-HEAD：请求与 GET 类似，但只返回响应头，不返回响应体。
-
-请求行下面是请求头，常见字段包括：
-
-Host：请求访问的主机名。
-X-Forwarded-For：代理服务器常用来传递客户端 IP。只有来自可信代理的值才应作为真实来源，因为客户端可能自行伪造它。
-Referer：表示请求从哪个页面发起。
-User-Agent：描述客户端使用的设备、操作系统和浏览器等信息。
-Content-Type：描述请求体的数据格式，例如表单或 JSON。
-
-请求头之后是请求体。题目中的请求体示例为 imoau=sb。如果提交 JSON，请求头中的 Content-Type 通常应设为 application/json；表单数据则使用对应的表单媒体类型。
-HTTP 响应
-服务器响应的第一行包含 HTTP 版本、状态码和状态描述。状态码按范围表示处理结果：
-
-1xx：信息响应，请求仍在处理中。
-2xx：请求已成功处理。
-3xx：需要重定向或进一步操作。
-4xx：请求存在问题，或服务器无法按请求提供资源。
-5xx：服务器处理请求时发生错误。
-
-常见状态码：
-
-200 OK：请求成功。
-301 Moved Permanently：资源已永久迁移，响应会提供新的地址。
-404 Not Found：服务器找不到请求的资源。
-418 I’m a teapot：一个真实定义过的状态码，源自愚人节 RFC，常作为趣味状态码出现。
-500 Internal Server Error：服务器遇到未预期的错误。
-
-响应状态行下面是响应头，常见字段包括：
-
-Server：服务器软件信息；出于安全考虑，服务器可能会隐藏或简化此字段。
-Content-Type：响应体的媒体类型，例如 text/html 或 application/json。
-Set-Cookie：让浏览器保存或更新 Cookie。
-Content-Length：响应体的长度（以字节计，具体行为也受传输方式影响）。
-
-响应头之后是响应体，通常包含浏览器最终显示的页面内容或接口返回的数据。
-]]></content>
-      <categories>
-        <category>web安全学习</category>
-      </categories>
-      <tags>
-        <tag>Web安全</tag>
-        <tag>CTF</tag>
-        <tag>HTTP</tag>
       </tags>
   </entry>
   <entry>
@@ -770,7 +770,7 @@ Less - 10时间盲注，闭合方式和9不一样而已
   <entry>
     <title>在Mac上搭建个人博客：Hexo + NexT + 自定义域名搭建永久有效的个人博客网站</title>
     <url>/2026/10/16/mac-hexo-next-custom-domain-blog/</url>
-    <content><![CDATA[本文介绍在 Mac 上搭建 Hexo 博客的步骤，包括环境安装、NexT 主题、自定义域名和 GitHub Pages 发布。
+    <content><![CDATA[本文记录在 Mac 上搭建和维护 Hexo + NexT 博客的过程，涵盖 GitHub Pages、自定义域名与 DNS，并补充 HanLior 网站当前的项目目录、主题、文章阅读和页脚统计配置。
 
 
 配置Github项目在Github右上角点击Repository
@@ -832,6 +832,8 @@ Pages 仓库：HanLior/HanLior.github.io
 Hexo 项目目录：/Users/cr1sp/blog
 Hexo：8.1.2；NexT：8.21.1，Pisces 风格
 
+目录和发布链路博客源文件放在 /Users/cr1sp/blog。source/_posts 保存文章，source/categories、source/tags 和 source/about 保存导航页面；NexT 配置放在 _config.next.yml。文章图片托管在单独的图床仓库 xhcola/typora_drawing_bed，正文使用 raw.githubusercontent.com 图片链接，不把图片文件混进 Hexo 文章目录。
+发布时，Hexo 先把源文件生成到 public，再由 hexo-deployer-git 把生成结果推送到 Pages 仓库 HanLior/HanLior.github.io 的 main 分支。这个 Pages 仓库用于托管生成后的网站。
 配置 DNS在域名服务商的 DNS 解析页面添加以下记录。根域名用 4 条 A 记录，www 用 CNAME；CNAME 的记录值不要带 https:// 或末尾路径。
 
 
@@ -891,7 +893,7 @@ theme: next
 主题设置写在博客根目录的 _config.next.yml，不是 themes/next/_config.yml。本站使用 Pisces、深色模式、左侧文章侧栏、中文导航和 GitHub 个人链接：
 scheme: Piscesdarkmode: truesidebar:  position: left  display: postmenu:  home: / || home  categories: /categories/ || th  tags: /tags/ || tags  about: /about/ || usersocial:  GitHub: https://github.com/HanLior || fab fa-github
 
-menu 中的页面需在 source 目录下创建对应页面。本站有分类、标签和关于页面；目前没有文章，所以暂时不显示归档入口。以后发布文章后，可以在主题配置里加上：
+menu 中的页面需在 source 目录下创建对应页面。本站导航显示首页、分类、标签和关于；归档页面仍可通过 /archives/ 访问，但没有放进主导航。
 archives: /archives/ || archive
 
 创建分类、标签和关于页面可用 Hexo 命令生成页面：
@@ -900,6 +902,20 @@ npx hexo new page categoriesnpx hexo new page tagsnpx hexo new page about
 命令会创建 source/&lt;页面名&gt;/index.md。分类页和标签页的 front matter 分别设置 type: categories、type: tags；这些页面以及关于页均可设置 comments: false。例如：
 ---title: 分类type: categoriescomments: false---
 
+文章通过 front matter 设置分类和标签。本站的分类包括“博客搭建”“逆向学习”和“web安全学习”。Hexo 默认会隐藏没有文章的分类；persistent_categories 配置和 scripts/persistent-categories.js 会让预设分类在文章发布前也能显示。文章归入该分类后，分类页会自动列出文章。
+首页摘要、分页和文章信息本站首页每页显示 10 篇文章。文章使用 &lt;!-- more --&gt; 分隔摘要和正文：首页只显示分隔符之前的内容，读者点击“阅读全文”进入全文。新文章可按下面的结构设置分类、标签和摘要：
+---title: 文章标题date: 2026-11-02 16:00:00categories:  - web安全学习tags:  - PHP---这里写首页摘要。&lt;!-- more --&gt;这里开始是文章全文。
+
+字数和预计阅读时间由 hexo-word-counter 生成，只有文章级统计开启，不显示全站总字数或总阅读时间：
+npm install hexo-word-counter --save
+
+Hexo 根目录 _config.yml：
+symbols_count_time:  symbols: true  time: true  total_symbols: false  total_time: false
+
+主题配置 _config.next.yml 控制发表于日期、分类和字数&#x2F;阅读时间布局。source/_data/post-meta.njk 额外显示文章文件的实际修改日期和时间：
+post_meta:  item_text: true  created_at: true  updated_at:    enable: false    another_day: true  categories: truesymbols_count_time:  separated_meta: true  item_text_total: falsecustom_file_path:  postMeta: source/_data/post-meta.njk
+
+项目的 updated_option 设为 mtime，因此文章更新信息根据源文件修改时间生成。自定义元信息模板会把更新日期和时分秒显示在文章标题下方。
 本站开启的搜索和 SEO 基础功能安装搜索索引、Atom 订阅和站点地图插件：
 npm install hexo-generator-searchdb hexo-generator-feed hexo-generator-sitemap --save
 
@@ -909,17 +925,18 @@ search:  path: search.xml  field: post  content: true  format: striptagsfeed:  t
 NexT 的 _config.next.yml 开启本地搜索：
 local_search:  enable: true  top_n_per_article: 1  unescape: false  preload: false
 
-本站还在 _config.next.yml 中启用了代码块复制和 Busuanzi 访问统计：
-codeblock:  copy_button:    enable: true    style: macbusuanzi_count:  enable: true  total_visitors: true  total_visitors_icon: fa fa-user  total_views: true  total_views_icon: fa fa-eye  post_views: true  post_views_icon: far fa-eye
+本站在 _config.next.yml 中开启了 Mac 风格的代码块复制按钮：
+codeblock:  copy_button:    enable: true    style: mac
 
+页脚的访客数和浏览量写在 source/_data/footer.njk，通过兼容不蒜子接口的脚本 https://busuanzi.meuicat.com/js 显示。NexT 内置的不蒜子开关保持关闭，因为原接口曾返回 502。切换到新服务后，访客数和浏览量从新服务开始累计。相同页脚还显示博客运行时间，起点为首次部署记录的北京时间 2026-10-16 18:48:16。
 根目录配置还要填写站点标题、作者、语言、时区和正式网址。本站当前值如下：
 title: HanLiorsubtitle: 技术学习与实践description: HanLior 的个人博客，记录技术学习、项目实践与思考。keywords: Hexo, NexT, HanLiorauthor: HanLiorlanguage: zh-CNtimezone: Asia/Shanghaiurl: https://www.hanlior.top
 
 搜索引擎抓取规则放在 source/robots.txt：
 User-agent: *Allow: /Sitemap: https://www.hanlior.top/sitemap.xml
 
-本站还开启了 NexT 深色模式。访问统计需要访客打开网页后才会逐步积累数据。
-删除默认示例文章Hexo 初始化时会生成 source/_posts/hello-world.md。删除该文件并重新部署后，文章和归档列表里就不会再显示 Hello World。删除博客最后一篇文章时，Hexo 可能不再生成首页，所以本站创建了 source/index.md 作为首页提示：
+本站开启了 NexT 深色模式、左侧侧栏、本地搜索和代码复制。网站根目录 _config.yml 还设置每页 10 篇、Atom 订阅、站点地图和 robots.txt。访问统计会在访客打开网页后逐步累计。
+删除默认示例文章Hexo 初始化时会生成 source/_posts/hello-world.md。删除该文件并重新部署后，文章和归档列表里就不会再显示 Hello World。source/index.md 是没有文章时的首页提示；有文章时，首页由文章索引生成器列出文章摘要：
 ---title: 首页layout: pagecomments: false---文章正在整理中，欢迎稍后再来。
 
 之后写新文章可运行：
