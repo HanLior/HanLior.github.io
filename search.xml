@@ -1,250 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
-    <title>HTTP协议学习：从请求头到响应头</title>
-    <url>/2026/10/28/http-protocol-learning/</url>
-    <content><![CDATA[本文结合 moectf 2024 的 ezhttp 题目，整理 HTTP 请求行、常见请求头、请求体，以及响应状态码和响应头。
-
-
-HTTP 请求
-HTTP 请求的第一行叫请求行，包含请求方法、请求目标和 HTTP 版本。常见方法有：
-
-GET：获取指定资源。
-POST：向服务器提交数据，常用于创建或处理资源。
-HEAD：请求与 GET 类似，但只返回响应头，不返回响应体。
-
-请求行下面是请求头，常见字段包括：
-
-Host：请求访问的主机名。
-X-Forwarded-For：代理服务器常用来传递客户端 IP。只有来自可信代理的值才应作为真实来源，因为客户端可能自行伪造它。
-Referer：表示请求从哪个页面发起。
-User-Agent：描述客户端使用的设备、操作系统和浏览器等信息。
-Content-Type：描述请求体的数据格式，例如表单或 JSON。
-
-请求头之后是请求体。题目中的请求体示例为 imoau=sb。如果提交 JSON，请求头中的 Content-Type 通常应设为 application/json；表单数据则使用对应的表单媒体类型。
-HTTP 响应
-服务器响应的第一行包含 HTTP 版本、状态码和状态描述。状态码按范围表示处理结果：
-
-1xx：信息响应，请求仍在处理中。
-2xx：请求已成功处理。
-3xx：需要重定向或进一步操作。
-4xx：请求存在问题，或服务器无法按请求提供资源。
-5xx：服务器处理请求时发生错误。
-
-常见状态码：
-
-200 OK：请求成功。
-301 Moved Permanently：资源已永久迁移，响应会提供新的地址。
-404 Not Found：服务器找不到请求的资源。
-418 I’m a teapot：一个真实定义过的状态码，源自愚人节 RFC，常作为趣味状态码出现。
-500 Internal Server Error：服务器遇到未预期的错误。
-
-响应状态行下面是响应头，常见字段包括：
-
-Server：服务器软件信息；出于安全考虑，服务器可能会隐藏或简化此字段。
-Content-Type：响应体的媒体类型，例如 text/html 或 application/json。
-Set-Cookie：让浏览器保存或更新 Cookie。
-Content-Length：响应体的长度（以字节计，具体行为也受传输方式影响）。
-
-响应头之后是响应体，通常包含浏览器最终显示的页面内容或接口返回的数据。
-]]></content>
-      <categories>
-        <category>web安全学习</category>
-      </categories>
-      <tags>
-        <tag>HTTP</tag>
-        <tag>Web安全</tag>
-        <tag>CTF</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>在Mac上搭建个人博客：Hexo + NexT + 自定义域名搭建永久有效的个人博客网站</title>
-    <url>/2026/10/16/mac-hexo-next-custom-domain-blog/</url>
-    <content><![CDATA[本文记录在 Mac 上搭建和维护 Hexo + NexT 博客的过程，涵盖 GitHub Pages、自定义域名与 DNS，并补充 HanLior 网站当前的项目目录、主题、文章阅读和页脚统计配置。
-
-
-配置Github项目在Github右上角点击Repository
-然后去New一个
-
-按照下面的输入配置，名字输入自己想要起的名字就可以
-
-生成密钥ssh-keygen -t rsa -b 4096然后一路回车，可以看到生成到了/Users/cr1sp/.ssh/id_rsa  这里Cr1sp是我电脑的用户名用编辑器打开，去复制id_rsa.pub到github：https://github.com/settings/ssh改变密钥认证方式：ssh-keyscan -t ed25519 github.com &gt;&gt; ~/.ssh/known_hosts测试是否成功：ssh -T git@github.com
-
-如果出现这样的字就是代表可以链接成功
-
-设置账号信息：
-git config --global user.name &quot;HanLior&quot;
-
-设置github邮箱：
-git config --global user.email &quot;你的 GitHub 邮箱&quot;
-
-下载Git这里我用的homebrew下载的git
-1.先安装homebrew/bin/bash -c &quot;$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)&quot;
-
-2.通过Homebrew安装Gitbrew install git
-
-3.验证是否安装成功
-出现这样的就是安装成功
-安装node.js1.下载node.jsbrew install node
-
-2.验证是否下载成功node --version
-
-
-搭建Hexo1.切换阿里云镜像源npm config set registry https://registry.npmmirror.com
-
-2.安装cnpmnpm install -g cnpm --registry=https://registry.npmmirror.com
-
-3.用 cnpm 安装 hexocnpm install -g hexo-cli
-
-4.验证是否安装成功
-本地创建Hexo博客文件先在本地目录里面创建一个文件夹
-mkdir blogcd bloghexo init
-
-然后看到blog目录文件里面有这些东西就可以
-
-node_modules: 依赖包public：存放生成的页面scaffolds：生成文章的一些模板source：用来存放你的文章themes：放下下载的主题_config.yml: 博客的核心配置文件（设置主体、标题等属性）
-
-启动cnpm install
-
-启动hexo hexo s -g
-
-访问127.0.0.1:4000
-
-配置域名解析，可以参考这篇文章
-https://www.duheweb.com/post/20210417143744.html
-然后去github配置一下域名，启用https
-
-本站实际配置记录以下配置对应本博客当前使用的 GitHub 仓库和域名：
-
-GitHub 用户：HanLior
-Pages 仓库：HanLior/HanLior.github.io
-域名：www.hanlior.top
-Hexo 项目目录：/Users/cr1sp/blog
-Hexo：8.1.2；NexT：8.21.1，Pisces 风格
-
-目录和发布链路博客源文件放在 /Users/cr1sp/blog。source/_posts 保存文章，source/categories、source/tags 和 source/about 保存导航页面；NexT 配置放在 _config.next.yml。文章图片托管在单独的图床仓库 xhcola/typora_drawing_bed，正文使用 raw.githubusercontent.com 图片链接，不把图片文件混进 Hexo 文章目录。
-发布时，Hexo 先把源文件生成到 public，再由 hexo-deployer-git 把生成结果推送到 Pages 仓库 HanLior/HanLior.github.io 的 main 分支。这个 Pages 仓库用于托管生成后的网站。
-配置 DNS在域名服务商的 DNS 解析页面添加以下记录。根域名用 4 条 A 记录，www 用 CNAME；CNAME 的记录值不要带 https:// 或末尾路径。
-
-
-
-主机记录
-类型
-记录值
-
-
-
-@
-A
-185.199.108.153
-
-
-@
-A
-185.199.109.153
-
-
-@
-A
-185.199.110.153
-
-
-@
-A
-185.199.111.153
-
-
-www
-CNAME
-HanLior.github.io
-
-
-在 GitHub 仓库 HanLior/HanLior.github.io 的 Settings → Pages 中，发布来源选择 Deploy from a branch，分支选择 main、目录选择 /(root)。Custom domain 填 www.hanlior.top。等 DNS 检查和 TLS 证书签发完成后，再启用 Enforce HTTPS。
-在 Hexo 的 source/CNAME 文件中只写自定义域名：
-www.hanlior.top
-
-不要把 CNAME 文件放在 source/_posts 里，也不要把它命名为 CNAME.txt。
-配置 Hexo 部署到 GitHub Pages在博客根目录 /Users/cr1sp/blog 安装部署插件：
-npm install hexo-deployer-git --save
-
-在根目录的 _config.yml 配置仓库和分支：
-deploy:  type: git  repo: git@github.com:HanLior/HanLior.github.io.git  branch: main
-
-每次发布前先清理并重新生成，再部署：
-npx hexo cleannpx hexo generatenpx hexo deploy
-
-也可以依次使用 hexo clean、hexo generate、hexo deploy。第一次在本机部署时需要已经配置 GitHub SSH Key，并确认 ssh -T git@github.com 可以连接。
-安装并启用 NexT 主题本站使用 NexT 8.21.1，主题通过 npm 安装并由 package.json 管理：
-npm install hexo-theme-next@8.21.1 --save
-
-Hexo 根目录 _config.yml 中设置：
-theme: next
-
-主题设置写在博客根目录的 _config.next.yml，不是 themes/next/_config.yml。本站使用 Pisces、深色模式、左侧文章侧栏、中文导航和 GitHub 个人链接：
-scheme: Piscesdarkmode: truesidebar:  position: left  display: postmenu:  home: / || home  categories: /categories/ || th  tags: /tags/ || tags  about: /about/ || usersocial:  GitHub: https://github.com/HanLior || fab fa-github
-
-menu 中的页面需在 source 目录下创建对应页面。本站导航显示首页、分类、标签和关于；归档页面仍可通过 /archives/ 访问，但没有放进主导航。
-archives: /archives/ || archive
-
-创建分类、标签和关于页面可用 Hexo 命令生成页面：
-npx hexo new page categoriesnpx hexo new page tagsnpx hexo new page about
-
-命令会创建 source/&lt;页面名&gt;/index.md。分类页和标签页的 front matter 分别设置 type: categories、type: tags；这些页面以及关于页均可设置 comments: false。例如：
----title: 分类type: categoriescomments: false---
-
-文章通过 front matter 设置分类和标签。本站的分类包括“博客搭建”“逆向学习”和“web安全学习”。Hexo 默认会隐藏没有文章的分类；persistent_categories 配置和 scripts/persistent-categories.js 会让预设分类在文章发布前也能显示。文章归入该分类后，分类页会自动列出文章。
-首页摘要、分页和文章信息本站首页每页显示 10 篇文章。文章使用 &lt;!-- more --&gt; 分隔摘要和正文：首页只显示分隔符之前的内容，读者点击“阅读全文”进入全文。新文章可按下面的结构设置分类、标签和摘要：
----title: 文章标题date: 2026-11-02 16:00:00categories:  - web安全学习tags:  - PHP---这里写首页摘要。&lt;!-- more --&gt;这里开始是文章全文。
-
-字数和预计阅读时间由 hexo-word-counter 生成，只有文章级统计开启，不显示全站总字数或总阅读时间：
-npm install hexo-word-counter --save
-
-Hexo 根目录 _config.yml：
-symbols_count_time:  symbols: true  time: true  total_symbols: false  total_time: false
-
-主题配置 _config.next.yml 控制发表于日期、分类和字数&#x2F;阅读时间布局。source/_data/post-meta.njk 额外显示文章文件的实际修改日期和时间：
-post_meta:  item_text: true  created_at: true  updated_at:    enable: false    another_day: true  categories: truesymbols_count_time:  separated_meta: true  item_text_total: falsecustom_file_path:  postMeta: source/_data/post-meta.njk
-
-项目的 updated_option 设为 mtime，因此文章更新信息根据源文件修改时间生成。自定义元信息模板会把更新日期和时分秒显示在文章标题下方。
-本站开启的搜索和 SEO 基础功能安装搜索索引、Atom 订阅和站点地图插件：
-npm install hexo-generator-searchdb hexo-generator-feed hexo-generator-sitemap --save
-
-Hexo 根目录 _config.yml 中配置搜索索引、订阅和站点地图：
-search:  path: search.xml  field: post  content: true  format: striptagsfeed:  type: atom  path: atom.xml  limit: 20sitemap:  path: sitemap.xml  tags: true  categories: true
-
-NexT 的 _config.next.yml 开启本地搜索：
-local_search:  enable: true  top_n_per_article: 1  unescape: false  preload: false
-
-本站在 _config.next.yml 中开启了 Mac 风格的代码块复制按钮：
-codeblock:  copy_button:    enable: true    style: mac
-
-页脚的访客数和浏览量写在 source/_data/footer.njk，通过兼容不蒜子接口的脚本 https://busuanzi.9420.ltd/js 显示。NexT 内置的不蒜子开关保持关闭，因为原接口曾返回 502。切换到新服务后，访客数和浏览量从新服务开始累计。相同页脚还显示博客运行时间，起点为首次部署记录的北京时间 2026-10-16 18:48:16。
-根目录配置还要填写站点标题、作者、语言、时区和正式网址。本站当前值如下：
-title: HanLiorsubtitle: 技术学习与实践description: HanLior 的个人博客，记录技术学习、项目实践与思考。keywords: Hexo, NexT, HanLiorauthor: HanLiorlanguage: zh-CNtimezone: Asia/Shanghaiurl: https://www.hanlior.top
-
-搜索引擎抓取规则放在 source/robots.txt：
-User-agent: *Allow: /Sitemap: https://www.hanlior.top/sitemap.xml
-
-本站开启了 NexT 深色模式、左侧侧栏、本地搜索和代码复制。网站根目录 _config.yml 还设置每页 10 篇、Atom 订阅、站点地图和 robots.txt。访问统计会在访客打开网页后逐步累计。
-删除默认示例文章Hexo 初始化时会生成 source/_posts/hello-world.md。删除该文件并重新部署后，文章和归档列表里就不会再显示 Hello World。source/index.md 是没有文章时的首页提示；有文章时，首页由文章索引生成器列出文章摘要：
----title: 首页layout: pagecomments: false---文章正在整理中，欢迎稍后再来。
-
-之后写新文章可运行：
-npx hexo new post &quot;文章标题&quot;
-
-完成编辑后再运行清理、生成和部署命令。
-]]></content>
-      <categories>
-        <category>博客搭建</category>
-      </categories>
-      <tags>
-        <tag>Mac</tag>
-        <tag>Hexo</tag>
-        <tag>NexT</tag>
-        <tag>GitHub Pages</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>文件上传安全：Upload-Labs 绕过思路与防御</title>
     <url>/2026/11/02/file-upload-security/</url>
     <content><![CDATA[本文为 Upload-Labs 本地靶场学习记录，示例仅用于自建或明确授权的测试环境。生产系统应采用严格白名单、服务端内容校验，并将上传文件存放在不可执行目录。
@@ -435,9 +191,253 @@ $allow_type = array(&#x27;image/jpeg&#x27;,&#x27;image/png&#x27;,&#x27;image/gif
         <category>web安全学习</category>
       </categories>
       <tags>
-        <tag>Web安全</tag>
         <tag>文件上传</tag>
         <tag>Upload-Labs</tag>
+        <tag>Web安全</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>HTTP协议学习：从请求头到响应头</title>
+    <url>/2026/10/28/http-protocol-learning/</url>
+    <content><![CDATA[本文结合 moectf 2024 的 ezhttp 题目，整理 HTTP 请求行、常见请求头、请求体，以及响应状态码和响应头。
+
+
+HTTP 请求
+HTTP 请求的第一行叫请求行，包含请求方法、请求目标和 HTTP 版本。常见方法有：
+
+GET：获取指定资源。
+POST：向服务器提交数据，常用于创建或处理资源。
+HEAD：请求与 GET 类似，但只返回响应头，不返回响应体。
+
+请求行下面是请求头，常见字段包括：
+
+Host：请求访问的主机名。
+X-Forwarded-For：代理服务器常用来传递客户端 IP。只有来自可信代理的值才应作为真实来源，因为客户端可能自行伪造它。
+Referer：表示请求从哪个页面发起。
+User-Agent：描述客户端使用的设备、操作系统和浏览器等信息。
+Content-Type：描述请求体的数据格式，例如表单或 JSON。
+
+请求头之后是请求体。题目中的请求体示例为 imoau=sb。如果提交 JSON，请求头中的 Content-Type 通常应设为 application/json；表单数据则使用对应的表单媒体类型。
+HTTP 响应
+服务器响应的第一行包含 HTTP 版本、状态码和状态描述。状态码按范围表示处理结果：
+
+1xx：信息响应，请求仍在处理中。
+2xx：请求已成功处理。
+3xx：需要重定向或进一步操作。
+4xx：请求存在问题，或服务器无法按请求提供资源。
+5xx：服务器处理请求时发生错误。
+
+常见状态码：
+
+200 OK：请求成功。
+301 Moved Permanently：资源已永久迁移，响应会提供新的地址。
+404 Not Found：服务器找不到请求的资源。
+418 I’m a teapot：一个真实定义过的状态码，源自愚人节 RFC，常作为趣味状态码出现。
+500 Internal Server Error：服务器遇到未预期的错误。
+
+响应状态行下面是响应头，常见字段包括：
+
+Server：服务器软件信息；出于安全考虑，服务器可能会隐藏或简化此字段。
+Content-Type：响应体的媒体类型，例如 text/html 或 application/json。
+Set-Cookie：让浏览器保存或更新 Cookie。
+Content-Length：响应体的长度（以字节计，具体行为也受传输方式影响）。
+
+响应头之后是响应体，通常包含浏览器最终显示的页面内容或接口返回的数据。
+]]></content>
+      <categories>
+        <category>web安全学习</category>
+      </categories>
+      <tags>
+        <tag>Web安全</tag>
+        <tag>HTTP</tag>
+        <tag>CTF</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>在Mac上搭建个人博客：Hexo + NexT + 自定义域名搭建永久有效的个人博客网站</title>
+    <url>/2026/10/16/mac-hexo-next-custom-domain-blog/</url>
+    <content><![CDATA[本文记录在 Mac 上搭建和维护 Hexo + NexT 博客的过程，涵盖 GitHub Pages、自定义域名与 DNS，并补充 HanLior 网站当前的项目目录、主题、文章阅读和页脚统计配置。
+
+
+配置Github项目在Github右上角点击Repository
+然后去New一个
+
+按照下面的输入配置，名字输入自己想要起的名字就可以
+
+生成密钥ssh-keygen -t rsa -b 4096然后一路回车，可以看到生成到了/Users/cr1sp/.ssh/id_rsa  这里Cr1sp是我电脑的用户名用编辑器打开，去复制id_rsa.pub到github：https://github.com/settings/ssh改变密钥认证方式：ssh-keyscan -t ed25519 github.com &gt;&gt; ~/.ssh/known_hosts测试是否成功：ssh -T git@github.com
+
+如果出现这样的字就是代表可以链接成功
+
+设置账号信息：
+git config --global user.name &quot;HanLior&quot;
+
+设置github邮箱：
+git config --global user.email &quot;你的 GitHub 邮箱&quot;
+
+下载Git这里我用的homebrew下载的git
+1.先安装homebrew/bin/bash -c &quot;$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)&quot;
+
+2.通过Homebrew安装Gitbrew install git
+
+3.验证是否安装成功
+出现这样的就是安装成功
+安装node.js1.下载node.jsbrew install node
+
+2.验证是否下载成功node --version
+
+
+搭建Hexo1.切换阿里云镜像源npm config set registry https://registry.npmmirror.com
+
+2.安装cnpmnpm install -g cnpm --registry=https://registry.npmmirror.com
+
+3.用 cnpm 安装 hexocnpm install -g hexo-cli
+
+4.验证是否安装成功
+本地创建Hexo博客文件先在本地目录里面创建一个文件夹
+mkdir blogcd bloghexo init
+
+然后看到blog目录文件里面有这些东西就可以
+
+node_modules: 依赖包public：存放生成的页面scaffolds：生成文章的一些模板source：用来存放你的文章themes：放下下载的主题_config.yml: 博客的核心配置文件（设置主体、标题等属性）
+
+启动cnpm install
+
+启动hexo hexo s -g
+
+访问127.0.0.1:4000
+
+配置域名解析，可以参考这篇文章
+https://www.duheweb.com/post/20210417143744.html
+然后去github配置一下域名，启用https
+
+本站实际配置记录以下配置对应本博客当前使用的 GitHub 仓库和域名：
+
+GitHub 用户：HanLior
+Pages 仓库：HanLior/HanLior.github.io
+域名：www.hanlior.top
+Hexo 项目目录：/Users/cr1sp/blog
+Hexo：8.1.2；NexT：8.21.1，Pisces 风格
+
+目录和发布链路博客源文件放在 /Users/cr1sp/blog。source/_posts 保存文章，source/categories、source/tags 和 source/about 保存导航页面；NexT 配置放在 _config.next.yml。文章图片托管在单独的图床仓库 xhcola/typora_drawing_bed，正文使用 raw.githubusercontent.com 图片链接，不把图片文件混进 Hexo 文章目录。
+发布时，Hexo 先把源文件生成到 public，再由 hexo-deployer-git 把生成结果推送到 Pages 仓库 HanLior/HanLior.github.io 的 main 分支。这个 Pages 仓库用于托管生成后的网站。
+配置 DNS在域名服务商的 DNS 解析页面添加以下记录。根域名用 4 条 A 记录，www 用 CNAME；CNAME 的记录值不要带 https:// 或末尾路径。
+
+
+
+主机记录
+类型
+记录值
+
+
+
+@
+A
+185.199.108.153
+
+
+@
+A
+185.199.109.153
+
+
+@
+A
+185.199.110.153
+
+
+@
+A
+185.199.111.153
+
+
+www
+CNAME
+HanLior.github.io
+
+
+在 GitHub 仓库 HanLior/HanLior.github.io 的 Settings → Pages 中，发布来源选择 Deploy from a branch，分支选择 main、目录选择 /(root)。Custom domain 填 www.hanlior.top。等 DNS 检查和 TLS 证书签发完成后，再启用 Enforce HTTPS。
+在 Hexo 的 source/CNAME 文件中只写自定义域名：
+www.hanlior.top
+
+不要把 CNAME 文件放在 source/_posts 里，也不要把它命名为 CNAME.txt。
+配置 Hexo 部署到 GitHub Pages在博客根目录 /Users/cr1sp/blog 安装部署插件：
+npm install hexo-deployer-git --save
+
+在根目录的 _config.yml 配置仓库和分支：
+deploy:  type: git  repo: git@github.com:HanLior/HanLior.github.io.git  branch: main
+
+每次发布前先清理并重新生成，再部署：
+npx hexo cleannpx hexo generatenpx hexo deploy
+
+也可以依次使用 hexo clean、hexo generate、hexo deploy。第一次在本机部署时需要已经配置 GitHub SSH Key，并确认 ssh -T git@github.com 可以连接。
+安装并启用 NexT 主题本站使用 NexT 8.21.1，主题通过 npm 安装并由 package.json 管理：
+npm install hexo-theme-next@8.21.1 --save
+
+Hexo 根目录 _config.yml 中设置：
+theme: next
+
+主题设置写在博客根目录的 _config.next.yml，不是 themes/next/_config.yml。本站使用 Pisces、深色模式、左侧文章侧栏、中文导航和 GitHub 个人链接：
+scheme: Piscesdarkmode: truesidebar:  position: left  display: postmenu:  home: / || home  categories: /categories/ || th  tags: /tags/ || tags  about: /about/ || usersocial:  GitHub: https://github.com/HanLior || fab fa-github
+
+menu 中的页面需在 source 目录下创建对应页面。本站导航显示首页、分类、标签和关于；归档页面仍可通过 /archives/ 访问，但没有放进主导航。
+archives: /archives/ || archive
+
+创建分类、标签和关于页面可用 Hexo 命令生成页面：
+npx hexo new page categoriesnpx hexo new page tagsnpx hexo new page about
+
+命令会创建 source/&lt;页面名&gt;/index.md。分类页和标签页的 front matter 分别设置 type: categories、type: tags；这些页面以及关于页均可设置 comments: false。例如：
+---title: 分类type: categoriescomments: false---
+
+文章通过 front matter 设置分类和标签。本站的分类包括“博客搭建”“逆向学习”和“web安全学习”。Hexo 默认会隐藏没有文章的分类；persistent_categories 配置和 scripts/persistent-categories.js 会让预设分类在文章发布前也能显示。文章归入该分类后，分类页会自动列出文章。
+首页摘要、分页和文章信息本站首页每页显示 10 篇文章。文章使用 &lt;!-- more --&gt; 分隔摘要和正文：首页只显示分隔符之前的内容，读者点击“阅读全文”进入全文。新文章可按下面的结构设置分类、标签和摘要：
+---title: 文章标题date: 2026-11-02 16:00:00categories:  - web安全学习tags:  - PHP---这里写首页摘要。&lt;!-- more --&gt;这里开始是文章全文。
+
+字数和预计阅读时间由 hexo-word-counter 生成，只有文章级统计开启，不显示全站总字数或总阅读时间：
+npm install hexo-word-counter --save
+
+Hexo 根目录 _config.yml：
+symbols_count_time:  symbols: true  time: true  total_symbols: false  total_time: false
+
+主题配置 _config.next.yml 控制发表于日期、分类和字数&#x2F;阅读时间布局。source/_data/post-meta.njk 额外显示文章文件的实际修改日期和时间：
+post_meta:  item_text: true  created_at: true  updated_at:    enable: false    another_day: true  categories: truesymbols_count_time:  separated_meta: true  item_text_total: falsecustom_file_path:  postMeta: source/_data/post-meta.njk
+
+项目的 updated_option 设为 mtime，因此文章更新信息根据源文件修改时间生成。自定义元信息模板会把更新日期和时分秒显示在文章标题下方。
+本站开启的搜索和 SEO 基础功能安装搜索索引、Atom 订阅和站点地图插件：
+npm install hexo-generator-searchdb hexo-generator-feed hexo-generator-sitemap --save
+
+Hexo 根目录 _config.yml 中配置搜索索引、订阅和站点地图：
+search:  path: search.xml  field: post  content: true  format: striptagsfeed:  type: atom  path: atom.xml  limit: 20sitemap:  path: sitemap.xml  tags: true  categories: true
+
+NexT 的 _config.next.yml 开启本地搜索：
+local_search:  enable: true  top_n_per_article: 1  unescape: false  preload: false
+
+本站在 _config.next.yml 中开启了 Mac 风格的代码块复制按钮：
+codeblock:  copy_button:    enable: true    style: mac
+
+页脚的访客数和浏览量写在 source/_data/footer.njk，通过不蒜子官方 CDN 脚本 https://cdn.busuanzi.cc/busuanzi/3.6.9/busuanzi.min.js 显示。NexT 内置的不蒜子开关保持关闭，因为旧接口曾返回 502。统计服务切换后，访客数和浏览量从新服务开始累计。相同页脚还显示博客运行时间，起点为首次部署记录的北京时间 2026-10-16 18:48:16。
+根目录配置还要填写站点标题、作者、语言、时区和正式网址。本站当前值如下：
+title: HanLiorsubtitle: 技术学习与实践description: HanLior 的个人博客，记录技术学习、项目实践与思考。keywords: Hexo, NexT, HanLiorauthor: HanLiorlanguage: zh-CNtimezone: Asia/Shanghaiurl: https://www.hanlior.top
+
+搜索引擎抓取规则放在 source/robots.txt：
+User-agent: *Allow: /Sitemap: https://www.hanlior.top/sitemap.xml
+
+本站开启了 NexT 深色模式、左侧侧栏、本地搜索和代码复制。网站根目录 _config.yml 还设置每页 10 篇、Atom 订阅、站点地图和 robots.txt。访问统计会在访客打开网页后逐步累计。
+删除默认示例文章Hexo 初始化时会生成 source/_posts/hello-world.md。删除该文件并重新部署后，文章和归档列表里就不会再显示 Hello World。source/index.md 是没有文章时的首页提示；有文章时，首页由文章索引生成器列出文章摘要：
+---title: 首页layout: pagecomments: false---文章正在整理中，欢迎稍后再来。
+
+之后写新文章可运行：
+npx hexo new post &quot;文章标题&quot;
+
+完成编辑后再运行清理、生成和部署命令。
+]]></content>
+      <categories>
+        <category>博客搭建</category>
+      </categories>
+      <tags>
+        <tag>Mac</tag>
+        <tag>Hexo</tag>
+        <tag>NexT</tag>
+        <tag>GitHub Pages</tag>
       </tags>
   </entry>
   <entry>
@@ -651,6 +651,103 @@ $car = new ElectricCar(&quot;white&quot;, 1000, 80);
         <tag>CTF</tag>
         <tag>PHP</tag>
       </tags>
+  </entry>
+  <entry>
+    <title>基础逆向分析学习</title>
+    <url>/2026/10/16/reverse-engineering-basics/</url>
+    <content><![CDATA[本文整理 Android 注册逻辑、Java 解密、ELF 与 Windows 程序等基础逆向分析题目的思路和脚本。
+
+
+基本函数char *strcat(char *dest, const char *src) 把 src 所指向的字符串追加到 dest 所指向的字符串的结尾。
+简单注册器刚接触到安卓逆向，用jdx打开apk包发现注册逻辑
+
+编写exp：
+x = list(&#x27;dd2940c04462b4dd7c450528835cca15&#x27;)x[2] = chr(ord(x[2]) + ord(x[3]) - 50)x[4] = chr(ord(x[2]) + ord(x[5]) - 48)x[30] = chr(ord(x[31]) + ord(x[9]) - 48)x[14] = chr(ord(x[27]) + ord(x[28]) - 97)for i in range(0,16):    a = x[31 - i ]    x[31 - i] = x[i]    x[i] = a print(&quot;flag&#123;&quot; + &quot;&quot;.join(x) + &quot;&#125;&quot;)
+
+获得flag为flag{59acc538825054c7de4b26440c0999dd}
+JAVA逆向解密
+看  Encrypt（）的逻辑，flag作为参数传入
+for (char c : arr) &#123;            int result = (c + &#x27;@&#x27;) ^ 32;            Resultlist.add(Integer.valueOf(result));        &#125;
+
+这是加密的主要逻辑
+逆向一下加密逻辑就是
+c &#x3D; result ^ 32 - ord(‘@’)
+后面使用KEY来做对比
+所以编写脚本
+KEY = [180, 136, 137, 147, 191, 137, 147, 191, 148, 136, 133, 191, 134, 140, 129, 135, 191, 65]result = &quot;&quot;for value in KEY:    value = value ^ 32    value = value - 64    cha = chr(value)    result = result + chaprint(&quot;flag&#123;&quot;+result+&quot;&#125;&quot;)
+
+flag{This_is_the_flag_!}
+luck_guy解压之后先查壳，发现无壳，是ELF64位文件
+
+将luck_guy拖进IDA中分析
+
+发现是switch-case函数，逐个分析一下每一个case
+case1的作用是先将s设置为空，将f1和f2都链接在s之后，那么s可能就是要找的flag，点击了一下f1，发现了f1的值
+
+case2和case3 都是输出，先不管
+case4这里给了 s &#x3D; ‘\x7Ffoguci&#39; ,刚开始查文件时候说了是ELF64文件，所以它存储的时候是小端存储，但是在IDA的显示中会变为大端存储，所以需要把s逆置一下，也就是s = icugof,然后会把s插入f2之后
+Case5是对f2进行处理，这个循环的含义是如果j为奇数，就把f2 - 2，如果是偶数，就把f2 - 1
+所以可以猜想一下，case4 -&gt; case5 -&gt; case1 就可以得到flag
+编写脚本走一圈
+f1 =list(&#x27;GXY&#123;do_not_&#x27;)f2 =list(&#x27;icug`of&#x27;)for i in range(0,7):    if i % 2 == 0:        f2[i] = chr(ord(f2[i]) - 1)    else:        f2[i] = chr(ord(f2[i]) - 2)print(&quot;&quot;.join(f1)+&quot;&quot;.join(f2)+&quot;&#125;&quot;)
+
+得到flag
+GXY{do_not_hate_me}
+刮开有奖先查壳，没什么有效信息
+
+直接丢IDA，看到DIalogFunc直接跟进去
+
+这里大概就能看到加密的主体了，将这些东西都修复了就变成这样了
+
+第一点，输入字符的长度必须是8
+第二点，下面的这些变量肯定是和flag有关
+跟进sub_4010f0函数
+
+发现函数是升序的快速排序，给函数更一下名
+那么意思就是将上面的变量进行升序排序
+key = list(&quot;ZJSECaNH3ng&quot;)key.sort()print(&quot;&quot;.join(key))# 3CEHJNSZagn
+
+
+
+再往下看sub_401000函数，跟进去
+
+观察函数逻辑，发现是base64加密，跟进去byte_407830中，看一下base64表是没有变的
+在主函数的逻辑中，v4 v5都是被base64加密之后的变量
+最后看if的判断条件
+
+排序后的元素为3CEHJNSZagn
+1️⃣v7[0]表示的是第一个元素 也就是3 ，string[0] &#x3D; v7[0] + 34
+2️⃣v10代表的是第五个元素 对应的也就是J 
+3️⃣逆运算一下 string[2] &#x3D; (3 * v8 + 141) &#x2F; 4,这里的v8是第三个元素，也就是E
+4️⃣逆运算一下 string[3] &#x3D; 2 * (v13 &#x2F; 9) * 4,这里的v13是第八个元素 ，也就是Z
+5️⃣6️⃣都是做比较，将ak1w和V1Ax base64解密一下再做比较，因为上面说过了 v4 v5都是base64加密之后的变量，解密之后为ak1w -&gt; jMp V1Ax -&gt; WP1
+从上往下求一下
+key = &quot;3CEHJNSZagn&quot;string0 = chr(ord(key[0]) + 34)string1 = key[4]string2 = chr(int((3 * ord(key[2]) + 141) / 4))string3 = chr(int(ord(key[7]) / 9 * 2 * 4))print(string0 + string1 + string2 + string3)
+
+得到UJWP，因为已知长度是8，上面两个字符串base64解密后为jMp和 WP1,做一下比较可以得到WP1在前面
+所以flag为flag{UJWP1jMp}
+[BJDCTF2020]JustRE进去之后查看字符串，发现一个和flag很像的东西，跟进去
+
+ 
+发现点击次数为19999输出flag，再往下看format，把19999和0带入进去得到flag
+flag{1999902069a45792d233ac}
+romemiwen = [&#x27;p&#x27;, &#x27;v&#x27;, &#x27;k&#x27;, &#x27;q&#x27;, &#x27;&#123;&#x27;, &#x27;m&#x27;, &#x27;1&#x27;, &#x27;6&#x27;, &#x27;4&#x27;, &#x27;6&#x27;, &#x27;7&#x27;, &#x27;5&#x27;, &#x27;2&#x27;, &#x27;6&#x27;, &#x27;2&#x27;, &#x27;0&#x27;, &#x27;3&#x27;, &#x27;3&#x27;, &#x27;l&#x27;, &#x27;4&#x27;, &#x27;m&#x27;, &#x27;4&#x27;, &#x27;9&#x27;, &#x27;l&#x27;, &#x27;n&#x27;, &#x27;p&#x27;, &#x27;7&#x27;, &#x27;p&#x27;, &#x27;9&#x27;, &#x27;m&#x27;, &#x27;n&#x27;, &#x27;k&#x27;, &#x27;2&#x27;, &#x27;8&#x27;, &#x27;k&#x27;, &#x27;7&#x27;, &#x27;5&#x27;, &#x27;&#125;&#x27;]mingwen = [&#x27;&#x27;] * 38for i in range(0,38):    if (miwen[i] &gt;= &#x27;A&#x27; and miwen[i] &lt;= &#x27;Z&#x27;) or (miwen[i] &gt;= &#x27;a&#x27; and miwen[i] &lt;= &#x27;z&#x27;):        y = ord(miwen[i]) + 16        if (y &gt; ord(&#x27;Z&#x27;) and y &lt; ord(&#x27;a&#x27;)) or (y &gt;= ord(&#x27;z&#x27;)):            y -= 26        mingwen[i] = chr(y)    else:        mingwen[i] = miwen[i]print(&quot;&quot;.join(mingwen))print(mingwen)
+
+[GWCTF 2019]pyre拿到题目反编译后得到这样的python代码
+
+分析第二个循环一下能够知道，反着算就行，code的最后一位是不变的
+由于最后一位code[i + 1]没变，从后往前走，code[i + 1] ^ code [i]得到的就是异或前的code[i]
+从后往前异或完得到的就是num
+然后分析第一个循环
+num &#x3D; (input[i] + i) % 128
+反着算就是flag
+num &#x3D; (input[i] - i) % 128
+编写exp
+code = [&#x27;\x1f&#x27;,&#x27;\x12&#x27;,&#x27;\x1d&#x27;,&#x27;(&#x27;,&#x27;0&#x27;,&#x27;4&#x27;,&#x27;\x01&#x27;,&#x27;\x06&#x27;,&#x27;\x14&#x27;,&#x27;4&#x27;,&#x27;,&#x27;,&#x27;\x1b&#x27;,&#x27;U&#x27;,&#x27;?&#x27;,&#x27;o&#x27;,&#x27;6&#x27;,&#x27;*&#x27;,&#x27;:&#x27;,&#x27;\x01&#x27;,&#x27;D&#x27;,&#x27;;&#x27;,&#x27;%&#x27;,&#x27;\x13&#x27;]len = len(code)flag = &#x27;&#x27;for i in range(len - 2, -1, -1):    code[i] = chr(ord(code[i]) ^ ord(code[i + 1]))for i in range(len):    flag += chr((ord(code[i]) - i )% 128)print(flag)
+]]></content>
+      <categories>
+        <category>逆向学习</category>
+      </categories>
   </entry>
   <entry>
     <title>PHP 文件包含漏洞学习：伪协议与 CTF+ 实战</title>
@@ -1469,102 +1566,5 @@ Less - 10时间盲注，闭合方式和9不一样而已
         <tag>SQL注入</tag>
         <tag>MySQL</tag>
       </tags>
-  </entry>
-  <entry>
-    <title>基础逆向分析学习</title>
-    <url>/2026/10/16/reverse-engineering-basics/</url>
-    <content><![CDATA[本文整理 Android 注册逻辑、Java 解密、ELF 与 Windows 程序等基础逆向分析题目的思路和脚本。
-
-
-基本函数char *strcat(char *dest, const char *src) 把 src 所指向的字符串追加到 dest 所指向的字符串的结尾。
-简单注册器刚接触到安卓逆向，用jdx打开apk包发现注册逻辑
-
-编写exp：
-x = list(&#x27;dd2940c04462b4dd7c450528835cca15&#x27;)x[2] = chr(ord(x[2]) + ord(x[3]) - 50)x[4] = chr(ord(x[2]) + ord(x[5]) - 48)x[30] = chr(ord(x[31]) + ord(x[9]) - 48)x[14] = chr(ord(x[27]) + ord(x[28]) - 97)for i in range(0,16):    a = x[31 - i ]    x[31 - i] = x[i]    x[i] = a print(&quot;flag&#123;&quot; + &quot;&quot;.join(x) + &quot;&#125;&quot;)
-
-获得flag为flag{59acc538825054c7de4b26440c0999dd}
-JAVA逆向解密
-看  Encrypt（）的逻辑，flag作为参数传入
-for (char c : arr) &#123;            int result = (c + &#x27;@&#x27;) ^ 32;            Resultlist.add(Integer.valueOf(result));        &#125;
-
-这是加密的主要逻辑
-逆向一下加密逻辑就是
-c &#x3D; result ^ 32 - ord(‘@’)
-后面使用KEY来做对比
-所以编写脚本
-KEY = [180, 136, 137, 147, 191, 137, 147, 191, 148, 136, 133, 191, 134, 140, 129, 135, 191, 65]result = &quot;&quot;for value in KEY:    value = value ^ 32    value = value - 64    cha = chr(value)    result = result + chaprint(&quot;flag&#123;&quot;+result+&quot;&#125;&quot;)
-
-flag{This_is_the_flag_!}
-luck_guy解压之后先查壳，发现无壳，是ELF64位文件
-
-将luck_guy拖进IDA中分析
-
-发现是switch-case函数，逐个分析一下每一个case
-case1的作用是先将s设置为空，将f1和f2都链接在s之后，那么s可能就是要找的flag，点击了一下f1，发现了f1的值
-
-case2和case3 都是输出，先不管
-case4这里给了 s &#x3D; ‘\x7Ffoguci&#39; ,刚开始查文件时候说了是ELF64文件，所以它存储的时候是小端存储，但是在IDA的显示中会变为大端存储，所以需要把s逆置一下，也就是s = icugof,然后会把s插入f2之后
-Case5是对f2进行处理，这个循环的含义是如果j为奇数，就把f2 - 2，如果是偶数，就把f2 - 1
-所以可以猜想一下，case4 -&gt; case5 -&gt; case1 就可以得到flag
-编写脚本走一圈
-f1 =list(&#x27;GXY&#123;do_not_&#x27;)f2 =list(&#x27;icug`of&#x27;)for i in range(0,7):    if i % 2 == 0:        f2[i] = chr(ord(f2[i]) - 1)    else:        f2[i] = chr(ord(f2[i]) - 2)print(&quot;&quot;.join(f1)+&quot;&quot;.join(f2)+&quot;&#125;&quot;)
-
-得到flag
-GXY{do_not_hate_me}
-刮开有奖先查壳，没什么有效信息
-
-直接丢IDA，看到DIalogFunc直接跟进去
-
-这里大概就能看到加密的主体了，将这些东西都修复了就变成这样了
-
-第一点，输入字符的长度必须是8
-第二点，下面的这些变量肯定是和flag有关
-跟进sub_4010f0函数
-
-发现函数是升序的快速排序，给函数更一下名
-那么意思就是将上面的变量进行升序排序
-key = list(&quot;ZJSECaNH3ng&quot;)key.sort()print(&quot;&quot;.join(key))# 3CEHJNSZagn
-
-
-
-再往下看sub_401000函数，跟进去
-
-观察函数逻辑，发现是base64加密，跟进去byte_407830中，看一下base64表是没有变的
-在主函数的逻辑中，v4 v5都是被base64加密之后的变量
-最后看if的判断条件
-
-排序后的元素为3CEHJNSZagn
-1️⃣v7[0]表示的是第一个元素 也就是3 ，string[0] &#x3D; v7[0] + 34
-2️⃣v10代表的是第五个元素 对应的也就是J 
-3️⃣逆运算一下 string[2] &#x3D; (3 * v8 + 141) &#x2F; 4,这里的v8是第三个元素，也就是E
-4️⃣逆运算一下 string[3] &#x3D; 2 * (v13 &#x2F; 9) * 4,这里的v13是第八个元素 ，也就是Z
-5️⃣6️⃣都是做比较，将ak1w和V1Ax base64解密一下再做比较，因为上面说过了 v4 v5都是base64加密之后的变量，解密之后为ak1w -&gt; jMp V1Ax -&gt; WP1
-从上往下求一下
-key = &quot;3CEHJNSZagn&quot;string0 = chr(ord(key[0]) + 34)string1 = key[4]string2 = chr(int((3 * ord(key[2]) + 141) / 4))string3 = chr(int(ord(key[7]) / 9 * 2 * 4))print(string0 + string1 + string2 + string3)
-
-得到UJWP，因为已知长度是8，上面两个字符串base64解密后为jMp和 WP1,做一下比较可以得到WP1在前面
-所以flag为flag{UJWP1jMp}
-[BJDCTF2020]JustRE进去之后查看字符串，发现一个和flag很像的东西，跟进去
-
- 
-发现点击次数为19999输出flag，再往下看format，把19999和0带入进去得到flag
-flag{1999902069a45792d233ac}
-romemiwen = [&#x27;p&#x27;, &#x27;v&#x27;, &#x27;k&#x27;, &#x27;q&#x27;, &#x27;&#123;&#x27;, &#x27;m&#x27;, &#x27;1&#x27;, &#x27;6&#x27;, &#x27;4&#x27;, &#x27;6&#x27;, &#x27;7&#x27;, &#x27;5&#x27;, &#x27;2&#x27;, &#x27;6&#x27;, &#x27;2&#x27;, &#x27;0&#x27;, &#x27;3&#x27;, &#x27;3&#x27;, &#x27;l&#x27;, &#x27;4&#x27;, &#x27;m&#x27;, &#x27;4&#x27;, &#x27;9&#x27;, &#x27;l&#x27;, &#x27;n&#x27;, &#x27;p&#x27;, &#x27;7&#x27;, &#x27;p&#x27;, &#x27;9&#x27;, &#x27;m&#x27;, &#x27;n&#x27;, &#x27;k&#x27;, &#x27;2&#x27;, &#x27;8&#x27;, &#x27;k&#x27;, &#x27;7&#x27;, &#x27;5&#x27;, &#x27;&#125;&#x27;]mingwen = [&#x27;&#x27;] * 38for i in range(0,38):    if (miwen[i] &gt;= &#x27;A&#x27; and miwen[i] &lt;= &#x27;Z&#x27;) or (miwen[i] &gt;= &#x27;a&#x27; and miwen[i] &lt;= &#x27;z&#x27;):        y = ord(miwen[i]) + 16        if (y &gt; ord(&#x27;Z&#x27;) and y &lt; ord(&#x27;a&#x27;)) or (y &gt;= ord(&#x27;z&#x27;)):            y -= 26        mingwen[i] = chr(y)    else:        mingwen[i] = miwen[i]print(&quot;&quot;.join(mingwen))print(mingwen)
-
-[GWCTF 2019]pyre拿到题目反编译后得到这样的python代码
-
-分析第二个循环一下能够知道，反着算就行，code的最后一位是不变的
-由于最后一位code[i + 1]没变，从后往前走，code[i + 1] ^ code [i]得到的就是异或前的code[i]
-从后往前异或完得到的就是num
-然后分析第一个循环
-num &#x3D; (input[i] + i) % 128
-反着算就是flag
-num &#x3D; (input[i] - i) % 128
-编写exp
-code = [&#x27;\x1f&#x27;,&#x27;\x12&#x27;,&#x27;\x1d&#x27;,&#x27;(&#x27;,&#x27;0&#x27;,&#x27;4&#x27;,&#x27;\x01&#x27;,&#x27;\x06&#x27;,&#x27;\x14&#x27;,&#x27;4&#x27;,&#x27;,&#x27;,&#x27;\x1b&#x27;,&#x27;U&#x27;,&#x27;?&#x27;,&#x27;o&#x27;,&#x27;6&#x27;,&#x27;*&#x27;,&#x27;:&#x27;,&#x27;\x01&#x27;,&#x27;D&#x27;,&#x27;;&#x27;,&#x27;%&#x27;,&#x27;\x13&#x27;]len = len(code)flag = &#x27;&#x27;for i in range(len - 2, -1, -1):    code[i] = chr(ord(code[i]) ^ ord(code[i + 1]))for i in range(len):    flag += chr((ord(code[i]) - i )% 128)print(flag)
-]]></content>
-      <categories>
-        <category>逆向学习</category>
-      </categories>
   </entry>
 </search>
